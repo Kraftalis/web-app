@@ -1,0 +1,392 @@
+// Kraftalis — Authentication Database Schema
+// Designed for NextAuth.js + Prisma Adapter
+// Best practices: UUID PKs, audit timestamps, soft delete, indexes, enums
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+enum AuthProvider {
+  CREDENTIALS
+  GOOGLE
+}
+
+// ─── NextAuth Required Models ───────────────────────────────────────────────
+
+/// Core user model — stores identity and profile info.
+/// Linked to accounts, sessions, and audit logs.
+model User {
+  id            String     @id @default(uuid()) @db.Uuid
+  name          String?    @db.VarChar(255)
+  email         String     @unique @db.VarChar(320)
+  emailVerified DateTime?  @map("email_verified")
+  image         String?    @db.Text
+  passwordHash  String?    @map("password_hash") @db.Text
+  role          UserRole   @default(USER)
+  status        UserStatus @default(ACTIVE)
+
+  // Audit fields
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  accounts     Account[]
+  sessions     Session[]
+  auditLogs    AuditLog[]
+  events       Event[]       @relation("vendorEvents")
+  bookingLinks BookingLink[] @relation("vendorBookingLinks")
+  packages     Package[]     @relation("vendorPackages")
+  addOns       AddOn[]       @relation("vendorAddOns")
+
+  @@index([email])
+  @@index([status])
+  @@index([role])
+  @@index([createdAt])
+  @@map("users")
+}
+
+/// OAuth accounts linked to users (Google, etc.)
+/// One user can have multiple linked accounts.
+model Account {
+  id                String  @id @default(uuid()) @db.Uuid
+  userId            String  @map("user_id") @db.Uuid
+  type              String  @db.VarChar(50)
+  provider          String  @db.VarChar(50)
+  providerAccountId String  @map("provider_account_id") @db.VarChar(255)
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String? @db.VarChar(50)
+  scope             String? @db.Text
+  id_token          String? @db.Text
+  session_state     String? @db.Text
+
+  // Audit fields
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+/// Server-side sessions for database strategy (optional but recommended).
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  sessionToken String   @unique @map("session_token") @db.Text
+  userId       String   @map("user_id") @db.Uuid
+  expires      DateTime @db.Timestamptz
+
+  // Audit fields
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expires])
+  @@map("sessions")
+}
+
+/// Email verification tokens (passwordless, email confirm).
+model VerificationToken {
+  identifier String   @db.VarChar(320)
+  token      String   @unique @db.Text
+  expires    DateTime @db.Timestamptz
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ─── Extended Auth Models ───────────────────────────────────────────────────
+
+/// Email verification tokens sent during credentials sign-up.
+model EmailVerificationToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @db.VarChar(320)
+  token     String   @unique @db.Text
+  expires   DateTime @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([email])
+  @@index([token])
+  @@map("email_verification_tokens")
+}
+
+/// Tracks password reset requests with expiry and usage status.
+model PasswordResetToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @db.VarChar(320)
+  token     String   @unique @db.Text
+  expires   DateTime @db.Timestamptz
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([email])
+  @@index([token])
+  @@map("password_reset_tokens")
+}
+
+/// Audit log for all authentication-related events.
+/// Immutable — never updated or deleted. Used for security tracing.
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  action    String   @db.VarChar(100) // e.g. "LOGIN_SUCCESS", "LOGIN_FAILED", "LOGOUT", "PASSWORD_RESET"
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  userAgent String?  @map("user_agent") @db.Text
+  metadata  Json?    @db.JsonB // Flexible extra data
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ─── Event Management Models ────────────────────────────────────────────────
+
+enum EventStatus {
+  INQUIRY
+  WAITING_PAYMENT
+  CONFIRMED
+  ONGOING
+  COMPLETED
+}
+
+enum PaymentStatus {
+  UNPAID
+  DP_PAID
+  PAID
+}
+
+enum PaymentType {
+  DOWN_PAYMENT
+  FULL_PAYMENT
+  INSTALLMENT
+}
+
+// ─── Package & Pricing ──────────────────────────────────────────────────────
+
+/// Vendor-defined service packages.
+/// Generic enough for photographers, WO, catering, MUA, decoration, etc.
+model Package {
+  id          String  @id @default(uuid()) @db.Uuid
+  vendorId    String  @map("vendor_id") @db.Uuid
+  name        String  @db.VarChar(255) // e.g. "Gold Package", "Paket Wisuda Group 5-6 Orang"
+  description String? @db.Text // Free-text summary
+  price       Decimal @db.Decimal(12, 2) // Base price
+  currency    String  @default("IDR") @db.VarChar(10)
+
+  // Flexible duration / capacity info (varies by vendor type)
+  duration    String? @db.VarChar(100) // e.g. "2.5 jam", "8 hours", "Full day"
+  capacity    String? @db.VarChar(100) // e.g. "5-6 orang", "100 pax", "1 bride"
+
+  // Active flag — vendor can archive packages without deleting
+  isActive    Boolean @default(true) @map("is_active")
+  sortOrder   Int     @default(0) @map("sort_order")
+
+  // Audit fields
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  vendor      User          @relation("vendorPackages", fields: [vendorId], references: [id], onDelete: Cascade)
+  items       PackageItem[]
+  events      Event[]       @relation("eventPackage")
+
+  @@index([vendorId])
+  @@index([isActive])
+  @@index([sortOrder])
+  @@map("packages")
+}
+
+/// Individual items / inclusions within a package.
+/// e.g. "Unlimited photoshoot", "Free edit", "File by GDrive", "100 pax buffet"
+model PackageItem {
+  id        String @id @default(uuid()) @db.Uuid
+  packageId String @map("package_id") @db.Uuid
+  label     String @db.VarChar(255) // The item description
+  sortOrder Int    @default(0) @map("sort_order")
+
+  // Relations
+  package   Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@index([packageId])
+  @@map("package_items")
+}
+
+/// Vendor-defined add-ons that can be added to any booking.
+/// e.g. "Extra 1 jam @250rb", "Photo booth", "Dekorasi tambahan"
+model AddOn {
+  id          String  @id @default(uuid()) @db.Uuid
+  vendorId    String  @map("vendor_id") @db.Uuid
+  name        String  @db.VarChar(255) // e.g. "Tambahan 1 jam"
+  description String? @db.Text
+  price       Decimal @db.Decimal(12, 2)
+  currency    String  @default("IDR") @db.VarChar(10)
+  isActive    Boolean @default(true) @map("is_active")
+  sortOrder   Int     @default(0) @map("sort_order")
+
+  // Audit fields
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  vendor      User         @relation("vendorAddOns", fields: [vendorId], references: [id], onDelete: Cascade)
+  eventAddOns EventAddOn[]
+
+  @@index([vendorId])
+  @@index([isActive])
+  @@map("add_ons")
+}
+
+// ─── Events ─────────────────────────────────────────────────────────────────
+
+/// Events / bookings managed by vendors.
+/// Created either manually by vendors or automatically via client booking link.
+model Event {
+  id            String        @id @default(uuid()) @db.Uuid
+  vendorId      String        @map("vendor_id") @db.Uuid
+
+  // Client info
+  clientName    String        @map("client_name") @db.VarChar(255)
+  clientPhone   String        @map("client_phone") @db.VarChar(50)
+  clientEmail   String?       @map("client_email") @db.VarChar(320)
+
+  // Event details
+  eventType     String        @map("event_type") @db.VarChar(100)
+  eventDate     DateTime      @map("event_date") @db.Date
+  eventTime     String?       @map("event_time") @db.VarChar(20)
+  eventLocation String?       @map("event_location") @db.Text
+
+  // Package reference (nullable — vendor may not use packages)
+  packageId     String?       @map("package_id") @db.Uuid
+  packageSnapshot String?     @map("package_snapshot") @db.Text // JSON snapshot of package at booking time
+
+  // Pricing (calculated from package + add-ons, or set manually)
+  amount        Decimal?      @db.Decimal(12, 2)
+  dpAmount      Decimal?      @map("dp_amount") @db.Decimal(12, 2)
+
+  // Status
+  eventStatus   EventStatus   @default(INQUIRY) @map("event_status")
+  paymentStatus PaymentStatus @default(UNPAID) @map("payment_status")
+
+  // Notes
+  notes         String?       @db.Text
+
+  // Audit fields
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  vendor        User          @relation("vendorEvents", fields: [vendorId], references: [id], onDelete: Cascade)
+  package       Package?      @relation("eventPackage", fields: [packageId], references: [id], onDelete: SetNull)
+  eventAddOns   EventAddOn[]
+  bookingLink   BookingLink?
+  payments      Payment[]
+
+  @@index([vendorId])
+  @@index([eventStatus])
+  @@index([paymentStatus])
+  @@index([eventDate])
+  @@index([createdAt])
+  @@map("events")
+}
+
+/// Junction table: which add-ons were selected for a specific event.
+model EventAddOn {
+  id       String  @id @default(uuid()) @db.Uuid
+  eventId  String  @map("event_id") @db.Uuid
+  addOnId  String  @map("add_on_id") @db.Uuid
+  quantity Int     @default(1)
+  snapshot String? @db.Text // JSON snapshot of add-on at booking time
+
+  // Relations
+  event    Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  addOn    AddOn   @relation(fields: [addOnId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, addOnId])
+  @@map("event_add_ons")
+}
+
+// ─── Booking Link (Persistent Client Portal) ───────────────────────────────
+
+/// Unique booking links generated by vendors.
+/// Each link is a persistent portal for the client to:
+/// 1. Fill initial booking form (if no event yet)
+/// 2. Track event status and updates
+/// 3. Upload payment receipts (DP, pelunasan)
+model BookingLink {
+  id        String    @id @default(uuid()) @db.Uuid
+  vendorId  String    @map("vendor_id") @db.Uuid
+  token     String    @unique @db.VarChar(64)
+  eventId   String?   @unique @map("event_id") @db.Uuid // 1:1 with event
+
+  // Expiry for the initial booking form (not the tracking portal)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz
+
+  // Audit fields
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  vendor    User      @relation("vendorBookingLinks", fields: [vendorId], references: [id], onDelete: Cascade)
+  event     Event?    @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  @@index([token])
+  @@index([vendorId])
+  @@map("booking_links")
+}
+
+// ─── Payment Records ────────────────────────────────────────────────────────
+
+/// Payment records for an event — tracks DP, installments, final payment.
+/// Clients can upload receipt images via their booking link.
+model Payment {
+  id           String      @id @default(uuid()) @db.Uuid
+  eventId      String      @map("event_id") @db.Uuid
+  paymentType  PaymentType @map("payment_type")
+  amount       Decimal     @db.Decimal(12, 2)
+  currency     String      @default("IDR") @db.VarChar(10)
+  note         String?     @db.Text
+  receiptUrl   String?     @map("receipt_url") @db.Text // URL to uploaded receipt image
+  receiptName  String?     @map("receipt_name") @db.VarChar(255) // Original filename
+  isVerified   Boolean     @default(false) @map("is_verified") // Vendor confirms receipt
+  paidAt       DateTime    @default(now()) @map("paid_at") @db.Timestamptz
+
+  // Audit fields
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  event        Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([paidAt])
+  @@map("payments")
+}
