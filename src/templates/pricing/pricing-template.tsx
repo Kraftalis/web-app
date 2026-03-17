@@ -2,27 +2,35 @@
 
 import { useState } from "react";
 import { AppLayout } from "@/components/layout";
-import { Card, CardBody, Badge, Button, Input, Modal } from "@/components/ui";
+import {
+  Card,
+  CardBody,
+  Badge,
+  Button,
+  Input,
+  Textarea,
+  Modal,
+} from "@/components/ui";
 import { IconPlus, IconEdit, IconPricing, IconCheck } from "@/components/icons";
 import { useDictionary } from "@/i18n";
 
 // ─── Types ──────────────────────────────────────────────────
 
-interface PackageItem {
+interface PackageVariation {
   id: string;
-  name: string;
+  label: string;
+  description: string | null;
+  price: string; // Decimal as string
 }
 
 interface Package {
   id: string;
   name: string;
   description: string | null;
-  price: string;
+  price: string; // Fallback price when no variations
   currency: string;
-  duration: string | null;
-  capacity: string | null;
   isActive: boolean;
-  items: PackageItem[];
+  items: PackageVariation[]; // price variations
 }
 
 interface AddOn {
@@ -46,10 +54,110 @@ interface PricingTemplateProps {
 
 // ─── Helpers ────────────────────────────────────────────────
 
-function formatCurrency(amount: string, currency = "IDR") {
-  const num = parseFloat(amount);
+function formatCurrency(amount: string | number, currency = "IDR") {
+  const num = typeof amount === "string" ? parseFloat(amount) : amount;
   if (isNaN(num)) return "-";
-  return `${currency} ${num.toLocaleString()}`;
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(num);
+}
+
+function getDisplayPrice(pkg: Package): { label: string; isRange: boolean } {
+  if (pkg.items.length === 0) {
+    return { label: formatCurrency(pkg.price, pkg.currency), isRange: false };
+  }
+  const prices = pkg.items
+    .map((v) => parseFloat(v.price))
+    .filter((n) => !isNaN(n));
+  if (prices.length === 0) return { label: "-", isRange: false };
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  if (min === max)
+    return { label: formatCurrency(min, pkg.currency), isRange: false };
+  return {
+    label: `${formatCurrency(min, pkg.currency)} – ${formatCurrency(max, pkg.currency)}`,
+    isRange: true,
+  };
+}
+
+// ─── Variation Form Row ──────────────────────────────────────
+
+interface VariationRowProps {
+  variation: { label: string; description: string; price: string };
+  index: number;
+  onChange: (
+    index: number,
+    field: "label" | "description" | "price",
+    value: string,
+  ) => void;
+  onRemove: (index: number) => void;
+  labelPlaceholder: string;
+  descPlaceholder: string;
+}
+
+function VariationRow({
+  variation,
+  index,
+  onChange,
+  onRemove,
+  labelPlaceholder,
+  descPlaceholder,
+}: VariationRowProps) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-2">
+      <div className="flex items-start gap-2">
+        <div className="flex-1 space-y-2">
+          <div className="grid gap-2 sm:grid-cols-2">
+            <input
+              type="text"
+              value={variation.label}
+              onChange={(e) => onChange(index, "label", e.target.value)}
+              placeholder={labelPlaceholder}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            />
+            <input
+              type="number"
+              value={variation.price}
+              onChange={(e) => onChange(index, "price", e.target.value)}
+              placeholder="0"
+              min="0"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            />
+          </div>
+          <input
+            type="text"
+            value={variation.description}
+            onChange={(e) => onChange(index, "description", e.target.value)}
+            placeholder={descPlaceholder}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => onRemove(index)}
+          className="mt-1 rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+          aria-label="Remove variation"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width={16}
+            height={16}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
 }
 
 // ─── Component ──────────────────────────────────────────────
@@ -62,7 +170,6 @@ export default function PricingTemplate({
   const { dict } = useDictionary();
   const pricing = dict.pricing;
 
-  // Local state for frontend-only management
   const [packages, setPackages] = useState<Package[]>(initialPackages);
   const [addOns, setAddOns] = useState<AddOn[]>(initialAddOns);
 
@@ -71,27 +178,82 @@ export default function PricingTemplate({
   const [editingPkg, setEditingPkg] = useState<Package | null>(null);
   const [deletingPkgId, setDeletingPkgId] = useState<string | null>(null);
 
+  // Variation editor state inside modal
+  const [variations, setVariations] = useState<
+    { label: string; description: string; price: string }[]
+  >([]);
+
   // AddOn modal state
   const [addonModalOpen, setAddonModalOpen] = useState(false);
   const [editingAddon, setEditingAddon] = useState<AddOn | null>(null);
   const [deletingAddonId, setDeletingAddonId] = useState<string | null>(null);
 
-  // ─── Package CRUD ─────────────────────────────────────────
+  // ─── Open package modal ──────────────────────────────────
+
+  const openAddPkg = () => {
+    setEditingPkg(null);
+    setVariations([]);
+    setPkgModalOpen(true);
+  };
+
+  const openEditPkg = (pkg: Package) => {
+    setEditingPkg(pkg);
+    setVariations(
+      pkg.items.map((v) => ({
+        label: v.label,
+        description: v.description ?? "",
+        price: v.price,
+      })),
+    );
+    setPkgModalOpen(true);
+  };
+
+  // ─── Variation helpers ───────────────────────────────────
+
+  const addVariation = () =>
+    setVariations((prev) => [
+      ...prev,
+      { label: "", description: "", price: "" },
+    ]);
+
+  const updateVariation = (
+    index: number,
+    field: "label" | "description" | "price",
+    value: string,
+  ) =>
+    setVariations((prev) =>
+      prev.map((v, i) => (i === index ? { ...v, [field]: value } : v)),
+    );
+
+  const removeVariation = (index: number) =>
+    setVariations((prev) => prev.filter((_, i) => i !== index));
+
+  // ─── Package CRUD ────────────────────────────────────────
 
   const handleSavePackage = (formData: FormData) => {
     const name = formData.get("name") as string;
     const description = (formData.get("description") as string) || null;
-    const price = formData.get("price") as string;
+    const flatPrice = (formData.get("flatPrice") as string) || "0";
     const currency = (formData.get("currency") as string) || "IDR";
-    const duration = (formData.get("duration") as string) || null;
-    const capacity = (formData.get("capacity") as string) || null;
     const isActive = formData.get("isActive") === "true";
-    const itemsRaw = (formData.get("items") as string) || "";
-    const items = itemsRaw
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .map((name) => ({ id: crypto.randomUUID(), name }));
+
+    const validVariations = variations.filter(
+      (v) => v.label.trim() && v.price !== "",
+    );
+
+    const minPrice =
+      validVariations.length > 0
+        ? String(
+            Math.min(...validVariations.map((v) => parseFloat(v.price) || 0)),
+          )
+        : flatPrice;
+
+    const newItems: PackageVariation[] = validVariations.map((v) => ({
+      id: crypto.randomUUID(),
+      label: v.label.trim(),
+      description: v.description.trim() || null,
+      price: v.price,
+    }));
 
     if (editingPkg) {
       setPackages((prev) =>
@@ -101,12 +263,10 @@ export default function PricingTemplate({
                 ...p,
                 name,
                 description,
-                price,
+                price: minPrice,
                 currency,
-                duration,
-                capacity,
                 isActive,
-                items,
+                items: newItems,
               }
             : p,
         ),
@@ -118,17 +278,17 @@ export default function PricingTemplate({
           id: crypto.randomUUID(),
           name,
           description,
-          price,
+          price: minPrice,
           currency,
-          duration,
-          capacity,
           isActive,
-          items,
+          items: newItems,
         },
       ]);
     }
+
     setPkgModalOpen(false);
     setEditingPkg(null);
+    setVariations([]);
   };
 
   const handleDeletePackage = (id: string) => {
@@ -141,7 +301,7 @@ export default function PricingTemplate({
     }
   };
 
-  // ─── AddOn CRUD ───────────────────────────────────────────
+  // ─── AddOn CRUD ──────────────────────────────────────────
 
   const handleSaveAddOn = (formData: FormData) => {
     const name = formData.get("name") as string;
@@ -194,20 +354,13 @@ export default function PricingTemplate({
           <p className="mt-1 text-sm text-gray-500">{pricing.subtitle}</p>
         </div>
 
-        {/* ─── Packages Section ──────────────────────────── */}
+        {/* ─── Packages Section ─────────────────────────── */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">
               {pricing.packagesTitle}
             </h2>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => {
-                setEditingPkg(null);
-                setPkgModalOpen(true);
-              }}
-            >
+            <Button variant="primary" size="sm" onClick={openAddPkg}>
               <IconPlus size={16} />
               <span className="ml-1">{pricing.addPackage}</span>
             </Button>
@@ -227,93 +380,114 @@ export default function PricingTemplate({
             </Card>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {packages.map((pkg) => (
-                <Card key={pkg.id}>
-                  <CardBody className="space-y-3">
-                    <div className="flex items-start justify-between">
+              {packages.map((pkg) => {
+                const display = getDisplayPrice(pkg);
+                return (
+                  <Card key={pkg.id}>
+                    <CardBody className="space-y-3">
+                      {/* Header */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-gray-900 truncate">
+                            {pkg.name}
+                          </h3>
+                          {pkg.description && (
+                            <p className="mt-0.5 text-xs text-gray-500 line-clamp-2">
+                              {pkg.description}
+                            </p>
+                          )}
+                        </div>
+                        <Badge
+                          variant={pkg.isActive ? "success" : "default"}
+                          className="shrink-0"
+                        >
+                          {pkg.isActive ? pricing.active : pricing.archived}
+                        </Badge>
+                      </div>
+
+                      {/* Price */}
                       <div>
-                        <h3 className="font-semibold text-gray-900">
-                          {pkg.name}
-                        </h3>
-                        {pkg.description && (
-                          <p className="mt-0.5 text-xs text-gray-500">
-                            {pkg.description}
+                        {display.isRange && (
+                          <p className="text-xs text-gray-400 mb-0.5">
+                            {pricing.startingFrom}
                           </p>
                         )}
+                        <p className="text-lg font-bold text-gray-900">
+                          {display.label}
+                        </p>
                       </div>
-                      <Badge variant={pkg.isActive ? "success" : "default"}>
-                        {pkg.isActive ? pricing.active : pricing.archived}
-                      </Badge>
-                    </div>
 
-                    <p className="text-lg font-bold text-gray-900">
-                      {formatCurrency(pkg.price, pkg.currency)}
-                    </p>
+                      {/* Variations */}
+                      {pkg.items.length > 0 && (
+                        <div className="space-y-1.5">
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            {pricing.variationsTitle}
+                          </p>
+                          <ul className="space-y-1">
+                            {pkg.items.map((variation) => (
+                              <li
+                                key={variation.id}
+                                className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-2.5 py-1.5"
+                              >
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <IconCheck
+                                    size={12}
+                                    className="shrink-0 text-green-500"
+                                  />
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-medium text-gray-700 truncate">
+                                      {variation.label}
+                                    </p>
+                                    {variation.description && (
+                                      <p className="text-xs text-gray-400 truncate">
+                                        {variation.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                                <span className="text-xs font-semibold text-gray-900 shrink-0">
+                                  {formatCurrency(
+                                    variation.price,
+                                    pkg.currency,
+                                  )}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
 
-                    {(pkg.duration || pkg.capacity) && (
-                      <div className="flex flex-wrap gap-2">
-                        {pkg.duration && (
-                          <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
-                            {pkg.duration}
-                          </span>
-                        )}
-                        {pkg.capacity && (
-                          <span className="rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700">
-                            {pkg.capacity}
-                          </span>
-                        )}
+                      {/* Actions */}
+                      <div className="flex gap-2 pt-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEditPkg(pkg)}
+                        >
+                          <IconEdit size={14} />
+                          <span className="ml-1">{dict.common.edit}</span>
+                        </Button>
+                        <Button
+                          variant={
+                            deletingPkgId === pkg.id ? "danger" : "outline"
+                          }
+                          size="sm"
+                          onClick={() => handleDeletePackage(pkg.id)}
+                        >
+                          {deletingPkgId === pkg.id
+                            ? pricing.confirmDelete
+                            : dict.common.delete}
+                        </Button>
                       </div>
-                    )}
-
-                    {pkg.items.length > 0 && (
-                      <ul className="space-y-1">
-                        {pkg.items.map((item) => (
-                          <li
-                            key={item.id}
-                            className="flex items-center gap-1.5 text-xs text-gray-600"
-                          >
-                            <IconCheck
-                              size={12}
-                              className="shrink-0 text-green-500"
-                            />
-                            {item.name}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setEditingPkg(pkg);
-                          setPkgModalOpen(true);
-                        }}
-                      >
-                        <IconEdit size={14} />
-                        <span className="ml-1">{dict.common.edit}</span>
-                      </Button>
-                      <Button
-                        variant={
-                          deletingPkgId === pkg.id ? "danger" : "outline"
-                        }
-                        size="sm"
-                        onClick={() => handleDeletePackage(pkg.id)}
-                      >
-                        {deletingPkgId === pkg.id
-                          ? pricing.confirmDelete
-                          : dict.common.delete}
-                      </Button>
-                    </div>
-                  </CardBody>
-                </Card>
-              ))}
+                    </CardBody>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </section>
 
-        {/* ─── Add-ons Section ───────────────────────────── */}
+        {/* ─── Add-ons Section ──────────────────────────── */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">
@@ -426,16 +600,36 @@ export default function PricingTemplate({
         </section>
       </div>
 
-      {/* ─── Package Modal ─────────────────────────────────── */}
+      {/* ─── Package Modal ───────────────────────────────── */}
       <Modal
         open={pkgModalOpen}
         onClose={() => {
           setPkgModalOpen(false);
           setEditingPkg(null);
+          setVariations([]);
         }}
         title={editingPkg ? pricing.editPackage : pricing.addPackage}
+        footer={
+          <>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => {
+                setPkgModalOpen(false);
+                setEditingPkg(null);
+                setVariations([]);
+              }}
+            >
+              {dict.common.cancel}
+            </Button>
+            <Button variant="primary" type="submit" form="pkg-form">
+              {dict.common.save}
+            </Button>
+          </>
+        }
       >
-        <form action={handleSavePackage} className="space-y-4">
+        <form id="pkg-form" action={handleSavePackage} className="space-y-5">
+          {/* Name */}
           <Input
             name="name"
             label={pricing.packageName}
@@ -443,60 +637,92 @@ export default function PricingTemplate({
             defaultValue={editingPkg?.name ?? ""}
             required
           />
-          <Input
+
+          {/* Description */}
+          <Textarea
             name="description"
             label={pricing.packageDescription}
             placeholder={pricing.packageDescPlaceholder}
             defaultValue={editingPkg?.description ?? ""}
+            rows={2}
           />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Input
-              name="price"
-              label={pricing.price}
-              type="number"
-              defaultValue={editingPkg?.price ?? ""}
-              required
-            />
-            <Input
-              name="currency"
-              label={pricing.currency}
-              defaultValue={editingPkg?.currency ?? "IDR"}
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Input
-              name="duration"
-              label={pricing.duration}
-              placeholder={pricing.durationPlaceholder}
-              defaultValue={editingPkg?.duration ?? ""}
-            />
-            <Input
-              name="capacity"
-              label={pricing.capacity}
-              placeholder={pricing.capacityPlaceholder}
-              defaultValue={editingPkg?.capacity ?? ""}
-            />
+
+          {/* Currency */}
+          <Input
+            name="currency"
+            label={pricing.currency}
+            defaultValue={editingPkg?.currency ?? "IDR"}
+            className="w-28"
+          />
+
+          {/* ─── Variations ─────────────────────────────── */}
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm font-medium text-gray-700">
+                {pricing.variationsTitle}
+              </p>
+              <p className="mt-0.5 text-xs text-gray-400">
+                {pricing.variationsHint}
+              </p>
+            </div>
+
+            {variations.length > 0 && (
+              <div className="space-y-2">
+                {/* Column headers */}
+                <div className="grid grid-cols-2 gap-2 px-3">
+                  <p className="text-xs font-medium text-gray-500">
+                    {pricing.variationLabel}
+                  </p>
+                  <p className="text-xs font-medium text-gray-500">
+                    {pricing.variationPrice}
+                  </p>
+                </div>
+                {variations.map((v, i) => (
+                  <VariationRow
+                    key={i}
+                    variation={v}
+                    index={i}
+                    onChange={updateVariation}
+                    onRemove={removeVariation}
+                    labelPlaceholder={pricing.variationLabelPlaceholder}
+                    descPlaceholder={pricing.variationDescPlaceholder}
+                  />
+                ))}
+              </div>
+            )}
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addVariation}
+            >
+              <IconPlus size={14} />
+              <span className="ml-1">{pricing.addVariation}</span>
+            </Button>
           </div>
 
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              {pricing.packageItems}
-            </label>
-            <p className="mb-1 text-xs text-gray-400">
-              {pricing.packageItemsHint}
-            </p>
-            <textarea
-              name="items"
-              rows={4}
-              placeholder={pricing.packageItemsPlaceholder}
-              defaultValue={
-                editingPkg?.items.map((i) => i.name).join("\n") ?? ""
-              }
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-            />
-          </div>
+          {/* Flat price — shown when no variations OR as fallback label */}
+          {variations.length === 0 && (
+            <div>
+              <Input
+                name="flatPrice"
+                label={pricing.flatPrice}
+                type="number"
+                min="0"
+                defaultValue={editingPkg?.price ?? "0"}
+                required
+              />
+              <p className="mt-1 text-xs text-gray-400">
+                {pricing.flatPriceHint}
+              </p>
+            </div>
+          )}
+          {variations.length > 0 && (
+            <input type="hidden" name="flatPrice" value="0" />
+          )}
 
-          {/* isActive checkbox */}
+          {/* isActive */}
           <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
             <input
               type="checkbox"
@@ -516,26 +742,10 @@ export default function PricingTemplate({
             />
             {pricing.activePackage}
           </label>
-
-          <div className="flex justify-end gap-3 pt-2">
-            <Button
-              variant="outline"
-              type="button"
-              onClick={() => {
-                setPkgModalOpen(false);
-                setEditingPkg(null);
-              }}
-            >
-              {dict.common.cancel}
-            </Button>
-            <Button variant="primary" type="submit">
-              {dict.common.save}
-            </Button>
-          </div>
         </form>
       </Modal>
 
-      {/* ─── AddOn Modal ───────────────────────────────────── */}
+      {/* ─── AddOn Modal ─────────────────────────────────── */}
       <Modal
         open={addonModalOpen}
         onClose={() => {
@@ -543,8 +753,25 @@ export default function PricingTemplate({
           setEditingAddon(null);
         }}
         title={editingAddon ? pricing.editAddOn : pricing.addAddOn}
+        footer={
+          <>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => {
+                setAddonModalOpen(false);
+                setEditingAddon(null);
+              }}
+            >
+              {dict.common.cancel}
+            </Button>
+            <Button variant="primary" type="submit" form="addon-form">
+              {dict.common.save}
+            </Button>
+          </>
+        }
       >
-        <form action={handleSaveAddOn} className="space-y-4">
+        <form id="addon-form" action={handleSaveAddOn} className="space-y-4">
           <Input
             name="name"
             label={pricing.addOnName}
@@ -552,17 +779,19 @@ export default function PricingTemplate({
             defaultValue={editingAddon?.name ?? ""}
             required
           />
-          <Input
+          <Textarea
             name="description"
             label={pricing.addOnDescription}
             placeholder={pricing.addOnDescPlaceholder}
             defaultValue={editingAddon?.description ?? ""}
+            rows={2}
           />
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
               name="price"
-              label={pricing.price}
+              label={pricing.addOnPrice}
               type="number"
+              min="0"
               defaultValue={editingAddon?.price ?? ""}
               required
             />
@@ -573,7 +802,6 @@ export default function PricingTemplate({
             />
           </div>
 
-          {/* isActive checkbox */}
           <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
             <input
               type="checkbox"
@@ -593,22 +821,6 @@ export default function PricingTemplate({
             />
             {pricing.activeAddOn}
           </label>
-
-          <div className="flex justify-end gap-3 pt-2">
-            <Button
-              variant="outline"
-              type="button"
-              onClick={() => {
-                setAddonModalOpen(false);
-                setEditingAddon(null);
-              }}
-            >
-              {dict.common.cancel}
-            </Button>
-            <Button variant="primary" type="submit">
-              {dict.common.save}
-            </Button>
-          </div>
         </form>
       </Modal>
     </AppLayout>

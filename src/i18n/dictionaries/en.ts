@@ -287,7 +287,27 @@ const en = {
 
   // ─── Generate Booking Link Modal ─────────────────────────
   bookingLink: {
-    modalTitle: "Booking Link Generated",
+    // Step 1 — configure
+    configTitle: "Create Booking Link",
+    configDesc:
+      "Optionally pre-fill a client name and select which package & add-ons to offer before sharing the link.",
+    clientNameLabel: "Client Name (optional)",
+    clientNamePlaceholder: "e.g. Budi Santoso",
+    selectPackageLabel: "Package (optional)",
+    noPackageOption: "Let client choose from all packages",
+    selectVariationLabel: "Variation",
+    customPackageLabel: "Or create a custom package for this client",
+    customPackageName: "Custom Package Name",
+    customPackageNamePlaceholder: "e.g. Custom Wedding Shoot",
+    customVariationsTitle: "Variations / Price Tiers",
+    customVariationHint: "Leave empty to use a flat price.",
+    customFlatPrice: "Flat Price",
+    addCustomVariation: "Add Variation",
+    selectAddOnsLabel: "Add-ons to offer (optional)",
+    generateButton: "Generate Link",
+    generating: "Generating…",
+    // Step 2 — result
+    modalTitle: "Booking Link Ready",
     modalDesc:
       "Share this link with your client so they can fill in their booking details.",
     copyLink: "Copy Link",
@@ -439,6 +459,8 @@ const en = {
     packageIncludes: "Includes:",
     selectedLabel: "Selected",
     selectLabel: "Select",
+    selectVariation: "Choose a variation",
+    variationRequired: "Please select a variation to continue.",
     addOnsOptional: "Add-ons (optional)",
     addOnsOptionalDesc: "Enhance your package with extra services.",
     perItem: "/ item",
@@ -476,20 +498,26 @@ const en = {
     noPackages: "No packages yet",
     noPackagesDesc: "Create your first package to show clients your offerings.",
     packageName: "Package Name",
-    packageNamePlaceholder: "e.g. Gold Package, Paket Wisuda Group",
+    packageNamePlaceholder: "e.g. Wisuda Photoshoot, Gold Package",
     packageDescription: "Description (optional)",
-    packageDescPlaceholder: "Brief description of what's included",
-    price: "Price",
-    currency: "Currency",
-    duration: "Duration (optional)",
-    durationPlaceholder: "e.g. 2.5 jam, Full day",
-    capacity: "Capacity (optional)",
-    capacityPlaceholder: "e.g. 5-6 orang, 100 pax",
-    packageItems: "Inclusions (one per line)",
-    packageItemsHint: "Enter each item on a new line",
-    packageItemsPlaceholder:
-      "Unlimited photoshoot\nGet all files\nFree edit\nFile by GDrive",
+    packageDescPlaceholder: "Brief description shown to clients",
     activePackage: "Active (visible to clients)",
+
+    // Variations
+    variationsTitle: "Price Variations",
+    variationsHint:
+      "Add variations if this package has different pricing tiers (e.g. by pax, duration, scope). Leave empty to use a single flat price.",
+    addVariation: "Add Variation",
+    variationLabel: "Variation Name",
+    variationLabelPlaceholder: "e.g. 2 People – 1 Hour, Pengantin, 100 Pax",
+    variationDescription: "Details (optional)",
+    variationDescPlaceholder:
+      "e.g. includes unlimited edits, soft file via GDrive",
+    variationPrice: "Price",
+    noVariations: "Single flat price",
+    flatPrice: "Flat Price",
+    flatPriceHint: "Used when no variations are defined.",
+    currency: "Currency",
 
     // Add-ons section
     addOnsTitle: "Add-ons",
@@ -501,6 +529,7 @@ const en = {
     addOnNamePlaceholder: "e.g. Extra 1 hour, Photo booth",
     addOnDescription: "Description (optional)",
     addOnDescPlaceholder: "Brief description",
+    addOnPrice: "Price",
     activeAddOn: "Active (available for bookings)",
 
     // Table columns
@@ -514,6 +543,7 @@ const en = {
     active: "Active",
     archived: "Archived",
     confirmDelete: "Confirm?",
+    startingFrom: "from",
   },
 
   // ─── Schedule Page ───────────────────────────────────────

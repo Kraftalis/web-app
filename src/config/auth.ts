@@ -2,8 +2,8 @@ import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { compareSync } from "bcryptjs";
-import { findUserByEmail, isUserActive } from "@/services/user-service";
-import { createAuditLog } from "@/services/audit-service";
+import { findUserByEmail, isUserActive } from "@/repositories/user";
+import { createAuditLog } from "@/repositories/audit";
 
 /**
  * Shared auth config (callbacks, pages, session) — safe for Edge/middleware.

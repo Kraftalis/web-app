@@ -1,11 +1,6 @@
 import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 
-/**
- * Verification token service — manages email verification tokens.
- * Tokens expire after 24 hours and are single-use.
- */
-
 const TOKEN_EXPIRY_HOURS = 24;
 
 /**
@@ -13,7 +8,6 @@ const TOKEN_EXPIRY_HOURS = 24;
  * Deletes any existing tokens for the email first.
  */
 export async function createEmailVerificationToken(email: string) {
-  // Remove any existing tokens for this email
   await prisma.emailVerificationToken.deleteMany({
     where: { email },
   });
@@ -22,11 +16,7 @@ export async function createEmailVerificationToken(email: string) {
   const expires = new Date(Date.now() + TOKEN_EXPIRY_HOURS * 60 * 60 * 1000);
 
   return prisma.emailVerificationToken.create({
-    data: {
-      email,
-      token,
-      expires,
-    },
+    data: { email, token, expires },
   });
 }
 
@@ -41,12 +31,8 @@ export async function findValidVerificationToken(token: string) {
 
   if (!record) return null;
 
-  // Check expiry
   if (record.expires < new Date()) {
-    // Clean up expired token
-    await prisma.emailVerificationToken.delete({
-      where: { token },
-    });
+    await prisma.emailVerificationToken.delete({ where: { token } });
     return null;
   }
 
@@ -57,9 +43,7 @@ export async function findValidVerificationToken(token: string) {
  * Deletes a verification token after successful verification.
  */
 export async function deleteVerificationToken(token: string) {
-  await prisma.emailVerificationToken.delete({
-    where: { token },
-  });
+  await prisma.emailVerificationToken.delete({ where: { token } });
 }
 
 /**
@@ -67,8 +51,6 @@ export async function deleteVerificationToken(token: string) {
  */
 export async function cleanupExpiredTokens() {
   await prisma.emailVerificationToken.deleteMany({
-    where: {
-      expires: { lt: new Date() },
-    },
+    where: { expires: { lt: new Date() } },
   });
 }

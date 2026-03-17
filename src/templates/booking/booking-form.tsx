@@ -36,6 +36,8 @@ interface BookingFormLabels {
   packageIncludes: string;
   selectedLabel: string;
   selectLabel: string;
+  selectVariation: string;
+  variationRequired: string;
   addOnsOptional: string;
   addOnsOptionalDesc: string;
   perItem: string;
@@ -87,6 +89,7 @@ export interface BookingFormData {
   eventLocation: string | null;
   notes: string | null;
   packageId: string | null;
+  selectedVariationId: string | null; // selected variation within package
   selectedAddOnIds: string[];
   dpAmount: string;
   receiptFile: File | null;
@@ -122,6 +125,9 @@ export function BookingForm({
   const [eventLocation, setEventLocation] = useState("");
   const [notes, setNotes] = useState("");
   const [selectedPkgId, setSelectedPkgId] = useState<string | null>(null);
+  const [selectedVariationId, setSelectedVariationId] = useState<string | null>(
+    null,
+  );
   const [selectedAddOnIds, setSelectedAddOnIds] = useState<string[]>([]);
   const [dpAmount, setDpAmount] = useState("");
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
@@ -141,7 +147,13 @@ export function BookingForm({
 
   function canGoNext(): boolean {
     if (step === "client") return !!clientName.trim() && !!clientPhone.trim();
-    if (step === "package") return !!selectedPkgId;
+    if (step === "package") {
+      if (!selectedPkgId) return false;
+      const pkg = packages.find((p) => p.id === selectedPkgId);
+      // if package has variations, one must be selected
+      if (pkg && pkg.items.length > 0 && !selectedVariationId) return false;
+      return true;
+    }
     if (step === "event") return !!eventType && !!eventDate;
     return !!dpAmount && !!receiptFile;
   }
@@ -176,6 +188,7 @@ export function BookingForm({
         eventLocation: eventLocation.trim() || null,
         notes: notes.trim() || null,
         packageId: selectedPkgId,
+        selectedVariationId,
         selectedAddOnIds,
         dpAmount,
         receiptFile,
@@ -231,7 +244,12 @@ export function BookingForm({
               packages={packages}
               addOns={addOns}
               selectedPkgId={selectedPkgId}
-              setSelectedPkgId={setSelectedPkgId}
+              setSelectedPkgId={(id) => {
+                setSelectedPkgId(id);
+                setSelectedVariationId(null); // reset variation when package changes
+              }}
+              selectedVariationId={selectedVariationId}
+              setSelectedVariationId={setSelectedVariationId}
               selectedAddOnIds={selectedAddOnIds}
               toggleAddOn={toggleAddOn}
               labels={labels}
@@ -455,6 +473,8 @@ function PackageStep({
   addOns,
   selectedPkgId,
   setSelectedPkgId,
+  selectedVariationId,
+  setSelectedVariationId,
   selectedAddOnIds,
   toggleAddOn,
   labels,
@@ -463,10 +483,14 @@ function PackageStep({
   addOns: VendorAddOn[];
   selectedPkgId: string | null;
   setSelectedPkgId: (id: string) => void;
+  selectedVariationId: string | null;
+  setSelectedVariationId: (id: string | null) => void;
   selectedAddOnIds: string[];
   toggleAddOn: (id: string) => void;
   labels: BookingFormLabels;
 }) {
+  const selectedPkg = packages.find((p) => p.id === selectedPkgId) ?? null;
+
   return (
     <div className="space-y-5">
       {/* Package selection */}
@@ -511,7 +535,7 @@ function PackageStep({
                           className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600"
                         >
                           <IconCheck size={8} className="text-green-500" />
-                          {item.name}
+                          {item.label}
                         </span>
                       ))}
                       {pkg.items.length > 3 && (
@@ -537,6 +561,62 @@ function PackageStep({
           );
         })}
       </div>
+
+      {/* Variation selector — shown when selected package has variations */}
+      {selectedPkg && selectedPkg.items.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
+            {labels.selectVariation}
+          </h3>
+          {!selectedVariationId && (
+            <p className="mt-0.5 text-xs text-red-500">
+              {labels.variationRequired}
+            </p>
+          )}
+          <div className="mt-3 space-y-2">
+            {selectedPkg.items.map((variation) => {
+              const isChosen = variation.id === selectedVariationId;
+              return (
+                <button
+                  key={variation.id}
+                  type="button"
+                  onClick={() => setSelectedVariationId(variation.id)}
+                  className={`flex w-full items-center gap-3 rounded-xl border-2 p-3 text-left transition-colors ${
+                    isChosen
+                      ? "border-blue-500 bg-blue-50/50"
+                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  <div
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${
+                      isChosen
+                        ? "border-blue-500 bg-blue-500"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    {isChosen && (
+                      <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900">
+                      {variation.label}
+                    </p>
+                    {variation.description && (
+                      <p className="text-xs text-gray-500">
+                        {variation.description}
+                      </p>
+                    )}
+                  </div>
+                  <p className="shrink-0 text-sm font-bold text-blue-600">
+                    {formatCurrency(variation.price, selectedPkg.currency)}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Add-ons */}
       {addOns.length > 0 && (

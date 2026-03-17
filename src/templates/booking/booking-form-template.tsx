@@ -6,7 +6,12 @@ import { Card, CardBody } from "@/components/ui";
 import { useDictionary } from "@/i18n";
 import type { Dictionary } from "@/i18n/dictionaries/en";
 import type { Locale } from "@/i18n/config";
-import type { PortalEvent, PortalPayment, VendorPackage, VendorAddOn } from "./types";
+import type {
+  PortalEvent,
+  PortalPayment,
+  VendorPackage,
+  VendorAddOn,
+} from "./types";
 import { BookingForm } from "./booking-form";
 import type { BookingFormData } from "./booking-form";
 import { PortalHeader } from "./portal-header";
@@ -78,8 +83,9 @@ function buildMockPortalEvent(
           currency: selectedPkg.currency,
           items: selectedPkg.items.map((item) => ({
             id: item.id,
-            name: item.name,
-            description: null,
+            label: item.label,
+            description: item.description,
+            price: item.price,
           })),
         }
       : null,
@@ -192,7 +198,13 @@ export default function BookingFormTemplate({
       throw new Error(json.error || "Something went wrong");
     }
 
-    const ev = buildMockPortalEvent(data, vendorName, vendorImage, packages, addOns);
+    const ev = buildMockPortalEvent(
+      data,
+      vendorName,
+      vendorImage,
+      packages,
+      addOns,
+    );
     setPortalEvent(ev);
   }
 
@@ -231,6 +243,8 @@ export default function BookingFormTemplate({
           packageIncludes: b.packageIncludes,
           selectedLabel: b.selectedLabel,
           selectLabel: b.selectLabel,
+          selectVariation: b.selectVariation,
+          variationRequired: b.variationRequired,
           addOnsOptional: b.addOnsOptional,
           addOnsOptionalDesc: b.addOnsOptionalDesc,
           perItem: b.perItem,

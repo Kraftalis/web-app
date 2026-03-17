@@ -3,9 +3,9 @@ import { cookies } from "next/headers";
 import {
   findValidVerificationToken,
   deleteVerificationToken,
-} from "@/services/verification-service";
-import { findUserByEmail, verifyUserEmail } from "@/services/user-service";
-import { createAuditLog } from "@/services/audit-service";
+} from "@/repositories/auth";
+import { findUserByEmail, verifyUserEmail } from "@/repositories/user";
+import { createAuditLog } from "@/repositories/audit";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { defaultLocale, type Locale, locales } from "@/i18n/config";
 

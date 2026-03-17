@@ -121,7 +121,7 @@ export function PortalEventInfo({
                           size={14}
                           className="shrink-0 text-green-500"
                         />
-                        {item.name}
+                        {item.label}
                       </li>
                     ))}
                   </ul>

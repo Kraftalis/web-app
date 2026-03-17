@@ -1,22 +1,4 @@
-import nodemailer from "nodemailer";
-
-/**
- * Email service — handles sending transactional emails.
- * Configured via environment variables for SMTP transport.
- */
-
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT ?? 587),
-  secure: process.env.SMTP_SECURE === "true", // true for 465, false for others
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
-
-const FROM_ADDRESS = process.env.SMTP_FROM ?? "noreply@kraftalis.com";
-const APP_NAME = "Kraftalis";
+import { transporter, FROM_ADDRESS, APP_NAME } from "../transporter";
 
 /**
  * Sends an email verification link to the user.
@@ -82,7 +64,7 @@ export async function sendVerificationEmail(
               <tr>
                 <td style="padding:0 32px 24px;text-align:center;">
                   <p style="margin:0;font-size:11px;color:#cbd5e1;">
-                    © ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+                    &copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
                   </p>
                 </td>
               </tr>

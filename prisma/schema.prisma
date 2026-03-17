@@ -196,17 +196,19 @@ enum PaymentType {
 
 /// Vendor-defined service packages.
 /// Generic enough for photographers, WO, catering, MUA, decoration, etc.
+/// A package can have zero or more PackageItem variations.
+/// - 0 variations: the package `price` is the single flat price.
+/// - 1+ variations: client must pick a variation; each variation has its own price.
 model Package {
   id          String  @id @default(uuid()) @db.Uuid
   vendorId    String  @map("vendor_id") @db.Uuid
-  name        String  @db.VarChar(255) // e.g. "Gold Package", "Paket Wisuda Group 5-6 Orang"
-  description String? @db.Text // Free-text summary
-  price       Decimal @db.Decimal(12, 2) // Base price
-  currency    String  @default("IDR") @db.VarChar(10)
+  name        String  @db.VarChar(255) // e.g. "Paket Wisuda Photoshoot"
+  description String? @db.Text // Free-text summary shown to clients
 
-  // Flexible duration / capacity info (varies by vendor type)
-  duration    String? @db.VarChar(100) // e.g. "2.5 jam", "8 hours", "Full day"
-  capacity    String? @db.VarChar(100) // e.g. "5-6 orang", "100 pax", "1 bride"
+  // Base / fallback price — used when there are no variations.
+  // When variations exist, this can be set to 0 or the min variation price.
+  price       Decimal @db.Decimal(12, 2)
+  currency    String  @default("IDR") @db.VarChar(10)
 
   // Active flag — vendor can archive packages without deleting
   isActive    Boolean @default(true) @map("is_active")
@@ -227,16 +229,24 @@ model Package {
   @@map("packages")
 }
 
-/// Individual items / inclusions within a package.
-/// e.g. "Unlimited photoshoot", "Free edit", "File by GDrive", "100 pax buffet"
+/// Price variations within a package.
+/// Each variation represents a distinct pricing tier / configuration.
+/// Generic enough for any vendor type:
+///   - Photography: "2 Orang – 1 Jam", "3 Orang – 1.5 Jam"
+///   - MUA: "Pengantin", "Pengantin + Pagar Ayu"
+///   - Catering: "100 Pax", "150 Pax"
+///   - Decoration: "Basic", "Premium", "Mewah"
+/// If a package has only one variation, clients skip the selection step.
 model PackageItem {
-  id        String @id @default(uuid()) @db.Uuid
-  packageId String @map("package_id") @db.Uuid
-  label     String @db.VarChar(255) // The item description
-  sortOrder Int    @default(0) @map("sort_order")
+  id          String  @id @default(uuid()) @db.Uuid
+  packageId   String  @map("package_id") @db.Uuid
+  label       String  @db.VarChar(255)   // Short name shown to client, e.g. "2 Orang – 1 Jam"
+  description String? @db.Text           // Optional detail: inclusions, notes, etc.
+  price       Decimal @db.Decimal(12, 2) // Price for this specific variation
+  sortOrder   Int     @default(0) @map("sort_order")
 
   // Relations
-  package   Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  package     Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
 
   @@index([packageId])
   @@map("package_items")

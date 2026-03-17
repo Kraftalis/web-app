@@ -2,24 +2,36 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import PricingTemplate from "@/templates/pricing/pricing-template";
 
-// ─── Dummy data (hardcoded) ─────────────────────────────────
+// ─── Dummy data (hardcoded, to be replaced with DB calls) ───
 
 const DUMMY_PACKAGES = [
   {
     id: "pkg-001",
-    name: "Silver Package",
+    name: "Wisuda Photoshoot",
     description:
-      "Paket hemat untuk sesi foto singkat. Cocok untuk wisuda, birthday, atau portrait session.",
-    price: "1500000",
+      "Paket foto wisuda dengan berbagai pilihan kapasitas dan durasi.",
+    price: "200000",
     currency: "IDR",
-    duration: "1.5 jam",
-    capacity: "1-3 orang",
     isActive: true,
     items: [
-      { id: "pi-001", name: "30 menit foto outdoor" },
-      { id: "pi-002", name: "1 jam foto studio" },
-      { id: "pi-003", name: "20 foto edited" },
-      { id: "pi-004", name: "Semua file via Google Drive" },
+      {
+        id: "var-001",
+        label: "2 Orang – 1 Jam",
+        description: "20 foto edited · file via GDrive",
+        price: "200000",
+      },
+      {
+        id: "var-002",
+        label: "3 Orang – 1.5 Jam",
+        description: "30 foto edited · file via GDrive",
+        price: "300000",
+      },
+      {
+        id: "var-003",
+        label: "5-6 Orang – 2 Jam",
+        description: "50 foto edited · file via GDrive · bonus cetak 10R",
+        price: "500000",
+      },
     ],
   },
   {
@@ -29,68 +41,32 @@ const DUMMY_PACKAGES = [
       "Paket lengkap untuk event menengah. Termasuk foto & video highlights.",
     price: "5000000",
     currency: "IDR",
-    duration: "4 jam",
-    capacity: "5-10 orang",
     isActive: true,
     items: [
-      { id: "pi-005", name: "Unlimited photoshoot" },
-      { id: "pi-006", name: "50+ foto edited" },
-      { id: "pi-007", name: "Video highlights 1 menit" },
-      { id: "pi-008", name: "Semua file via Google Drive" },
-      { id: "pi-009", name: "1 cetak foto 10R" },
-      { id: "pi-010", name: "Free 1x revisi" },
+      {
+        id: "var-004",
+        label: "4 Jam Coverage",
+        description:
+          "Unlimited shoot · 50+ foto edited · video highlights 1 menit",
+        price: "5000000",
+      },
+      {
+        id: "var-005",
+        label: "8 Jam Coverage (Full Day)",
+        description:
+          "Unlimited shoot · 100+ foto edited · cinematic video 3-5 menit",
+        price: "8500000",
+      },
     ],
   },
   {
     id: "pkg-003",
-    name: "Platinum Package",
-    description:
-      "Paket premium all-in untuk wedding atau event besar. Full day coverage dengan tim lengkap.",
-    price: "15000000",
-    currency: "IDR",
-    duration: "Full day (8 jam)",
-    capacity: "Unlimited",
-    isActive: true,
-    items: [
-      { id: "pi-011", name: "2 fotografer + 1 videografer" },
-      { id: "pi-012", name: "Unlimited photoshoot" },
-      { id: "pi-013", name: "100+ foto edited" },
-      { id: "pi-014", name: "Cinematic video 3-5 menit" },
-      { id: "pi-015", name: "Drone aerial footage" },
-      { id: "pi-016", name: "Semua file via Google Drive" },
-      { id: "pi-017", name: "Album cetak 20 halaman" },
-      { id: "pi-018", name: "Free 2x revisi" },
-    ],
-  },
-  {
-    id: "pkg-004",
-    name: "Paket Wisuda Group",
-    description: "Paket khusus foto wisuda berkelompok.",
-    price: "500000",
-    currency: "IDR",
-    duration: "1 jam",
-    capacity: "5-6 orang",
-    isActive: true,
-    items: [
-      { id: "pi-019", name: "Foto outdoor kampus" },
-      { id: "pi-020", name: "10 foto edited per orang" },
-      { id: "pi-021", name: "File via Google Drive" },
-    ],
-  },
-  {
-    id: "pkg-005",
     name: "Basic Portrait",
-    description: "Sesi portrait singkat untuk kebutuhan profil atau CV.",
+    description: "Sesi portrait singkat untuk profil atau CV.",
     price: "350000",
     currency: "IDR",
-    duration: "30 menit",
-    capacity: "1 orang",
     isActive: false,
-    items: [
-      { id: "pi-022", name: "5 foto edited" },
-      { id: "pi-023", name: "Background polos / outdoor" },
-      { id: "pi-024", name: "File via Google Drive" },
-    ],
+    items: [], // flat price, no variations
   },
 ];
 
@@ -134,14 +110,6 @@ const DUMMY_ADDONS = [
     price: "500000",
     currency: "IDR",
     isActive: true,
-  },
-  {
-    id: "addon-006",
-    name: "Album Premium 30 Halaman",
-    description: "Upgrade album cetak hardcover 30 halaman.",
-    price: "1200000",
-    currency: "IDR",
-    isActive: false,
   },
 ];
 

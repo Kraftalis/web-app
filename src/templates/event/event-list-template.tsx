@@ -17,6 +17,8 @@ import type { EventItem } from "./types";
 import { EventTable } from "./event-table";
 import { KanbanBoard } from "./kanban-board";
 import { CreateEventModal, BookingLinkModal } from "./event-modals";
+import type { BookingLinkConfig } from "./event-modals";
+import type { VendorPackage, VendorAddOn } from "@/templates/booking/types";
 
 export type { EventItem };
 
@@ -27,6 +29,8 @@ interface EventListTemplateProps {
     image: string | null;
   } | null;
   events: EventItem[];
+  packages?: VendorPackage[];
+  addOns?: VendorAddOn[];
 }
 
 type ViewMode = "list" | "kanban";
@@ -34,6 +38,8 @@ type ViewMode = "list" | "kanban";
 export default function EventListTemplate({
   user,
   events,
+  packages = [],
+  addOns = [],
 }: EventListTemplateProps) {
   const { dict } = useDictionary();
   const router = useRouter();
@@ -92,9 +98,9 @@ export default function EventListTemplate({
     });
   }
 
-  function handleGenerateLink() {
+  function handleGenerateLink(config: BookingLinkConfig) {
     startGenTransition(async () => {
-      const result = await generateBookingLinkAction();
+      const result = await generateBookingLinkAction(config);
       if (result.token) {
         setGeneratedToken(result.token);
         setShowLinkModal(true);
@@ -146,7 +152,7 @@ export default function EventListTemplate({
           <Button
             variant="outline"
             size="md"
-            onClick={handleGenerateLink}
+            onClick={() => setShowLinkModal(true)}
             isLoading={isGenerating}
           >
             <IconLink size={16} />
@@ -271,11 +277,16 @@ export default function EventListTemplate({
           setGeneratedToken(null);
           setLinkCopied(false);
         }}
+        packages={packages}
+        addOns={addOns}
         token={generatedToken}
+        isGenerating={isGenerating}
+        onGenerate={handleGenerateLink}
         onCopyLink={handleCopyLink}
         onShareWhatsApp={handleShareWhatsApp}
         linkCopied={linkCopied}
         labels={dict.bookingLink}
+        cancelLabel={dict.common.cancel}
       />
     </AppLayout>
   );

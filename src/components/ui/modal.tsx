@@ -12,6 +12,7 @@ interface ModalProps {
   onClose: () => void;
   title?: string;
   children: ReactNode;
+  footer?: ReactNode;
   className?: string;
 }
 
@@ -20,6 +21,7 @@ export default function Modal({
   onClose,
   title,
   children,
+  footer,
   className = "",
 }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -45,21 +47,21 @@ export default function Modal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto px-4 py-8 sm:items-center">
       {/* Backdrop */}
       <div
         ref={overlayRef}
-        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Panel */}
       <div
-        className={`relative z-10 w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${className}`}
+        className={`relative z-10 my-auto w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${className}`}
       >
-        {/* Header */}
+        {/* Header — sticky so title stays visible while body scrolls */}
         {title && (
-          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+          <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-slate-100 bg-white px-6 py-4">
             <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
             <button
               onClick={onClose}
@@ -70,8 +72,17 @@ export default function Modal({
           </div>
         )}
 
-        {/* Body */}
-        <div className="px-6 py-4">{children}</div>
+        {/* Body — scrollable when content exceeds viewport */}
+        <div className="max-h-[calc(100dvh-12rem)] overflow-y-auto px-6 py-4">
+          {children}
+        </div>
+
+        {/* Footer — sticky action bar, always visible */}
+        {footer && (
+          <div className="sticky bottom-0 flex justify-end gap-3 rounded-b-2xl border-t border-slate-100 bg-white px-6 py-4">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

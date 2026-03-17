@@ -2,10 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 
 /**
- * Audit log service — immutable security event logging.
- * Records all auth-related events for traceability.
+ * Audit action types for security event logging.
  */
-
 export type AuditAction =
   | "LOGIN_SUCCESS"
   | "LOGIN_FAILED"
@@ -44,6 +42,9 @@ async function getRequestContext() {
   }
 }
 
+/**
+ * Create an immutable audit log entry.
+ */
 export async function createAuditLog(params: CreateAuditLogParams) {
   const { ipAddress, userAgent } = await getRequestContext();
 
@@ -55,17 +56,5 @@ export async function createAuditLog(params: CreateAuditLogParams) {
       userAgent,
       metadata: (params.metadata as object) ?? undefined,
     },
-  });
-}
-
-export async function getAuditLogsByUserId(
-  userId: string,
-  options?: { limit?: number; offset?: number },
-) {
-  return prisma.auditLog.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-    take: options?.limit ?? 50,
-    skip: options?.offset ?? 0,
   });
 }

@@ -2,10 +2,10 @@
 
 import { signIn } from "@/lib/auth";
 import { hashSync } from "bcryptjs";
-import { findUserByEmail, createUser } from "@/services/user-service";
-import { createEmailVerificationToken } from "@/services/verification-service";
-import { sendVerificationEmail } from "@/services/email-service";
-import { createAuditLog } from "@/services/audit-service";
+import { findUserByEmail, createUser } from "@/repositories/user";
+import { createEmailVerificationToken } from "@/repositories/auth";
+import { sendVerificationEmail } from "@/lib/email";
+import { createAuditLog } from "@/repositories/audit";
 
 export async function signUpWithCredentials(
   _prevState: { error?: string; success?: string } | undefined,

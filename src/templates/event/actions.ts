@@ -5,6 +5,18 @@
  * TODO: Replace with real Prisma calls when backend is ready.
  */
 
+export interface BookingLinkConfigPayload {
+  clientName: string;
+  packageId: string | null;
+  variationId: string | null;
+  selectedAddOnIds: string[];
+  customPackage: {
+    name: string;
+    flatPrice: string;
+    variations: { label: string; description: string; price: string }[];
+  } | null;
+}
+
 export async function createEventAction(
   _formData: FormData,
 ): Promise<{ success?: boolean; error?: string }> {
@@ -18,7 +30,9 @@ export async function updateEventAction(
   return { success: true };
 }
 
-export async function generateBookingLinkAction(): Promise<{
+export async function generateBookingLinkAction(
+  _config?: BookingLinkConfigPayload,
+): Promise<{
   success?: boolean;
   token?: string;
   error?: string;

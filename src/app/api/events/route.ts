@@ -1,0 +1,80 @@
+import { NextRequest } from "next/server";
+import {
+  successResponse,
+  createdResponse,
+  validationError,
+  internalError,
+  requireAuth,
+  validate,
+} from "@/lib/api";
+import { findEventsByVendor, createEvent } from "@/repositories/event";
+import { createEventSchema } from "@/lib/validations/event";
+
+/**
+ * GET /api/events
+ * List all events for the authenticated vendor.
+ */
+export async function GET() {
+  const { userId, error } = await requireAuth();
+  if (error) return error;
+
+  try {
+    const events = await findEventsByVendor(userId);
+
+    return successResponse(
+      events.map((e) => ({
+        id: e.id,
+        vendorId: e.vendorId,
+        clientName: e.clientName,
+        clientPhone: e.clientPhone,
+        clientEmail: e.clientEmail,
+        eventType: e.eventType,
+        eventDate: e.eventDate.toISOString(),
+        eventTime: e.eventTime,
+        eventLocation: e.eventLocation,
+        packageName: e.package?.name ?? null,
+        amount: e.amount ? String(e.amount) : null,
+        dpAmount: e.dpAmount ? String(e.dpAmount) : null,
+        eventStatus: e.eventStatus,
+        paymentStatus: e.paymentStatus,
+        notes: e.notes,
+        bookingToken: e.bookingLink?.token ?? null,
+        createdAt: e.createdAt.toISOString(),
+        updatedAt: e.updatedAt.toISOString(),
+      })),
+    );
+  } catch (err) {
+    console.error("[API] GET /api/events error:", err);
+    return internalError();
+  }
+}
+
+/**
+ * POST /api/events
+ * Create a new event for the authenticated vendor.
+ */
+export async function POST(request: NextRequest) {
+  const { userId, error } = await requireAuth();
+  if (error) return error;
+
+  try {
+    const body = await request.json();
+    const result = validate(createEventSchema, body);
+    if (result.error)
+      return validationError("Validation failed.", result.error);
+
+    const event = await createEvent(userId, result.data);
+
+    return createdResponse({
+      ...event,
+      eventDate: event.eventDate.toISOString(),
+      amount: event.amount ? String(event.amount) : null,
+      dpAmount: event.dpAmount ? String(event.dpAmount) : null,
+      createdAt: event.createdAt.toISOString(),
+      updatedAt: event.updatedAt.toISOString(),
+    });
+  } catch (err) {
+    console.error("[API] POST /api/events error:", err);
+    return internalError();
+  }
+}

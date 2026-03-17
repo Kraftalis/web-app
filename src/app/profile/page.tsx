@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { findUserById } from "@/services/user-service";
+import { findUserById } from "@/repositories/user";
 import { redirect } from "next/navigation";
 import ProfileTemplate from "@/templates/profile/profile-template";
 

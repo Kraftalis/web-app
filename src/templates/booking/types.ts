@@ -2,20 +2,20 @@ import type { BadgeVariant } from "@/components/ui";
 
 // ─── Vendor package / add-on (for booking form) ────────────
 
-export interface VendorPackageItem {
+export interface VendorPackageVariation {
   id: string;
-  name: string;
+  label: string;
+  description: string | null;
+  price: string;
 }
 
 export interface VendorPackage {
   id: string;
   name: string;
   description: string | null;
-  price: string;
+  price: string; // base / fallback price
   currency: string;
-  duration: string | null;
-  capacity: string | null;
-  items: VendorPackageItem[];
+  items: VendorPackageVariation[]; // price variations (empty = flat price)
 }
 
 export interface VendorAddOn {
@@ -28,10 +28,11 @@ export interface VendorAddOn {
 
 // ─── Booking portal data ────────────────────────────────────
 
-export interface PortalPackageItem {
+export interface PortalPackageVariation {
   id: string;
-  name: string;
+  label: string;
   description: string | null;
+  price: string;
 }
 
 export interface PortalPackage {
@@ -40,7 +41,7 @@ export interface PortalPackage {
   description: string | null;
   price: string;
   currency: string;
-  items: PortalPackageItem[];
+  items: PortalPackageVariation[];
 }
 
 export interface PortalAddOn {

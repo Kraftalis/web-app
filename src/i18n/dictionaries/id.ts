@@ -291,7 +291,27 @@ const id: Dictionary = {
 
   // ─── Generate Booking Link Modal ─────────────────────────
   bookingLink: {
-    modalTitle: "Link Booking Dibuat",
+    // Step 1 — configure
+    configTitle: "Buat Link Booking",
+    configDesc:
+      "Opsional: isi nama klien dan pilih paket & add-on yang akan ditawarkan sebelum link dibagikan.",
+    clientNameLabel: "Nama Klien (opsional)",
+    clientNamePlaceholder: "cth. Budi Santoso",
+    selectPackageLabel: "Paket (opsional)",
+    noPackageOption: "Biarkan klien memilih dari semua paket",
+    selectVariationLabel: "Variasi",
+    customPackageLabel: "Atau buat paket khusus untuk klien ini",
+    customPackageName: "Nama Paket Khusus",
+    customPackageNamePlaceholder: "cth. Custom Wedding Shoot",
+    customVariationsTitle: "Variasi / Tingkatan Harga",
+    customVariationHint: "Biarkan kosong untuk menggunakan harga tunggal.",
+    customFlatPrice: "Harga Satuan",
+    addCustomVariation: "Tambah Variasi",
+    selectAddOnsLabel: "Add-on yang ditawarkan (opsional)",
+    generateButton: "Buat Link",
+    generating: "Membuat…",
+    // Step 2 — result
+    modalTitle: "Link Booking Siap",
     modalDesc:
       "Bagikan link ini ke klien agar mereka bisa mengisi detail booking.",
     copyLink: "Salin Link",
@@ -441,6 +461,8 @@ const id: Dictionary = {
     packageIncludes: "Termasuk:",
     selectedLabel: "Dipilih",
     selectLabel: "Pilih",
+    selectVariation: "Pilih variasi",
+    variationRequired: "Silakan pilih variasi untuk melanjutkan.",
     addOnsOptional: "Tambahan (opsional)",
     addOnsOptionalDesc: "Tambahkan layanan ekstra untuk paket Anda.",
     perItem: "/ item",
@@ -477,20 +499,26 @@ const id: Dictionary = {
     noPackages: "Belum ada paket",
     noPackagesDesc: "Buat paket pertama Anda untuk ditampilkan ke klien.",
     packageName: "Nama Paket",
-    packageNamePlaceholder: "cth. Paket Gold, Paket Wisuda Group",
+    packageNamePlaceholder: "cth. Wisuda Photoshoot, Paket Gold",
     packageDescription: "Deskripsi (opsional)",
-    packageDescPlaceholder: "Deskripsi singkat isi paket",
-    price: "Harga",
-    currency: "Mata Uang",
-    duration: "Durasi (opsional)",
-    durationPlaceholder: "cth. 2.5 jam, Seharian",
-    capacity: "Kapasitas (opsional)",
-    capacityPlaceholder: "cth. 5-6 orang, 100 pax",
-    packageItems: "Isi Paket (satu per baris)",
-    packageItemsHint: "Masukkan setiap item di baris baru",
-    packageItemsPlaceholder:
-      "Unlimited photoshoot\nDapat semua file\nFree edit\nFile via GDrive",
+    packageDescPlaceholder: "Deskripsi singkat yang ditampilkan ke klien",
     activePackage: "Aktif (terlihat oleh klien)",
+
+    // Variations
+    variationsTitle: "Variasi Harga",
+    variationsHint:
+      "Tambahkan variasi jika paket ini memiliki beberapa pilihan harga (cth. berdasarkan jumlah orang, durasi, atau lingkup pekerjaan). Biarkan kosong untuk harga satuan.",
+    addVariation: "Tambah Variasi",
+    variationLabel: "Nama Variasi",
+    variationLabelPlaceholder: "cth. 2 Orang – 1 Jam, Pengantin, 100 Pax",
+    variationDescription: "Detail (opsional)",
+    variationDescPlaceholder:
+      "cth. termasuk edit tak terbatas, soft file via GDrive",
+    variationPrice: "Harga",
+    noVariations: "Harga tunggal",
+    flatPrice: "Harga Satuan",
+    flatPriceHint: "Digunakan jika tidak ada variasi harga.",
+    currency: "Mata Uang",
 
     // Add-ons section
     addOnsTitle: "Tambahan",
@@ -502,6 +530,7 @@ const id: Dictionary = {
     addOnNamePlaceholder: "cth. Tambahan 1 jam, Photo booth",
     addOnDescription: "Deskripsi (opsional)",
     addOnDescPlaceholder: "Deskripsi singkat",
+    addOnPrice: "Harga",
     activeAddOn: "Aktif (tersedia untuk booking)",
 
     // Table columns
@@ -515,6 +544,7 @@ const id: Dictionary = {
     active: "Aktif",
     archived: "Diarsipkan",
     confirmDelete: "Konfirmasi?",
+    startingFrom: "mulai dari",
   },
 
   // ─── Schedule Page ───────────────────────────────────────

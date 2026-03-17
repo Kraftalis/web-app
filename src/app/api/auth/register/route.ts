@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { hashSync } from "bcryptjs";
-import { findUserByEmail, createUser } from "@/services/user-service";
-import { createAuditLog } from "@/services/audit-service";
-import { createEmailVerificationToken } from "@/services/verification-service";
-import { sendVerificationEmail } from "@/services/email-service";
+import { findUserByEmail, createUser } from "@/repositories/user";
+import { createAuditLog } from "@/repositories/audit";
+import { createEmailVerificationToken } from "@/repositories/auth";
+import { sendVerificationEmail } from "@/lib/email";
 
 /**
  * POST /api/auth/register

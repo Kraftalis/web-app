@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { updateUserProfile } from "@/services/user-service";
+import { updateUserProfile } from "@/repositories/user";
 import { revalidatePath } from "next/cache";
 
 /**
