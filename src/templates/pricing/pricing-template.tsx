@@ -8,31 +8,28 @@ import {
   Badge,
   Button,
   Input,
+  Select,
   Textarea,
   Modal,
 } from "@/components/ui";
-import { IconPlus, IconEdit, IconPricing, IconCheck } from "@/components/icons";
+import {
+  IconPlus,
+  IconEdit,
+  IconPricing,
+  IconCheck,
+  IconChevronDown,
+  IconList,
+  IconGrid,
+  IconSearch,
+} from "@/components/icons";
+import PricingControls from "@/templates/pricing/pricing-controls";
+import VariationRow from "@/templates/pricing/variation-row";
 import { useDictionary } from "@/i18n";
+import type { Package, PackageVariation } from "./types";
 
 // ─── Types ──────────────────────────────────────────────────
 
-interface PackageVariation {
-  id: string;
-  label: string;
-  description: string | null;
-  price: string; // Decimal as string
-}
-
-interface Package {
-  id: string;
-  name: string;
-  description: string | null;
-  price: string; // Fallback price when no variations
-  currency: string;
-  isActive: boolean;
-  items: PackageVariation[]; // price variations
-}
-
+// reusing shared types from ./types
 interface AddOn {
   id: string;
   name: string;
@@ -83,83 +80,6 @@ function getDisplayPrice(pkg: Package): { label: string; isRange: boolean } {
   };
 }
 
-// ─── Variation Form Row ──────────────────────────────────────
-
-interface VariationRowProps {
-  variation: { label: string; description: string; price: string };
-  index: number;
-  onChange: (
-    index: number,
-    field: "label" | "description" | "price",
-    value: string,
-  ) => void;
-  onRemove: (index: number) => void;
-  labelPlaceholder: string;
-  descPlaceholder: string;
-}
-
-function VariationRow({
-  variation,
-  index,
-  onChange,
-  onRemove,
-  labelPlaceholder,
-  descPlaceholder,
-}: VariationRowProps) {
-  return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-2">
-      <div className="flex items-start gap-2">
-        <div className="flex-1 space-y-2">
-          <div className="grid gap-2 sm:grid-cols-2">
-            <input
-              type="text"
-              value={variation.label}
-              onChange={(e) => onChange(index, "label", e.target.value)}
-              placeholder={labelPlaceholder}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-            />
-            <input
-              type="number"
-              value={variation.price}
-              onChange={(e) => onChange(index, "price", e.target.value)}
-              placeholder="0"
-              min="0"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-            />
-          </div>
-          <input
-            type="text"
-            value={variation.description}
-            onChange={(e) => onChange(index, "description", e.target.value)}
-            placeholder={descPlaceholder}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-          />
-        </div>
-        <button
-          type="button"
-          onClick={() => onRemove(index)}
-          className="mt-1 rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-          aria-label="Remove variation"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width={16}
-            height={16}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M18 6 6 18M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  );
-}
-
 // ─── Component ──────────────────────────────────────────────
 
 export default function PricingTemplate({
@@ -172,6 +92,21 @@ export default function PricingTemplate({
 
   const [packages, setPackages] = useState<Package[]>(initialPackages);
   const [addOns, setAddOns] = useState<AddOn[]>(initialAddOns);
+  // List controls
+  const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "price" | "status">("name");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(8);
+  const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
+  // View mode
+  const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+  // Category filters
+  const [category, setCategory] = useState("");
+  const [subcategory, setSubcategory] = useState("");
+
+  const toggleExpanded = (id: string) =>
+    setExpandedIds((prev) => ({ ...prev, [id]: !prev[id] }));
 
   // Package modal state
   const [pkgModalOpen, setPkgModalOpen] = useState(false);
@@ -182,6 +117,8 @@ export default function PricingTemplate({
   const [variations, setVariations] = useState<
     { label: string; description: string; price: string }[]
   >([]);
+  // Inclusions stored as newline-separated text in the modal textarea
+  const [inclusionDraft, setInclusionDraft] = useState("");
 
   // AddOn modal state
   const [addonModalOpen, setAddonModalOpen] = useState(false);
@@ -193,6 +130,7 @@ export default function PricingTemplate({
   const openAddPkg = () => {
     setEditingPkg(null);
     setVariations([]);
+    setInclusionDraft("");
     setPkgModalOpen(true);
   };
 
@@ -205,6 +143,7 @@ export default function PricingTemplate({
         price: v.price,
       })),
     );
+    setInclusionDraft((pkg.inclusions ?? []).join("\n"));
     setPkgModalOpen(true);
   };
 
@@ -233,6 +172,8 @@ export default function PricingTemplate({
   const handleSavePackage = (formData: FormData) => {
     const name = formData.get("name") as string;
     const description = (formData.get("description") as string) || null;
+    const category = (formData.get("category") as string) || "";
+    const subcategory = (formData.get("subcategory") as string) || "";
     const flatPrice = (formData.get("flatPrice") as string) || "0";
     const currency = (formData.get("currency") as string) || "IDR";
     const isActive = formData.get("isActive") === "true";
@@ -267,6 +208,12 @@ export default function PricingTemplate({
                 currency,
                 isActive,
                 items: newItems,
+                inclusions: inclusionDraft
+                  .split("\n")
+                  .map((s) => s.trim())
+                  .filter(Boolean),
+                category,
+                subcategory,
               }
             : p,
         ),
@@ -282,6 +229,12 @@ export default function PricingTemplate({
           currency,
           isActive,
           items: newItems,
+          inclusions: inclusionDraft
+            .split("\n")
+            .map((s) => s.trim())
+            .filter(Boolean),
+          category,
+          subcategory,
         },
       ]);
     }
@@ -345,47 +298,258 @@ export default function PricingTemplate({
     }
   };
 
+  // Filtering / sorting / pagination (previously inside an IIFE)
+  const q = query.trim().toLowerCase();
+  const filtered = packages.filter((p) => {
+    const matchQuery =
+      q === ""
+        ? true
+        : `${p.name} ${p.description ?? ""}`.toLowerCase().includes(q);
+    // simple category/subcategory matching stored in package.description or name for now
+    const matchCategory =
+      category === ""
+        ? true
+        : (p.description ?? "").includes(category) || p.name.includes(category);
+    const matchSub =
+      subcategory === ""
+        ? true
+        : (p.description ?? "").includes(subcategory) ||
+          p.name.includes(subcategory);
+    return matchQuery && matchCategory && matchSub;
+  });
+
+  filtered.sort((a, b) => {
+    if (sortBy === "name") {
+      const cmp = a.name.localeCompare(b.name);
+      return sortDir === "asc" ? cmp : -cmp;
+    }
+    if (sortBy === "price") {
+      const pa =
+        parseFloat(getDisplayPrice(a).label.replace(/[^0-9.-]+/g, "")) || 0;
+      const pb =
+        parseFloat(getDisplayPrice(b).label.replace(/[^0-9.-]+/g, "")) || 0;
+      return sortDir === "asc" ? pa - pb : pb - pa;
+    }
+    if (sortBy === "status") {
+      return Number(b.isActive) - Number(a.isActive);
+    }
+    return 0;
+  });
+
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const start = (currentPage - 1) * pageSize;
+  const pageItems = filtered.slice(start, start + pageSize);
+
   return (
     <AppLayout user={user}>
       <div className="space-y-8">
-        {/* Page header */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{pricing.title}</h1>
-          <p className="mt-1 text-sm text-gray-500">{pricing.subtitle}</p>
+        {/* ── Page Header ────────────────────────────────── */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+              {pricing.packagesTitle}
+            </h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Manage your packages and add-ons
+            </p>
+          </div>
+          <Button size="md" onClick={openAddPkg}>
+            <IconPlus size={16} />
+            {pricing.addPackage}
+          </Button>
         </div>
 
-        {/* ─── Packages Section ─────────────────────────── */}
+        {/* ── Packages Section ───────────────────────────── */}
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">
-              {pricing.packagesTitle}
-            </h2>
-            <Button variant="primary" size="sm" onClick={openAddPkg}>
-              <IconPlus size={16} />
-              <span className="ml-1">{pricing.addPackage}</span>
-            </Button>
+          {/* Filters + Search + View Toggle — single row */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
+            {/* Search */}
+            <div className="relative flex-1 min-w-48">
+              <IconSearch
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10"
+              />
+              <Input
+                type="text"
+                placeholder="Search packages..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="pl-9 w-full"
+              />
+            </div>
+
+            {/* Inline filter selects */}
+            <PricingControls
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              sortDir={sortDir}
+              setSortDir={setSortDir}
+              pageSize={pageSize}
+              setPageSize={setPageSize}
+              category={category}
+              setCategory={setCategory}
+              subcategory={subcategory}
+              setSubcategory={setSubcategory}
+            />
+
+            {/* View toggle */}
+            <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 shrink-0">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
+                  viewMode === "grid"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+                title="Grid view"
+              >
+                <IconGrid size={16} />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
+                  viewMode === "list"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+                title="List view"
+              >
+                <IconList size={16} />
+              </button>
+            </div>
           </div>
 
-          {packages.length === 0 ? (
-            <Card>
-              <CardBody className="py-12 text-center">
-                <IconPricing size={40} className="mx-auto mb-3 text-gray-300" />
-                <p className="text-sm font-medium text-gray-500">
-                  {pricing.noPackages}
-                </p>
-                <p className="mt-1 text-xs text-gray-400">
-                  {pricing.noPackagesDesc}
-                </p>
-              </CardBody>
-            </Card>
-          ) : (
+          {/* ── Grid View ──────────────────────────────── */}
+          {viewMode === "grid" && (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {packages.map((pkg) => {
+              {pageItems.map((pkg) => {
                 const display = getDisplayPrice(pkg);
+                return (
+                  <Card key={pkg.id} className="flex flex-col">
+                    <CardBody className="flex flex-1 flex-col space-y-3">
+                      {/* Header */}
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-semibold text-gray-900 truncate">
+                          {pkg.name}
+                        </h3>
+                        <Badge
+                          variant={pkg.isActive ? "success" : "default"}
+                          className="shrink-0"
+                        >
+                          {pkg.isActive ? pricing.active : pricing.archived}
+                        </Badge>
+                      </div>
+
+                      {/* Description */}
+                      {pkg.description && (
+                        <p className="text-xs text-gray-500 line-clamp-2">
+                          {pkg.description}
+                        </p>
+                      )}
+
+                      {/* Price */}
+                      <div>
+                        {display.isRange && (
+                          <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                            {pricing.startingFrom}
+                          </p>
+                        )}
+                        <p className="text-xl font-bold text-gray-900">
+                          {display.label}
+                        </p>
+                      </div>
+
+                      {/* Variations (compact) */}
+                      {pkg.items.length > 0 && (
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                            {pricing.variationsTitle}
+                          </p>
+                          <div className="flex flex-wrap gap-1">
+                            {pkg.items.map((v) => (
+                              <span
+                                key={v.id}
+                                className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700"
+                              >
+                                {v.label}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Inclusions (compact) */}
+                      {pkg.inclusions && pkg.inclusions.length > 0 && (
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                            {pricing.inclusionsTitle || "Includes"}
+                          </p>
+                          <ul className="space-y-0.5">
+                            {pkg.inclusions.slice(0, 3).map((inc, i) => (
+                              <li
+                                key={i}
+                                className="flex items-center gap-1.5 text-xs text-gray-600"
+                              >
+                                <IconCheck
+                                  size={12}
+                                  className="shrink-0 text-green-500"
+                                />
+                                <span className="truncate">{inc}</span>
+                              </li>
+                            ))}
+                            {pkg.inclusions.length > 3 && (
+                              <li className="text-xs text-gray-400">
+                                +{pkg.inclusions.length - 3} more
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Spacer to push actions to bottom */}
+                      <div className="flex-1" />
+
+                      {/* Actions */}
+                      <div className="flex gap-2 border-t border-gray-100 pt-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => openEditPkg(pkg)}
+                        >
+                          <IconEdit size={14} />
+                          <span className="ml-1">{dict.common.edit}</span>
+                        </Button>
+                        <Button
+                          variant={
+                            deletingPkgId === pkg.id ? "danger" : "outline"
+                          }
+                          size="sm"
+                          onClick={() => handleDeletePackage(pkg.id)}
+                        >
+                          {deletingPkgId === pkg.id
+                            ? pricing.confirmDelete
+                            : dict.common.delete}
+                        </Button>
+                      </div>
+                    </CardBody>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          {/* ── List View ──────────────────────────────── */}
+          {viewMode === "list" && (
+            <div className="space-y-3">
+              {pageItems.map((pkg) => {
+                const display = getDisplayPrice(pkg);
+                const open = !!expandedIds[pkg.id];
                 return (
                   <Card key={pkg.id}>
                     <CardBody className="space-y-3">
-                      {/* Header */}
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <h3 className="font-semibold text-gray-900 truncate">
@@ -397,67 +561,96 @@ export default function PricingTemplate({
                             </p>
                           )}
                         </div>
-                        <Badge
-                          variant={pkg.isActive ? "success" : "default"}
-                          className="shrink-0"
-                        >
-                          {pkg.isActive ? pricing.active : pricing.archived}
-                        </Badge>
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-gray-900">
+                              {display.label}
+                            </p>
+                          </div>
+                          <Badge
+                            variant={pkg.isActive ? "success" : "default"}
+                            className="shrink-0"
+                          >
+                            {pkg.isActive ? pricing.active : pricing.archived}
+                          </Badge>
+                          <button
+                            type="button"
+                            aria-expanded={open}
+                            onClick={() => toggleExpanded(pkg.id)}
+                            className={`p-2 rounded hover:bg-gray-100 transition-transform ${open ? "-rotate-180" : ""}`}
+                          >
+                            <IconChevronDown size={16} />
+                          </button>
+                        </div>
                       </div>
 
-                      {/* Price */}
-                      <div>
-                        {display.isRange && (
-                          <p className="text-xs text-gray-400 mb-0.5">
-                            {pricing.startingFrom}
-                          </p>
-                        )}
-                        <p className="text-lg font-bold text-gray-900">
-                          {display.label}
-                        </p>
-                      </div>
+                      {open && (
+                        <div className="space-y-2">
+                          {pkg.items.length > 0 && (
+                            <div className="space-y-1.5">
+                              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                {pricing.variationsTitle}
+                              </p>
+                              <ul className="space-y-1">
+                                {pkg.items.map((variation) => (
+                                  <li
+                                    key={variation.id}
+                                    className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-2.5 py-1.5"
+                                  >
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                      <IconCheck
+                                        size={12}
+                                        className="shrink-0 text-green-500"
+                                      />
+                                      <div className="min-w-0">
+                                        <p className="text-xs font-medium text-gray-700 truncate">
+                                          {variation.label}
+                                        </p>
+                                        {variation.description && (
+                                          <p className="text-xs text-gray-400 truncate">
+                                            {variation.description}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <span className="text-xs font-semibold text-gray-900 shrink-0">
+                                      {formatCurrency(
+                                        variation.price,
+                                        pkg.currency,
+                                      )}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
 
-                      {/* Variations */}
-                      {pkg.items.length > 0 && (
-                        <div className="space-y-1.5">
-                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                            {pricing.variationsTitle}
-                          </p>
-                          <ul className="space-y-1">
-                            {pkg.items.map((variation) => (
-                              <li
-                                key={variation.id}
-                                className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-2.5 py-1.5"
-                              >
-                                <div className="flex items-center gap-1.5 min-w-0">
-                                  <IconCheck
-                                    size={12}
-                                    className="shrink-0 text-green-500"
-                                  />
-                                  <div className="min-w-0">
-                                    <p className="text-xs font-medium text-gray-700 truncate">
-                                      {variation.label}
-                                    </p>
-                                    {variation.description && (
-                                      <p className="text-xs text-gray-400 truncate">
-                                        {variation.description}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                                <span className="text-xs font-semibold text-gray-900 shrink-0">
-                                  {formatCurrency(
-                                    variation.price,
-                                    pkg.currency,
-                                  )}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
+                          {pkg.inclusions && pkg.inclusions.length > 0 && (
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                {pricing.inclusionsTitle || "Includes"}
+                              </p>
+                              <ul className="mt-1 space-y-1">
+                                {pkg.inclusions.map((inc, i) => (
+                                  <li
+                                    key={i}
+                                    className="flex items-start gap-2"
+                                  >
+                                    <IconCheck
+                                      size={14}
+                                      className="text-green-500 shrink-0 mt-0.5"
+                                    />
+                                    <span className="text-sm text-gray-700">
+                                      {inc}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
                         </div>
                       )}
 
-                      {/* Actions */}
                       <div className="flex gap-2 pt-1">
                         <Button
                           variant="outline"
@@ -485,6 +678,32 @@ export default function PricingTemplate({
               })}
             </div>
           )}
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between py-3">
+            <div className="text-sm text-gray-600">{`Showing ${start + 1}–${Math.min(start + pageSize, total)} of ${total}`}</div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                Prev
+              </Button>
+              <div className="text-sm">
+                {currentPage} / {totalPages}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         </section>
 
         {/* ─── Add-ons Section ──────────────────────────── */}
@@ -703,6 +922,50 @@ export default function PricingTemplate({
           </div>
 
           {/* Flat price — shown when no variations OR as fallback label */}
+          {/* Category / Subcategory */}
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Select
+              label="Category"
+              name="category"
+              defaultValue={editingPkg?.category ?? ""}
+              placeholder="Select category"
+              options={[{ value: "Photography", label: "Photography" }]}
+            />
+            <Select
+              label="Subcategory"
+              name="subcategory"
+              defaultValue={editingPkg?.subcategory ?? ""}
+              placeholder="Select subcategory"
+              options={[
+                { value: "Wedding", label: "Wedding" },
+                { value: "Pre-wedding", label: "Pre-wedding" },
+                { value: "Graduation", label: "Graduation" },
+                { value: "Family", label: "Family" },
+                { value: "Community", label: "Community" },
+                { value: "Maternity", label: "Maternity" },
+              ]}
+            />
+          </div>
+
+          {/* Inclusions: single textarea with newline-separated items */}
+          <div>
+            <p className="text-sm font-medium text-gray-700">
+              {pricing.inclusionsTitle || "Includes"}
+            </p>
+            <p className="mt-0.5 text-xs text-gray-400">
+              Enter each inclusion on a new line.
+            </p>
+            <Textarea
+              name="inclusions"
+              value={inclusionDraft}
+              onChange={(e) => setInclusionDraft(e.target.value)}
+              placeholder={
+                "e.g. 2 photographers\n3 hours coverage\nSoft files via Drive"
+              }
+              rows={4}
+            />
+          </div>
+
           {variations.length === 0 && (
             <div>
               <Input

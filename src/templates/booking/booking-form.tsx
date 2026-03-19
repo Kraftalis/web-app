@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
-import { Button, Input, Card, CardBody } from "@/components/ui";
+import { Button, Input, Select, Card, CardBody } from "@/components/ui";
 import { IconCheck, IconUpload, IconImage } from "@/components/icons";
 import type { VendorPackage, VendorAddOn } from "./types";
 import { formatCurrency } from "./types";
@@ -703,24 +703,13 @@ function EventInfoStep({
       <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
         {labels.eventInfoTitle}
       </h3>
-      <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">
-          {labels.eventType} <span className="text-red-500">*</span>
-        </label>
-        <select
-          value={eventType}
-          onChange={(e) => setEventType(e.target.value)}
-          required
-          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-        >
-          <option value="">{labels.selectEventType}</option>
-          {eventTypes.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
-          ))}
-        </select>
-      </div>
+      <Select
+        label={labels.eventType}
+        value={eventType}
+        onChange={(e) => setEventType(e.target.value)}
+        placeholder={labels.selectEventType}
+        options={eventTypes}
+      />
       <Input
         label={labels.eventDate}
         type="date"

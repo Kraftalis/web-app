@@ -1,3 +1,21 @@
+export interface BookingLinkConfig {
+  clientName: string;
+  location: string;
+  packageId: string | null;
+  variationId: string | null;
+  selectedAddOnIds: string[];
+  customPackage: {
+    name: string;
+    flatPrice: string;
+    variations: { label: string; description: string; price: string }[];
+  } | null;
+  customAddOns: {
+    name: string;
+    description: string;
+    price: string;
+  }[];
+}
+
 import type { BadgeVariant } from "@/components/ui";
 
 // ─── Event Item (list view) ─────────────────────────────────

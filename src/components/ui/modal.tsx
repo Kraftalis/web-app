@@ -51,21 +51,21 @@ export default function Modal({
       {/* Backdrop */}
       <div
         ref={overlayRef}
-        className="fixed inset-0 bg-black/30 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/40"
         onClick={onClose}
       />
 
       {/* Panel */}
       <div
-        className={`relative z-10 my-auto w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${className}`}
+        className={`relative z-10 my-auto w-full max-w-lg rounded-lg border border-gray-200 bg-white shadow-xl animate-in fade-in zoom-in-95 duration-150 ${className}`}
       >
         {/* Header — sticky so title stays visible while body scrolls */}
         {title && (
-          <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-slate-100 bg-white px-6 py-4">
-            <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+          <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-lg border-b border-gray-200 bg-white px-6 py-4">
+            <h2 className="text-lg font-medium text-gray-900">{title}</h2>
             <button
               onClick={onClose}
-              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              className="rounded-full p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
             >
               <IconX size={18} />
             </button>
@@ -79,7 +79,7 @@ export default function Modal({
 
         {/* Footer — sticky action bar, always visible */}
         {footer && (
-          <div className="sticky bottom-0 flex justify-end gap-3 rounded-b-2xl border-t border-slate-100 bg-white px-6 py-4">
+          <div className="sticky bottom-0 flex justify-end gap-3 rounded-b-lg border-t border-gray-200 bg-white px-6 py-4">
             {footer}
           </div>
         )}

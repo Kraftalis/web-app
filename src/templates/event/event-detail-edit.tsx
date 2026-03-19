@@ -1,6 +1,14 @@
 "use client";
 
-import { Card, CardHeader, CardBody, Button, Input } from "@/components/ui";
+import {
+  Card,
+  CardHeader,
+  CardBody,
+  Button,
+  Input,
+  Select,
+  Textarea,
+} from "@/components/ui";
 import type { EventDetail } from "./types";
 
 // ─── Edit Mode ──────────────────────────────────────────────
@@ -87,26 +95,13 @@ export function EventDetailEdit({
           </h2>
         </CardHeader>
         <CardBody className="space-y-4">
-          <div>
-            <label
-              htmlFor="eventType"
-              className="mb-1.5 block text-sm font-medium text-gray-700"
-            >
-              {labels.eventType}
-            </label>
-            <select
-              id="eventType"
-              name="eventType"
-              defaultValue={event.eventType}
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            >
-              {eventTypes.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            id="eventType"
+            name="eventType"
+            label={labels.eventType}
+            defaultValue={event.eventType}
+            options={eventTypes}
+          />
           <div className="grid grid-cols-2 gap-4">
             <Input
               id="eventDate"
@@ -141,46 +136,20 @@ export function EventDetailEdit({
           </h2>
         </CardHeader>
         <CardBody className="space-y-4">
-          <div>
-            <label
-              htmlFor="eventStatus"
-              className="mb-1.5 block text-sm font-medium text-gray-700"
-            >
-              {labels.updateStatus}
-            </label>
-            <select
-              id="eventStatus"
-              name="eventStatus"
-              defaultValue={event.eventStatus}
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            >
-              {eventStatusOptions.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label
-              htmlFor="paymentStatus"
-              className="mb-1.5 block text-sm font-medium text-gray-700"
-            >
-              {labels.paymentStatus}
-            </label>
-            <select
-              id="paymentStatus"
-              name="paymentStatus"
-              defaultValue={event.paymentStatus}
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            >
-              {paymentStatusOptions.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            id="eventStatus"
+            name="eventStatus"
+            label={labels.updateStatus}
+            defaultValue={event.eventStatus}
+            options={eventStatusOptions}
+          />
+          <Select
+            id="paymentStatus"
+            name="paymentStatus"
+            label={labels.paymentStatus}
+            defaultValue={event.paymentStatus}
+            options={paymentStatusOptions}
+          />
         </CardBody>
       </Card>
 
@@ -217,13 +186,7 @@ export function EventDetailEdit({
           </h2>
         </CardHeader>
         <CardBody>
-          <textarea
-            id="notes"
-            name="notes"
-            rows={4}
-            defaultValue={event.notes ?? ""}
-            className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-          />
+          <Textarea id="notes" name="notes" defaultValue={event.notes ?? ""} />
         </CardBody>
       </Card>
 

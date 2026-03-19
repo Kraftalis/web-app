@@ -8,6 +8,7 @@ import {
   Badge,
   Button,
   Input,
+  Select,
 } from "@/components/ui";
 import {
   IconUpload,
@@ -334,20 +335,16 @@ export function AddPaymentForm({
         placeholder="0"
       />
 
-      <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">
-          {bookingLabels.paymentType}
-        </label>
-        <select
-          value={paymentType}
-          onChange={(e) => setPaymentType(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-        >
-          <option value="DOWN_PAYMENT">{bookingLabels.dpPayment}</option>
-          <option value="INSTALLMENT">{bookingLabels.installment}</option>
-          <option value="FULL_PAYMENT">{bookingLabels.fullPayment}</option>
-        </select>
-      </div>
+      <Select
+        label={bookingLabels.paymentType}
+        value={paymentType}
+        onChange={(e) => setPaymentType(e.target.value)}
+        options={[
+          { value: "DOWN_PAYMENT", label: bookingLabels.dpPayment },
+          { value: "INSTALLMENT", label: bookingLabels.installment },
+          { value: "FULL_PAYMENT", label: bookingLabels.fullPayment },
+        ]}
+      />
 
       <Input
         label={bookingLabels.paymentNote}

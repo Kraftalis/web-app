@@ -14,9 +14,7 @@ interface CardProps {
 
 export function Card({ children, className = "" }: CardProps) {
   return (
-    <div
-      className={`rounded-2xl border border-slate-200 bg-white shadow-sm ${className}`}
-    >
+    <div className={`rounded-lg border border-gray-200 bg-white ${className}`}>
       {children}
     </div>
   );
@@ -40,7 +38,7 @@ export function CardHeader({
   if (children) {
     return (
       <div
-        className={`flex items-center justify-between border-b border-slate-100 px-6 py-4 ${className}`}
+        className={`flex items-center justify-between border-b border-gray-200 px-5 py-4 ${className}`}
       >
         {children}
       </div>
@@ -49,15 +47,13 @@ export function CardHeader({
 
   return (
     <div
-      className={`flex items-center justify-between border-b border-slate-100 px-6 py-4 ${className}`}
+      className={`flex items-center justify-between border-b border-gray-200 px-5 py-4 ${className}`}
     >
       <div>
         {title && (
-          <h3 className="text-base font-semibold text-slate-900">{title}</h3>
+          <h3 className="text-base font-semibold text-gray-900">{title}</h3>
         )}
-        {subtitle && (
-          <p className="mt-0.5 text-xs text-slate-400">{subtitle}</p>
-        )}
+        {subtitle && <p className="mt-0.5 text-xs text-gray-400">{subtitle}</p>}
       </div>
       {action && <div className="flex items-center gap-2">{action}</div>}
     </div>

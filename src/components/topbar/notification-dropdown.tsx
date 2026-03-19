@@ -73,7 +73,7 @@ export default function NotificationDropdown() {
 
   const typeColors: Record<Notification["type"], string> = {
     info: "bg-blue-500",
-    success: "bg-emerald-500",
+    success: "bg-green-500",
     warning: "bg-amber-500",
   };
 
@@ -82,7 +82,7 @@ export default function NotificationDropdown() {
       {/* Bell Button */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="relative rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+        className="relative rounded-lg p-2 text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors"
         aria-label={dict.notifications.title}
       >
         <IconBell size={20} />
@@ -95,10 +95,10 @@ export default function NotificationDropdown() {
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-slate-200 bg-white shadow-xl animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className="absolute right-0 top-full mt-2 w-80 rounded-lg border border-gray-200 bg-white shadow-xl animate-in fade-in slide-in-from-top-1 duration-150">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-            <h3 className="text-sm font-semibold text-slate-900">
+          <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+            <h3 className="text-sm font-semibold text-gray-900">
               {dict.notifications.title}
             </h3>
             {unreadCount > 0 && (
@@ -115,11 +115,11 @@ export default function NotificationDropdown() {
           <div className="max-h-72 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="px-4 py-8 text-center">
-                <IconBell size={24} className="mx-auto mb-2 text-slate-300" />
-                <p className="text-sm text-slate-500">
+                <IconBell size={24} className="mx-auto mb-2 text-gray-300" />
+                <p className="text-sm text-gray-500">
                   {dict.notifications.noNotifications}
                 </p>
-                <p className="mt-0.5 text-xs text-slate-400">
+                <p className="mt-0.5 text-xs text-gray-400">
                   {dict.notifications.allCaughtUp}
                 </p>
               </div>
@@ -128,7 +128,7 @@ export default function NotificationDropdown() {
                 {notifications.map((n) => (
                   <li
                     key={n.id}
-                    className={`group flex items-start gap-3 px-4 py-3 transition-colors hover:bg-slate-50 ${
+                    className={`group flex items-start gap-3 px-4 py-3 transition-colors hover:bg-gray-50 ${
                       !n.read ? "bg-blue-50/40" : ""
                     }`}
                   >
@@ -137,22 +137,20 @@ export default function NotificationDropdown() {
                       className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${typeColors[n.type]}`}
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-slate-900">
+                      <p className="text-sm font-medium text-gray-900">
                         {n.title}
                       </p>
-                      <p className="mt-0.5 text-xs text-slate-500 line-clamp-2">
+                      <p className="mt-0.5 text-xs text-gray-500 line-clamp-2">
                         {n.message}
                       </p>
-                      <p className="mt-1 text-[11px] text-slate-400">
-                        {n.time}
-                      </p>
+                      <p className="mt-1 text-[11px] text-gray-400">{n.time}</p>
                     </div>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         dismissNotification(n.id);
                       }}
-                      className="mt-0.5 hidden rounded p-0.5 text-slate-400 hover:text-slate-600 group-hover:block"
+                      className="mt-0.5 hidden rounded p-0.5 text-gray-400 hover:text-gray-600 group-hover:block"
                       aria-label={dict.common.close}
                     >
                       <IconX size={14} />
@@ -165,7 +163,7 @@ export default function NotificationDropdown() {
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="border-t border-slate-100 px-4 py-2.5 text-center">
+            <div className="border-t border-gray-200 px-4 py-2.5 text-center">
               <button className="text-xs font-medium text-blue-600 hover:text-blue-700">
                 {dict.notifications.viewAll}
               </button>

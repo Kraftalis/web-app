@@ -505,6 +505,7 @@ const en = {
 
     // Variations
     variationsTitle: "Price Variations",
+    inclusionsTitle: "Includes",
     variationsHint:
       "Add variations if this package has different pricing tiers (e.g. by pax, duration, scope). Leave empty to use a single flat price.",
     addVariation: "Add Variation",

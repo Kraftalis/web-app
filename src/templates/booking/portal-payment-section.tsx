@@ -8,6 +8,7 @@ import {
   Badge,
   Button,
   Input,
+  Select,
 } from "@/components/ui";
 import {
   IconDollar,
@@ -274,20 +275,16 @@ export function PortalUploadPayment({
             placeholder="0"
           />
 
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              {labels.paymentType}
-            </label>
-            <select
-              value={paymentType}
-              onChange={(e) => setPaymentType(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-            >
-              <option value="DOWN_PAYMENT">{labels.dpPayment}</option>
-              <option value="INSTALLMENT">{labels.installment}</option>
-              <option value="FULL_PAYMENT">{labels.fullPayment}</option>
-            </select>
-          </div>
+          <Select
+            label={labels.paymentType}
+            value={paymentType}
+            onChange={(e) => setPaymentType(e.target.value)}
+            options={[
+              { value: "DOWN_PAYMENT", label: labels.dpPayment },
+              { value: "INSTALLMENT", label: labels.installment },
+              { value: "FULL_PAYMENT", label: labels.fullPayment },
+            ]}
+          />
 
           <Input
             label={labels.paymentNote}

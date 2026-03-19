@@ -7,6 +7,7 @@
 
 export interface BookingLinkConfigPayload {
   clientName: string;
+  location: string;
   packageId: string | null;
   variationId: string | null;
   selectedAddOnIds: string[];
@@ -15,6 +16,11 @@ export interface BookingLinkConfigPayload {
     flatPrice: string;
     variations: { label: string; description: string; price: string }[];
   } | null;
+  customAddOns: {
+    name: string;
+    description: string;
+    price: string;
+  }[];
 }
 
 export async function createEventAction(

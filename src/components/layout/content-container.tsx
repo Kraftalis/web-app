@@ -17,9 +17,7 @@ export default function ContentContainer({
   className = "",
 }: ContentContainerProps) {
   return (
-    <main
-      className={`flex-1 overflow-y-auto bg-slate-50 p-4 sm:p-6 ${className}`}
-    >
+    <main className={`flex-1 overflow-y-auto bg-white p-4 sm:p-6 ${className}`}>
       {children}
     </main>
   );

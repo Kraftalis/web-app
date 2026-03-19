@@ -43,7 +43,7 @@ export default function LanguageSwitcher() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50"
+        className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
         aria-label="Switch language"
       >
         <span>{localeFlags[locale]}</span>
@@ -51,15 +51,15 @@ export default function LanguageSwitcher() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-44 rounded-lg border border-slate-200 bg-white shadow-lg">
+        <div className="absolute right-0 top-full mt-1.5 w-44 rounded-lg border border-gray-200 bg-white shadow-lg">
           {locales.map((l) => (
             <button
               key={l}
               onClick={() => switchLocale(l)}
-              className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 first:rounded-t-lg last:rounded-b-lg ${
+              className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
                 l === locale
                   ? "bg-blue-50 font-medium text-blue-700"
-                  : "text-slate-700"
+                  : "text-gray-700"
               }`}
             >
               <span>{localeFlags[l]}</span>

@@ -108,10 +108,10 @@ export default function ProfileTemplate({ user }: ProfileTemplateProps) {
     <AppLayout user={topbarUser} title={dict.profile.title}>
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
           {dict.profile.title}
         </h1>
-        <p className="mt-1 text-sm text-slate-500">{dict.profile.subtitle}</p>
+        <p className="mt-1 text-sm text-gray-500">{dict.profile.subtitle}</p>
       </div>
 
       {/* Status Message */}
@@ -119,7 +119,7 @@ export default function ProfileTemplate({ user }: ProfileTemplateProps) {
         <div
           className={`mb-6 flex items-center gap-2 rounded-lg px-4 py-3 text-sm ${
             message.type === "success"
-              ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+              ? "border border-green-200 bg-green-50 text-green-700"
               : "border border-red-200 bg-red-50 text-red-700"
           }`}
         >
@@ -255,7 +255,7 @@ export default function ProfileTemplate({ user }: ProfileTemplateProps) {
                     value={user.email || "—"}
                     extra={
                       user.emailVerified ? (
-                        <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
+                        <span className="inline-flex items-center gap-1 text-xs text-green-600">
                           <IconCheck size={12} />
                           {dict.profile.verified}
                         </span>

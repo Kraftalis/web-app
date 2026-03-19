@@ -506,6 +506,7 @@ const id: Dictionary = {
 
     // Variations
     variationsTitle: "Variasi Harga",
+    inclusionsTitle: "Termasuk",
     variationsHint:
       "Tambahkan variasi jika paket ini memiliki beberapa pilihan harga (cth. berdasarkan jumlah orang, durasi, atau lingkup pekerjaan). Biarkan kosong untuk harga satuan.",
     addVariation: "Tambah Variasi",

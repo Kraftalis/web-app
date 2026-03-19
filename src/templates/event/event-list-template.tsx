@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layout";
-import { Button } from "@/components/ui";
+import { Button, Input, Select } from "@/components/ui";
 import {
   IconPlus,
   IconLink,
@@ -143,10 +143,10 @@ export default function EventListTemplate({
       {/* Page Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
             {dict.event.title}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">{dict.event.subtitle}</p>
+          <p className="mt-1 text-sm text-gray-500">{dict.event.subtitle}</p>
         </div>
         <div className="flex items-center gap-3">
           <Button
@@ -170,49 +170,52 @@ export default function EventListTemplate({
         <div className="relative flex-1">
           <IconSearch
             size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10"
           />
-          <input
+          <Input
             type="text"
             placeholder={dict.event.searchPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="pl-9"
           />
         </div>
-        <select
+        <Select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-        >
-          <option value="">{dict.event.allStatuses}</option>
-          <option value="INQUIRY">{dict.event.statusInquiry}</option>
-          <option value="WAITING_PAYMENT">
-            {dict.event.statusWaitingPayment}
-          </option>
-          <option value="CONFIRMED">{dict.event.statusConfirmed}</option>
-          <option value="ONGOING">{dict.event.statusOngoing}</option>
-          <option value="COMPLETED">{dict.event.statusCompleted}</option>
-        </select>
-        <select
+          options={[
+            { value: "", label: dict.event.allStatuses },
+            { value: "INQUIRY", label: dict.event.statusInquiry },
+            {
+              value: "WAITING_PAYMENT",
+              label: dict.event.statusWaitingPayment,
+            },
+            { value: "CONFIRMED", label: dict.event.statusConfirmed },
+            { value: "ONGOING", label: dict.event.statusOngoing },
+            { value: "COMPLETED", label: dict.event.statusCompleted },
+          ]}
+          className="w-auto"
+        />
+        <Select
           value={paymentFilter}
           onChange={(e) => setPaymentFilter(e.target.value)}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-        >
-          <option value="">{dict.event.allPayments}</option>
-          <option value="UNPAID">{dict.event.paymentUnpaid}</option>
-          <option value="DP_PAID">{dict.event.paymentDpPaid}</option>
-          <option value="PAID">{dict.event.paymentPaid}</option>
-        </select>
+          options={[
+            { value: "", label: dict.event.allPayments },
+            { value: "UNPAID", label: dict.event.paymentUnpaid },
+            { value: "DP_PAID", label: dict.event.paymentDpPaid },
+            { value: "PAID", label: dict.event.paymentPaid },
+          ]}
+          className="w-auto"
+        />
 
         {/* View toggle */}
-        <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
+        <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1">
           <button
             onClick={() => setViewMode("list")}
             className={`rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
               viewMode === "list"
                 ? "bg-blue-600 text-white"
-                : "text-slate-600 hover:bg-slate-100"
+                : "text-gray-600 hover:bg-gray-100"
             }`}
             title={dict.event.listView}
           >
@@ -223,7 +226,7 @@ export default function EventListTemplate({
             className={`rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
               viewMode === "kanban"
                 ? "bg-blue-600 text-white"
-                : "text-slate-600 hover:bg-slate-100"
+                : "text-gray-600 hover:bg-gray-100"
             }`}
             title={dict.event.kanbanView}
           >

@@ -63,14 +63,14 @@ export default function SearchButton() {
       {/* Trigger Button */}
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-400 transition-colors hover:bg-slate-100"
+        className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-400 transition-colors hover:bg-gray-100"
         aria-label={dict.common.search}
       >
         <IconSearch size={16} />
         <span className="hidden sm:inline">
           {dict.topbar.searchPlaceholder}
         </span>
-        <kbd className="ml-2 hidden rounded bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-400 shadow-sm ring-1 ring-slate-200 sm:inline">
+        <kbd className="ml-2 hidden rounded bg-white px-1.5 py-0.5 text-[10px] font-medium text-gray-400 shadow-sm ring-1 ring-gray-200 sm:inline">
           ⌘K
         </kbd>
       </button>
@@ -79,33 +79,33 @@ export default function SearchButton() {
       {open && (
         <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]">
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/30" />
 
           {/* Search Panel */}
           <div
             ref={overlayRef}
-            className="relative z-10 w-full max-w-lg rounded-xl border border-slate-200 bg-white shadow-2xl"
+            className="relative z-10 w-full max-w-lg rounded-lg border border-gray-200 bg-white shadow-xl"
           >
             {/* Search Input */}
-            <div className="flex items-center gap-3 border-b border-slate-100 px-4 py-3">
-              <IconSearch size={18} className="text-slate-400" />
+            <div className="flex items-center gap-3 border-b border-gray-200 px-4 py-3">
+              <IconSearch size={18} className="text-gray-400" />
               <input
                 ref={inputRef}
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={dict.topbar.searchPlaceholderLong}
-                className="flex-1 bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
               />
               {query && (
                 <button
                   onClick={() => setQuery("")}
-                  className="rounded p-0.5 text-slate-400 hover:text-slate-600"
+                  className="rounded p-0.5 text-gray-400 hover:text-gray-600"
                 >
                   <IconX size={14} />
                 </button>
               )}
-              <kbd className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
+              <kbd className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-400">
                 ESC
               </kbd>
             </div>
@@ -114,16 +114,16 @@ export default function SearchButton() {
             <div className="max-h-72 overflow-y-auto px-2 py-2">
               {!query ? (
                 <div className="px-3 py-8 text-center">
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-gray-400">
                     {dict.topbar.startTyping}
                   </p>
                 </div>
               ) : (
                 <div className="px-3 py-8 text-center">
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-gray-500">
                     {dict.topbar.noResults} &ldquo;{query}&rdquo;
                   </p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-gray-400">
                     {dict.topbar.tryDifferent}
                   </p>
                 </div>
@@ -131,16 +131,16 @@ export default function SearchButton() {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2">
-              <div className="flex items-center gap-3 text-[11px] text-slate-400">
+            <div className="flex items-center justify-between border-t border-gray-200 px-4 py-2">
+              <div className="flex items-center gap-3 text-[11px] text-gray-400">
                 <span>
-                  <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono text-[10px]">
+                  <kbd className="rounded bg-gray-100 px-1 py-0.5 font-mono text-[10px]">
                     ↑↓
                   </kbd>{" "}
                   {dict.topbar.navigate}
                 </span>
                 <span>
-                  <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono text-[10px]">
+                  <kbd className="rounded bg-gray-100 px-1 py-0.5 font-mono text-[10px]">
                     ↵
                   </kbd>{" "}
                   {dict.topbar.select}
@@ -148,7 +148,7 @@ export default function SearchButton() {
               </div>
               <button
                 onClick={close}
-                className="text-[11px] text-slate-400 hover:text-slate-600"
+                className="text-[11px] text-gray-400 hover:text-gray-600"
               >
                 {dict.common.close}
               </button>

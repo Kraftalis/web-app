@@ -1,16 +1,19 @@
 "use client";
 
+import Link from "next/link";
 import { AppLayout } from "@/components/layout";
-import { Card, CardHeader, CardBody, Badge, Button } from "@/components/ui";
 import { StatCard } from "@/components/dashboard";
 import {
   IconCalendar,
   IconEvent,
   IconUsers,
   IconDollar,
-  IconRefresh,
-  IconExpand,
+  IconLink,
+  IconPricing,
+  IconPlus,
+  IconChevronRight,
 } from "@/components/icons";
+import { Select } from "@/components/ui";
 import { useDictionary } from "@/i18n";
 
 interface HomeTemplateProps {
@@ -26,25 +29,70 @@ export default function HomeTemplate({ user }: HomeTemplateProps) {
 
   return (
     <AppLayout user={user} title={dict.nav.home}>
-      {/* ─── Page header ─────────────────────────────────────── */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            {dict.dashboard.title}
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            {dict.dashboard.welcomeBack}
-            {user?.name ? `, ${user.name}` : ""}!{" "}
-            {dict.dashboard.hereIsOverview}
-          </p>
-        </div>
-        <Button variant="outline" size="md">
-          {dict.dashboard.generateReports}
-        </Button>
+      {/* ─── Welcome Header ──────────────────────────────── */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+          {dict.dashboard.welcomeBack}
+          {user?.name ? `, ${user.name}` : ""}! 👋
+        </h1>
+        <p className="mt-1 text-sm text-gray-500">
+          {dict.dashboard.hereIsOverview}
+        </p>
       </div>
 
-      {/* ─── Stat Cards ──────────────────────────────────────── */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {/* ─── Quick Actions ───────────────────────────────── */}
+      <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Link
+          href="/event"
+          className="group flex flex-col items-center gap-2 rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-blue-200 hover:shadow-sm"
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-100">
+            <IconLink size={20} />
+          </div>
+          <span className="text-xs font-medium text-gray-700">
+            {dict.event.generateLink}
+          </span>
+        </Link>
+
+        <Link
+          href="/event"
+          className="group flex flex-col items-center gap-2 rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-blue-200 hover:shadow-sm"
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-green-50 text-green-600 transition-colors group-hover:bg-green-100">
+            <IconPlus size={20} />
+          </div>
+          <span className="text-xs font-medium text-gray-700">
+            {dict.event.createEvent}
+          </span>
+        </Link>
+
+        <Link
+          href="/pricing"
+          className="group flex flex-col items-center gap-2 rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-blue-200 hover:shadow-sm"
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-50 text-amber-600 transition-colors group-hover:bg-amber-100">
+            <IconPricing size={20} />
+          </div>
+          <span className="text-xs font-medium text-gray-700">
+            {dict.nav.pricingPackage}
+          </span>
+        </Link>
+
+        <Link
+          href="/schedule"
+          className="group flex flex-col items-center gap-2 rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-blue-200 hover:shadow-sm"
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-600 transition-colors group-hover:bg-red-100">
+            <IconCalendar size={20} />
+          </div>
+          <span className="text-xs font-medium text-gray-700">
+            {dict.nav.schedule}
+          </span>
+        </Link>
+      </div>
+
+      {/* ─── Stat Cards ──────────────────────────────────── */}
+      <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           icon={<IconDollar size={20} />}
           title={dict.dashboard.totalRevenue}
@@ -71,176 +119,134 @@ export default function HomeTemplate({ user }: HomeTemplateProps) {
         />
       </div>
 
-      {/* ─── Charts Row ──────────────────────────────────────── */}
-      <div className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
-        {/* Event Analytics — 2/3 width */}
-        <Card className="xl:col-span-2">
-          <CardHeader
-            title={dict.dashboard.eventAnalytics}
-            action={
-              <div className="flex items-center gap-2">
-                <select className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                  <option>{dict.dashboard.month}</option>
-                  <option>{dict.dashboard.week}</option>
-                  <option>{dict.dashboard.year}</option>
-                </select>
-                <button className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
-                  <IconRefresh size={16} />
-                </button>
+      {/* ─── Two-Column: Upcoming Events + Recent Bookings ── */}
+      <div className="grid gap-6 lg:grid-cols-5">
+        {/* Upcoming Events — 3/5 */}
+        <div className="lg:col-span-3">
+          <div className="rounded-lg border border-gray-200 bg-white">
+            <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+              <h2 className="text-base font-medium text-gray-900">
+                {dict.dashboard.upcomingEvents}
+              </h2>
+              <Link
+                href="/schedule"
+                className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+              >
+                {dict.event.view}
+                <IconChevronRight size={14} />
+              </Link>
+            </div>
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+                <IconCalendar size={24} className="text-gray-400" />
               </div>
-            }
-          />
-          <CardBody className="flex items-center justify-center py-16">
-            <div className="text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
-                <IconEvent size={24} className="text-slate-400" />
-              </div>
-              <p className="text-sm font-medium text-slate-500">
-                {dict.dashboard.noEventData}
+              <p className="text-sm font-medium text-gray-500">
+                {dict.dashboard.noBookings}
               </p>
-              <p className="mt-1 text-xs text-slate-400">
-                {dict.dashboard.createFirstEvent}
+              <p className="mt-1 text-xs text-gray-400">
+                {dict.dashboard.bookingsAppearHere}
               </p>
             </div>
-          </CardBody>
-        </Card>
+          </div>
+        </div>
 
-        {/* Client Distribution — 1/3 width */}
-        <Card>
-          <CardHeader
-            title={dict.dashboard.clientDistribution}
-            action={
-              <button className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
-                <IconExpand size={16} />
-              </button>
-            }
-          />
-          <CardBody className="flex items-center justify-center py-16">
-            <div className="text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
-                <IconUsers size={24} className="text-slate-400" />
-              </div>
-              <p className="text-sm font-medium text-slate-500">
-                {dict.dashboard.noClients}
-              </p>
-              <p className="mt-1 text-xs text-slate-400">
-                {dict.dashboard.clientsAfterBookings}
-              </p>
+        {/* Module Shortcuts — 2/5 */}
+        <div className="lg:col-span-2">
+          <div className="rounded-lg border border-gray-200 bg-white">
+            <div className="border-b border-gray-200 px-5 py-4">
+              <h2 className="text-base font-medium text-gray-900">
+                {dict.dashboard.quickActions}
+              </h2>
             </div>
-          </CardBody>
-        </Card>
+            <div className="divide-y divide-gray-100">
+              <ModuleShortcut
+                icon={<IconEvent size={18} />}
+                label={dict.nav.event}
+                desc={dict.event.subtitle}
+                href="/event"
+                color="text-blue-600 bg-blue-50"
+              />
+              <ModuleShortcut
+                icon={<IconCalendar size={18} />}
+                label={dict.nav.schedule}
+                desc={dict.schedule.subtitle}
+                href="/schedule"
+                color="text-red-600 bg-red-50"
+              />
+              <ModuleShortcut
+                icon={<IconPricing size={18} />}
+                label={dict.nav.pricingPackage}
+                desc={dict.pricing.subtitle}
+                href="/pricing"
+                color="text-amber-600 bg-amber-50"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* ─── Recent Bookings Table ───────────────────────────── */}
-      <Card>
-        <CardHeader
-          title={dict.dashboard.recentBookings}
-          action={
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5">
-                <svg
-                  className="h-4 w-4 text-slate-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                  />
-                </svg>
-                <input
-                  type="text"
-                  placeholder={dict.common.search}
-                  className="w-24 border-0 bg-transparent text-xs text-slate-600 placeholder:text-slate-400 focus:outline-none sm:w-32"
-                />
-              </div>
-              <Button variant="outline" size="sm">
-                {dict.common.filter}
-              </Button>
-              <Button variant="outline" size="sm">
-                {dict.common.sortBy}
-              </Button>
-            </div>
-          }
-        />
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100">
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500">
-                  {dict.dashboard.no}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500">
-                  {dict.dashboard.client}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500">
-                  {dict.dashboard.package}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500">
-                  {dict.dashboard.eventDate}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500">
-                  {dict.dashboard.status}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500">
-                  {dict.dashboard.amount}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500">
-                  {dict.dashboard.actions}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Empty state */}
-              <tr>
-                <td colSpan={7} className="px-6 py-12 text-center">
-                  <div className="flex flex-col items-center">
-                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
-                      <IconCalendar size={24} className="text-slate-400" />
-                    </div>
-                    <p className="text-sm font-medium text-slate-500">
-                      {dict.dashboard.noBookings}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      {dict.dashboard.bookingsAppearHere}
-                    </p>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+      {/* ─── Analytics Placeholder ───────────────────────── */}
+      <div className="mt-6 rounded-lg border border-gray-200 bg-white">
+        <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+          <h2 className="text-base font-medium text-gray-900">
+            {dict.dashboard.eventAnalytics}
+          </h2>
+          <Select
+            value="month"
+            onChange={() => {}}
+            options={[
+              { value: "month", label: dict.dashboard.month },
+              { value: "week", label: dict.dashboard.week },
+              { value: "year", label: dict.dashboard.year },
+            ]}
+            className="w-auto"
+          />
         </div>
-      </Card>
-
-      {/* ─── Sample data preview (for design reference) ──────── */}
-      <Card className="mt-6">
-        <CardHeader title={dict.dashboard.quickActions} />
-        <CardBody>
-          <div className="flex flex-wrap gap-3">
-            <Badge variant="primary" dot>
-              {dict.dashboard.active}
-            </Badge>
-            <Badge variant="success" dot>
-              {dict.dashboard.confirmed}
-            </Badge>
-            <Badge variant="warning" dot>
-              {dict.dashboard.pending}
-            </Badge>
-            <Badge variant="danger" dot>
-              {dict.dashboard.cancelled}
-            </Badge>
-            <Badge variant="info" dot>
-              {dict.dashboard.rescheduled}
-            </Badge>
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+            <IconEvent size={24} className="text-gray-400" />
           </div>
-          <p className="mt-4 text-xs text-slate-400">
-            {dict.dashboard.badgeVariants}
+          <p className="text-sm font-medium text-gray-500">
+            {dict.dashboard.noEventData}
           </p>
-        </CardBody>
-      </Card>
+          <p className="mt-1 text-xs text-gray-400">
+            {dict.dashboard.createFirstEvent}
+          </p>
+        </div>
+      </div>
     </AppLayout>
+  );
+}
+
+/* ─── Module Shortcut Row ──────────────────────────────── */
+function ModuleShortcut({
+  icon,
+  label,
+  desc,
+  href,
+  color,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  desc: string;
+  href: string;
+  color: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-gray-50"
+    >
+      <div
+        className={`flex h-9 w-9 items-center justify-center rounded-lg ${color}`}
+      >
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-gray-900">{label}</p>
+        <p className="truncate text-xs text-gray-400">{desc}</p>
+      </div>
+      <IconChevronRight size={16} className="text-gray-300" />
+    </Link>
   );
 }

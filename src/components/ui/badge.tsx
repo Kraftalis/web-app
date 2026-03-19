@@ -22,7 +22,7 @@ interface BadgeProps {
 }
 
 const variantClasses: Record<BadgeVariant, string> = {
-  default: "bg-slate-100 text-slate-600",
+  default: "bg-gray-100 text-gray-700",
   primary: "bg-blue-50 text-blue-700",
   success: "bg-green-50 text-green-700",
   warning: "bg-amber-50 text-amber-700",
@@ -31,8 +31,8 @@ const variantClasses: Record<BadgeVariant, string> = {
 };
 
 const dotClasses: Record<BadgeVariant, string> = {
-  default: "bg-slate-400",
-  primary: "bg-blue-500",
+  default: "bg-gray-400",
+  primary: "bg-blue-600",
   success: "bg-green-500",
   warning: "bg-amber-500",
   danger: "bg-red-500",
