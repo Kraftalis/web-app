@@ -591,6 +591,35 @@ const id: Dictionary = {
     tomorrow: "Besok",
     yesterday: "Kemarin",
   },
+
+  // ─── Settings ────────────────────────────────────────────
+  settings: {
+    title: "Pengaturan",
+    subtitle: "Kelola pengaturan aplikasi dan data master.",
+    categoriesTitle: "Kategori Layanan",
+    categoriesSubtitle:
+      "Kelola kategori dan subkategori layanan untuk paket Anda.",
+    addCategory: "Tambah Kategori",
+    editCategory: "Edit Kategori",
+    categoryName: "Nama Kategori",
+    categoryNamePlaceholder: "mis. Photography",
+    categoryDescription: "Deskripsi",
+    categoryDescPlaceholder: "Deskripsi singkat kategori ini",
+    subcategories: "Subkategori",
+    addSubcategory: "Tambah Subkategori",
+    subcategoryName: "Nama Subkategori",
+    subcategoryNamePlaceholder: "mis. Pre-Wedding",
+    subcategoryDescription: "Deskripsi",
+    subcategoryDescPlaceholder: "Deskripsi singkat",
+    noCategories: "Belum ada kategori",
+    noCategoriesDesc: "Buat kategori layanan pertama Anda untuk memulai.",
+    noSubcategories: "Belum ada subkategori",
+    noSubcategoriesDesc: "Tambahkan subkategori untuk mengatur layanan Anda.",
+    confirmDeleteCategory: "Hapus kategori ini?",
+    confirmDeleteSubcategory: "Hapus?",
+    active: "Aktif",
+    archived: "Nonaktif",
+  },
 };
 
 export default id;

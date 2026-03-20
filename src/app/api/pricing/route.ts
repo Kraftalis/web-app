@@ -16,26 +16,39 @@ import {
 import {
   createPackageSchema,
   createAddOnSchema,
+  paginationSchema,
 } from "@/lib/validations/pricing";
 
 /**
  * GET /api/pricing
- * List all packages and add-ons for the authenticated vendor.
+ * List packages and add-ons for the authenticated vendor.
+ * Supports pagination & filtering via query params.
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   const { userId, error } = await requireAuth();
   if (error) return error;
 
   try {
-    const [packages, addOns] = await Promise.all([
-      findPackagesByVendor(userId),
-      findAddOnsByVendor(userId),
+    const params = Object.fromEntries(request.nextUrl.searchParams);
+    const parsed = paginationSchema.safeParse(params);
+    const filters = parsed.success ? parsed.data : {};
+
+    const [pkgResult, addonResult] = await Promise.all([
+      findPackagesByVendor(userId, filters),
+      findAddOnsByVendor(userId, filters),
     ]);
 
-    return successResponse({
-      packages: packages.map(serializePackage),
-      addOns: addOns.map(serializeAddOn),
-    });
+    return successResponse(
+      {
+        packages: pkgResult.packages.map(serializePackage),
+        addOns: addonResult.addOns.map(serializeAddOn),
+      },
+      {
+        page: pkgResult.page,
+        limit: pkgResult.limit,
+        total: pkgResult.total,
+      },
+    );
   } catch (err) {
     console.error("[API] GET /api/pricing error:", err);
     return internalError();
@@ -82,18 +95,19 @@ export async function POST(request: NextRequest) {
 
 // ─── Serializers ────────────────────────────────────────────
 
-function serializePackage(pkg: {
-  price: unknown;
-  items?: Array<{ price: unknown; [key: string]: unknown }>;
-  [key: string]: unknown;
-}) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function serializePackage(pkg: any) {
   return {
     ...pkg,
     price: String(pkg.price),
-    items: (pkg.items ?? []).map((item) => ({
+    items: (pkg.items ?? []).map((item: any) => ({
+      // eslint-disable-line @typescript-eslint/no-explicit-any
       ...item,
       price: String(item.price),
     })),
+    category: pkg.category ?? null,
+    subcategory: pkg.subcategory ?? null,
+    inclusions: pkg.inclusions ?? [],
   };
 }
 

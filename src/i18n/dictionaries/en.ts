@@ -590,6 +590,35 @@ const en = {
     tomorrow: "Tomorrow",
     yesterday: "Yesterday",
   },
+
+  // ─── Settings ────────────────────────────────────────────
+  settings: {
+    title: "Settings",
+    subtitle: "Manage application settings and master data.",
+    categoriesTitle: "Service Categories",
+    categoriesSubtitle:
+      "Manage service categories and subcategories for your packages.",
+    addCategory: "Add Category",
+    editCategory: "Edit Category",
+    categoryName: "Category Name",
+    categoryNamePlaceholder: "e.g. Photography",
+    categoryDescription: "Description",
+    categoryDescPlaceholder: "Brief description of this category",
+    subcategories: "Subcategories",
+    addSubcategory: "Add Subcategory",
+    subcategoryName: "Subcategory Name",
+    subcategoryNamePlaceholder: "e.g. Pre-Wedding",
+    subcategoryDescription: "Description",
+    subcategoryDescPlaceholder: "Brief description",
+    noCategories: "No categories yet",
+    noCategoriesDesc: "Create your first service category to get started.",
+    noSubcategories: "No subcategories",
+    noSubcategoriesDesc: "Add subcategories to organize your services.",
+    confirmDeleteCategory: "Delete this category?",
+    confirmDeleteSubcategory: "Delete?",
+    active: "Active",
+    archived: "Archived",
+  },
 };
 
 /**

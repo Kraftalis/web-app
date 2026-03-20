@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AppLayout } from "@/components/layout";
 import {
   Card,
@@ -25,11 +25,21 @@ import {
 import PricingControls from "@/templates/pricing/pricing-controls";
 import VariationRow from "@/templates/pricing/variation-row";
 import { useDictionary } from "@/i18n";
-import type { Package, PackageVariation } from "./types";
+import {
+  usePricing,
+  useAddOns,
+  useCategories,
+  useCreatePackage,
+  useUpdatePackage,
+  useDeletePackage,
+  useCreateAddOn,
+  useUpdateAddOn,
+  useDeleteAddOn,
+} from "@/hooks/pricing";
+import type { Package } from "./types";
 
 // ─── Types ──────────────────────────────────────────────────
 
-// reusing shared types from ./types
 interface AddOn {
   id: string;
   name: string;
@@ -45,8 +55,6 @@ interface PricingTemplateProps {
     email: string | null;
     image: string | null;
   } | null;
-  packages: Package[];
-  addOns: AddOn[];
 }
 
 // ─── Helpers ────────────────────────────────────────────────
@@ -82,16 +90,10 @@ function getDisplayPrice(pkg: Package): { label: string; isRange: boolean } {
 
 // ─── Component ──────────────────────────────────────────────
 
-export default function PricingTemplate({
-  user,
-  packages: initialPackages,
-  addOns: initialAddOns,
-}: PricingTemplateProps) {
+export default function PricingTemplate({ user }: PricingTemplateProps) {
   const { dict } = useDictionary();
   const pricing = dict.pricing;
 
-  const [packages, setPackages] = useState<Package[]>(initialPackages);
-  const [addOns, setAddOns] = useState<AddOn[]>(initialAddOns);
   // List controls
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "price" | "status">("name");
@@ -102,8 +104,55 @@ export default function PricingTemplate({
   // View mode
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   // Category filters
-  const [category, setCategory] = useState("");
-  const [subcategory, setSubcategory] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [subcategoryId, setSubcategoryId] = useState("");
+
+  // ─── React Query ─────────────────────────────────────────
+
+  const pricingQuery = usePricing({
+    page,
+    limit: pageSize,
+    search: query || undefined,
+    sortBy,
+    sortDir,
+    categoryId: categoryId || undefined,
+    subcategoryId: subcategoryId || undefined,
+  });
+
+  const addOnsQuery = useAddOns();
+  const categoriesQuery = useCategories();
+  const createPkgMutation = useCreatePackage();
+  const updatePkgMutation = useUpdatePackage();
+  const deletePkgMutation = useDeletePackage();
+  const createAddonMutation = useCreateAddOn();
+  const updateAddonMutation = useUpdateAddOn();
+  const deleteAddonMutation = useDeleteAddOn();
+
+  const packages: Package[] = pricingQuery.data?.data?.packages ?? [];
+  const addOns: AddOn[] = addOnsQuery.data?.data ?? [];
+  const meta = pricingQuery.data?.meta;
+  const categories = useMemo(
+    () => categoriesQuery.data ?? [],
+    [categoriesQuery.data],
+  );
+
+  // Subcategories for selected category
+  const subcategories = useMemo(() => {
+    if (!categoryId) return [];
+    const cat = categories.find((c) => c.id === categoryId);
+    return cat?.subcategories ?? [];
+  }, [categoryId, categories]);
+
+  // Category options for Select
+  const categoryOptions = useMemo(
+    () => categories.map((c) => ({ value: c.id, label: c.name })),
+    [categories],
+  );
+
+  const subcategoryOptions = useMemo(
+    () => subcategories.map((s) => ({ value: s.id, label: s.name })),
+    [subcategories],
+  );
 
   const toggleExpanded = (id: string) =>
     setExpandedIds((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -117,8 +166,21 @@ export default function PricingTemplate({
   const [variations, setVariations] = useState<
     { label: string; description: string; price: string }[]
   >([]);
-  // Inclusions stored as newline-separated text in the modal textarea
   const [inclusionDraft, setInclusionDraft] = useState("");
+
+  // Modal category selects
+  const [modalCategoryId, setModalCategoryId] = useState("");
+  const [modalSubcategoryId, setModalSubcategoryId] = useState("");
+
+  // Modal subcategory options
+  const modalSubcategoryOptions = useMemo(() => {
+    if (!modalCategoryId) return [];
+    const cat = categories.find((c) => c.id === modalCategoryId);
+    return (cat?.subcategories ?? []).map((s) => ({
+      value: s.id,
+      label: s.name,
+    }));
+  }, [modalCategoryId, categories]);
 
   // AddOn modal state
   const [addonModalOpen, setAddonModalOpen] = useState(false);
@@ -131,6 +193,8 @@ export default function PricingTemplate({
     setEditingPkg(null);
     setVariations([]);
     setInclusionDraft("");
+    setModalCategoryId("");
+    setModalSubcategoryId("");
     setPkgModalOpen(true);
   };
 
@@ -144,6 +208,8 @@ export default function PricingTemplate({
       })),
     );
     setInclusionDraft((pkg.inclusions ?? []).join("\n"));
+    setModalCategoryId(pkg.category?.id ?? "");
+    setModalSubcategoryId(pkg.subcategory?.id ?? "");
     setPkgModalOpen(true);
   };
 
@@ -172,8 +238,6 @@ export default function PricingTemplate({
   const handleSavePackage = (formData: FormData) => {
     const name = formData.get("name") as string;
     const description = (formData.get("description") as string) || null;
-    const category = (formData.get("category") as string) || "";
-    const subcategory = (formData.get("subcategory") as string) || "";
     const flatPrice = (formData.get("flatPrice") as string) || "0";
     const currency = (formData.get("currency") as string) || "IDR";
     const isActive = formData.get("isActive") === "true";
@@ -182,71 +246,80 @@ export default function PricingTemplate({
       (v) => v.label.trim() && v.price !== "",
     );
 
-    const minPrice =
-      validVariations.length > 0
-        ? String(
-            Math.min(...validVariations.map((v) => parseFloat(v.price) || 0)),
-          )
-        : flatPrice;
-
-    const newItems: PackageVariation[] = validVariations.map((v) => ({
-      id: crypto.randomUUID(),
-      label: v.label.trim(),
-      description: v.description.trim() || null,
-      price: v.price,
-    }));
+    const inclusions = inclusionDraft
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
 
     if (editingPkg) {
-      setPackages((prev) =>
-        prev.map((p) =>
-          p.id === editingPkg.id
-            ? {
-                ...p,
-                name,
-                description,
-                price: minPrice,
-                currency,
-                isActive,
-                items: newItems,
-                inclusions: inclusionDraft
-                  .split("\n")
-                  .map((s) => s.trim())
-                  .filter(Boolean),
-                category,
-                subcategory,
-              }
-            : p,
-        ),
+      updatePkgMutation.mutate(
+        {
+          id: editingPkg.id,
+          payload: {
+            name,
+            description,
+            price:
+              validVariations.length > 0
+                ? Math.min(
+                    ...validVariations.map((v) => parseFloat(v.price) || 0),
+                  )
+                : parseFloat(flatPrice) || 0,
+            currency,
+            isActive,
+            categoryId: modalCategoryId || null,
+            subcategoryId: modalSubcategoryId || null,
+            inclusions,
+            variations: validVariations.map((v, i) => ({
+              label: v.label.trim(),
+              description: v.description.trim() || null,
+              price: parseFloat(v.price) || 0,
+              sortOrder: i,
+            })),
+          },
+        },
+        {
+          onSuccess: () => {
+            setPkgModalOpen(false);
+            setEditingPkg(null);
+            setVariations([]);
+          },
+        },
       );
     } else {
-      setPackages((prev) => [
-        ...prev,
+      createPkgMutation.mutate(
         {
-          id: crypto.randomUUID(),
           name,
           description,
-          price: minPrice,
+          price:
+            validVariations.length > 0
+              ? Math.min(
+                  ...validVariations.map((v) => parseFloat(v.price) || 0),
+                )
+              : parseFloat(flatPrice) || 0,
           currency,
-          isActive,
-          items: newItems,
-          inclusions: inclusionDraft
-            .split("\n")
-            .map((s) => s.trim())
-            .filter(Boolean),
-          category,
-          subcategory,
+          categoryId: modalCategoryId || null,
+          subcategoryId: modalSubcategoryId || null,
+          inclusions,
+          variations: validVariations.map((v, i) => ({
+            label: v.label.trim(),
+            description: v.description.trim() || null,
+            price: parseFloat(v.price) || 0,
+            sortOrder: i,
+          })),
         },
-      ]);
+        {
+          onSuccess: () => {
+            setPkgModalOpen(false);
+            setVariations([]);
+          },
+        },
+      );
     }
-
-    setPkgModalOpen(false);
-    setEditingPkg(null);
-    setVariations([]);
   };
 
   const handleDeletePackage = (id: string) => {
     if (deletingPkgId === id) {
-      setPackages((prev) => prev.filter((p) => p.id !== id));
+      deletePkgMutation.mutate(id);
       setDeletingPkgId(null);
     } else {
       setDeletingPkgId(id);
@@ -259,38 +332,38 @@ export default function PricingTemplate({
   const handleSaveAddOn = (formData: FormData) => {
     const name = formData.get("name") as string;
     const description = (formData.get("description") as string) || null;
-    const price = formData.get("price") as string;
+    const price = parseFloat(formData.get("price") as string) || 0;
     const currency = (formData.get("currency") as string) || "IDR";
     const isActive = formData.get("isActive") === "true";
 
     if (editingAddon) {
-      setAddOns((prev) =>
-        prev.map((a) =>
-          a.id === editingAddon.id
-            ? { ...a, name, description, price, currency, isActive }
-            : a,
-        ),
+      updateAddonMutation.mutate(
+        {
+          id: editingAddon.id,
+          payload: { name, description, price, currency, isActive },
+        },
+        {
+          onSuccess: () => {
+            setAddonModalOpen(false);
+            setEditingAddon(null);
+          },
+        },
       );
     } else {
-      setAddOns((prev) => [
-        ...prev,
+      createAddonMutation.mutate(
+        { name, description, price, currency },
         {
-          id: crypto.randomUUID(),
-          name,
-          description,
-          price,
-          currency,
-          isActive,
+          onSuccess: () => {
+            setAddonModalOpen(false);
+          },
         },
-      ]);
+      );
     }
-    setAddonModalOpen(false);
-    setEditingAddon(null);
   };
 
   const handleDeleteAddOn = (id: string) => {
     if (deletingAddonId === id) {
-      setAddOns((prev) => prev.filter((a) => a.id !== id));
+      deleteAddonMutation.mutate(id);
       setDeletingAddonId(null);
     } else {
       setDeletingAddonId(id);
@@ -298,49 +371,11 @@ export default function PricingTemplate({
     }
   };
 
-  // Filtering / sorting / pagination (previously inside an IIFE)
-  const q = query.trim().toLowerCase();
-  const filtered = packages.filter((p) => {
-    const matchQuery =
-      q === ""
-        ? true
-        : `${p.name} ${p.description ?? ""}`.toLowerCase().includes(q);
-    // simple category/subcategory matching stored in package.description or name for now
-    const matchCategory =
-      category === ""
-        ? true
-        : (p.description ?? "").includes(category) || p.name.includes(category);
-    const matchSub =
-      subcategory === ""
-        ? true
-        : (p.description ?? "").includes(subcategory) ||
-          p.name.includes(subcategory);
-    return matchQuery && matchCategory && matchSub;
-  });
-
-  filtered.sort((a, b) => {
-    if (sortBy === "name") {
-      const cmp = a.name.localeCompare(b.name);
-      return sortDir === "asc" ? cmp : -cmp;
-    }
-    if (sortBy === "price") {
-      const pa =
-        parseFloat(getDisplayPrice(a).label.replace(/[^0-9.-]+/g, "")) || 0;
-      const pb =
-        parseFloat(getDisplayPrice(b).label.replace(/[^0-9.-]+/g, "")) || 0;
-      return sortDir === "asc" ? pa - pb : pb - pa;
-    }
-    if (sortBy === "status") {
-      return Number(b.isActive) - Number(a.isActive);
-    }
-    return 0;
-  });
-
-  const total = filtered.length;
+  // Pagination from API meta
+  const total = meta?.total ?? packages.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const currentPage = Math.min(page, totalPages);
   const start = (currentPage - 1) * pageSize;
-  const pageItems = filtered.slice(start, start + pageSize);
 
   return (
     <AppLayout user={user}>
@@ -388,10 +423,12 @@ export default function PricingTemplate({
               setSortDir={setSortDir}
               pageSize={pageSize}
               setPageSize={setPageSize}
-              category={category}
-              setCategory={setCategory}
-              subcategory={subcategory}
-              setSubcategory={setSubcategory}
+              categoryId={categoryId}
+              setCategoryId={setCategoryId}
+              subcategoryId={subcategoryId}
+              setSubcategoryId={setSubcategoryId}
+              categoryOptions={categoryOptions}
+              subcategoryOptions={subcategoryOptions}
             />
 
             {/* View toggle */}
@@ -424,7 +461,7 @@ export default function PricingTemplate({
           {/* ── Grid View ──────────────────────────────── */}
           {viewMode === "grid" && (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {pageItems.map((pkg) => {
+              {packages.map((pkg: Package) => {
                 const display = getDisplayPrice(pkg);
                 return (
                   <Card key={pkg.id} className="flex flex-col">
@@ -544,7 +581,7 @@ export default function PricingTemplate({
           {/* ── List View ──────────────────────────────── */}
           {viewMode === "list" && (
             <div className="space-y-3">
-              {pageItems.map((pkg) => {
+              {packages.map((pkg: Package) => {
                 const display = getDisplayPrice(pkg);
                 const open = !!expandedIds[pkg.id];
                 return (
@@ -927,23 +964,22 @@ export default function PricingTemplate({
             <Select
               label="Category"
               name="category"
-              defaultValue={editingPkg?.category ?? ""}
+              value={modalCategoryId}
+              onChange={(e) => {
+                setModalCategoryId(e.target.value);
+                setModalSubcategoryId("");
+              }}
               placeholder="Select category"
-              options={[{ value: "Photography", label: "Photography" }]}
+              options={categoryOptions}
             />
             <Select
               label="Subcategory"
               name="subcategory"
-              defaultValue={editingPkg?.subcategory ?? ""}
+              value={modalSubcategoryId}
+              onChange={(e) => setModalSubcategoryId(e.target.value)}
               placeholder="Select subcategory"
-              options={[
-                { value: "Wedding", label: "Wedding" },
-                { value: "Pre-wedding", label: "Pre-wedding" },
-                { value: "Graduation", label: "Graduation" },
-                { value: "Family", label: "Family" },
-                { value: "Community", label: "Community" },
-                { value: "Maternity", label: "Maternity" },
-              ]}
+              options={modalSubcategoryOptions}
+              disabled={!modalCategoryId}
             />
           </div>
 

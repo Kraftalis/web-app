@@ -192,6 +192,55 @@ enum PaymentType {
   INSTALLMENT
 }
 
+// ─── Category & Subcategory (Master Data) ───────────────────────────────────
+
+/// Master categories for vendor services.
+/// e.g. "Photography", "Videography", "MUA", "Decoration", "Catering", "WO"
+model Category {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique @db.VarChar(255) // e.g. "Photography"
+  description String?  @db.Text
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+
+  // Audit fields
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  subcategories Subcategory[]
+  packages      Package[]
+
+  @@index([sortOrder])
+  @@index([isActive])
+  @@map("categories")
+}
+
+/// Subcategories within a category.
+/// e.g. Under "Photography": "Wedding", "Pre-wedding", "Graduation", "Family"
+model Subcategory {
+  id          String   @id @default(uuid()) @db.Uuid
+  categoryId  String   @map("category_id") @db.Uuid
+  name        String   @db.VarChar(255) // e.g. "Wedding"
+  description String?  @db.Text
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+
+  // Audit fields
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  packages    Package[]
+
+  @@unique([categoryId, name])
+  @@index([categoryId])
+  @@index([sortOrder])
+  @@index([isActive])
+  @@map("subcategories")
+}
+
 // ─── Package & Pricing ──────────────────────────────────────────────────────
 
 /// Vendor-defined service packages.
@@ -200,10 +249,12 @@ enum PaymentType {
 /// - 0 variations: the package `price` is the single flat price.
 /// - 1+ variations: client must pick a variation; each variation has its own price.
 model Package {
-  id          String  @id @default(uuid()) @db.Uuid
-  vendorId    String  @map("vendor_id") @db.Uuid
-  name        String  @db.VarChar(255) // e.g. "Paket Wisuda Photoshoot"
-  description String? @db.Text // Free-text summary shown to clients
+  id             String  @id @default(uuid()) @db.Uuid
+  vendorId       String  @map("vendor_id") @db.Uuid
+  categoryId     String? @map("category_id") @db.Uuid
+  subcategoryId  String? @map("subcategory_id") @db.Uuid
+  name           String  @db.VarChar(255) // e.g. "Paket Wisuda Photoshoot"
+  description    String? @db.Text // Free-text summary shown to clients
 
   // Base / fallback price — used when there are no variations.
   // When variations exist, this can be set to 0 or the min variation price.
@@ -214,16 +265,23 @@ model Package {
   isActive    Boolean @default(true) @map("is_active")
   sortOrder   Int     @default(0) @map("sort_order")
 
+  // Newline-separated inclusions stored as text array
+  inclusions  String[] @default([])
+
   // Audit fields
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  vendor      User          @relation("vendorPackages", fields: [vendorId], references: [id], onDelete: Cascade)
-  items       PackageItem[]
-  events      Event[]       @relation("eventPackage")
+  vendor        User          @relation("vendorPackages", fields: [vendorId], references: [id], onDelete: Cascade)
+  category      Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  subcategory   Subcategory?  @relation(fields: [subcategoryId], references: [id], onDelete: SetNull)
+  items         PackageItem[]
+  events        Event[]       @relation("eventPackage")
 
   @@index([vendorId])
+  @@index([categoryId])
+  @@index([subcategoryId])
   @@index([isActive])
   @@index([sortOrder])
   @@map("packages")

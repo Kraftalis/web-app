@@ -3,13 +3,23 @@ export type {
   PackageVariation,
   AddOn,
   PricingData,
+  PricingQueryParams,
+  AddOnQueryParams,
+  PaginationMeta,
+  Category,
+  Subcategory,
+  CategoryRef,
   PackageVariationPayload,
   CreatePackagePayload,
   UpdatePackagePayload,
   CreateAddOnPayload,
   UpdateAddOnPayload,
+  CreateCategoryPayload,
+  UpdateCategoryPayload,
+  CreateSubcategoryPayload,
+  UpdateSubcategoryPayload,
 } from "./types";
-export { getPricing } from "./get-pricing";
+export { getPricing, getAddOns, getCategories } from "./get-pricing";
 export {
   createPackage,
   updatePackage,
@@ -17,4 +27,10 @@ export {
   createAddOn,
   updateAddOn,
   deleteAddOn,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  createSubcategory,
+  updateSubcategory,
+  deleteSubcategory,
 } from "./upsert-pricing";

@@ -8,6 +8,7 @@ import {
   IconCalendar,
   IconEvent,
   IconPricing,
+  IconSettings,
   IconPlus,
 } from "@/components/icons";
 import {
@@ -34,7 +35,7 @@ interface AppLayoutProps {
 }
 
 interface NavItem {
-  labelKey: "home" | "schedule" | "event" | "pricingPackage";
+  labelKey: "home" | "schedule" | "event" | "pricingPackage" | "settings";
   href: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
 }
@@ -44,6 +45,7 @@ const navItems: NavItem[] = [
   { labelKey: "schedule", href: "/schedule", icon: IconCalendar },
   { labelKey: "event", href: "/event", icon: IconEvent },
   { labelKey: "pricingPackage", href: "/pricing", icon: IconPricing },
+  { labelKey: "settings", href: "/settings", icon: IconSettings },
 ];
 
 export default function AppLayout({ children, user }: AppLayoutProps) {

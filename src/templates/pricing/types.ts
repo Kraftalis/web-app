@@ -5,6 +5,11 @@ export interface PackageVariation {
   price: string;
 }
 
+export interface CategoryRef {
+  id: string;
+  name: string;
+}
+
 export interface Package {
   id: string;
   name: string;
@@ -13,11 +18,11 @@ export interface Package {
   currency: string;
   isActive: boolean;
   items: PackageVariation[];
-  // Optional list of inclusions / what's included in the package
-  inclusions?: string[];
+  // Inclusions / what's included in the package
+  inclusions: string[];
   // Category metadata
-  category?: string;
-  subcategory?: string;
+  category: CategoryRef | null;
+  subcategory: CategoryRef | null;
 }
 
 export interface AddOn {
@@ -26,5 +31,23 @@ export interface AddOn {
   description: string | null;
   price: string;
   currency: string;
+  isActive: boolean;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  description: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  subcategories: Subcategory[];
+}
+
+export interface Subcategory {
+  id: string;
+  categoryId: string;
+  name: string;
+  description: string | null;
+  sortOrder: number;
   isActive: boolean;
 }

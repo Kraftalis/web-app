@@ -1,6 +1,42 @@
 // ─── Shared API types ───────────────────────────────────────
 
 /**
+ * Category reference (embedded in Package).
+ */
+export interface CategoryRef {
+  id: string;
+  name: string;
+}
+
+/**
+ * Full category with subcategories.
+ */
+export interface Category {
+  id: string;
+  name: string;
+  description: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  subcategories: Subcategory[];
+}
+
+/**
+ * Subcategory within a category.
+ */
+export interface Subcategory {
+  id: string;
+  categoryId: string;
+  name: string;
+  description: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
  * A price variation within a package.
  * e.g. "2 Orang – 1 Jam" at 200,000 IDR
  * Generic for any vendor type (photography, MUA, decoration, WO, etc.)
@@ -26,6 +62,9 @@ export interface Package {
   currency: string;
   isActive: boolean;
   sortOrder: number;
+  inclusions: string[];
+  category: CategoryRef | null;
+  subcategory: CategoryRef | null;
   createdAt: string;
   updatedAt: string;
   items: PackageVariation[]; // Price variations (empty = single flat price)
@@ -55,6 +94,40 @@ export interface PricingData {
   addOns: AddOn[];
 }
 
+/**
+ * Pagination metadata from the API.
+ */
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+}
+
+/**
+ * Query params for fetching packages.
+ */
+export interface PricingQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+  categoryId?: string;
+  subcategoryId?: string;
+  isActive?: "true" | "false" | "all";
+}
+
+/**
+ * Query params for fetching add-ons (separate from packages).
+ */
+export interface AddOnQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortDir?: "asc" | "desc";
+  isActive?: "true" | "false" | "all";
+}
+
 // ─── Payloads ───────────────────────────────────────────────
 
 export interface PackageVariationPayload {
@@ -70,6 +143,9 @@ export interface CreatePackagePayload {
   description?: string | null;
   price?: number; // 0 when all pricing is handled by variations
   currency?: string;
+  categoryId?: string | null;
+  subcategoryId?: string | null;
+  inclusions?: string[];
   variations?: PackageVariationPayload[];
   sortOrder?: number;
 }
@@ -80,6 +156,9 @@ export interface UpdatePackagePayload {
   price?: number;
   currency?: string;
   isActive?: boolean;
+  categoryId?: string | null;
+  subcategoryId?: string | null;
+  inclusions?: string[];
   variations?: PackageVariationPayload[];
   sortOrder?: number;
 }
@@ -100,4 +179,31 @@ export interface UpdateAddOnPayload {
   currency?: string;
   isActive?: boolean;
   sortOrder?: number;
+}
+
+export interface CreateCategoryPayload {
+  name: string;
+  description?: string | null;
+  sortOrder?: number;
+}
+
+export interface UpdateCategoryPayload {
+  name?: string;
+  description?: string | null;
+  sortOrder?: number;
+  isActive?: boolean;
+}
+
+export interface CreateSubcategoryPayload {
+  categoryId: string;
+  name: string;
+  description?: string | null;
+  sortOrder?: number;
+}
+
+export interface UpdateSubcategoryPayload {
+  name?: string;
+  description?: string | null;
+  sortOrder?: number;
+  isActive?: boolean;
 }

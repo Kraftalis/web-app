@@ -1,16 +1,90 @@
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/generated/prisma/client";
+import type { PaginationInput } from "@/lib/validations/pricing";
 
 /**
- * Find all packages belonging to a vendor.
+ * Build the shared `where` clause for package queries.
  */
-export async function findPackagesByVendor(vendorId: string) {
-  return prisma.package.findMany({
-    where: { vendorId },
-    orderBy: { sortOrder: "asc" },
-    include: {
-      items: { orderBy: { sortOrder: "asc" } },
-    },
-  });
+function buildPackageWhere(
+  vendorId: string,
+  params?: Partial<PaginationInput>,
+): Prisma.PackageWhereInput {
+  const where: Prisma.PackageWhereInput = { vendorId };
+
+  if (params?.search) {
+    where.OR = [
+      { name: { contains: params.search, mode: "insensitive" } },
+      { description: { contains: params.search, mode: "insensitive" } },
+    ];
+  }
+  if (params?.categoryId) {
+    where.categoryId = params.categoryId;
+  }
+  if (params?.subcategoryId) {
+    where.subcategoryId = params.subcategoryId;
+  }
+  if (params?.isActive === "true") {
+    where.isActive = true;
+  } else if (params?.isActive === "false") {
+    where.isActive = false;
+  }
+
+  return where;
+}
+
+/**
+ * Shared include for package queries.
+ */
+const packageInclude = {
+  items: { orderBy: { sortOrder: "asc" as const } },
+  category: { select: { id: true, name: true } },
+  subcategory: { select: { id: true, name: true } },
+};
+
+/**
+ * Build orderBy clause.
+ */
+function buildOrderBy(
+  sortBy?: string,
+  sortDir?: "asc" | "desc",
+): Prisma.PackageOrderByWithRelationInput {
+  const dir = sortDir ?? "asc";
+  switch (sortBy) {
+    case "price":
+      return { price: dir };
+    case "status":
+      return { isActive: dir };
+    case "createdAt":
+      return { createdAt: dir };
+    default:
+      return { sortOrder: dir };
+  }
+}
+
+/**
+ * Find packages with pagination, search, and filtering.
+ */
+export async function findPackagesByVendor(
+  vendorId: string,
+  params?: Partial<PaginationInput>,
+) {
+  const where = buildPackageWhere(vendorId, params);
+  const page = params?.page ?? 1;
+  const limit = params?.limit ?? 10;
+  const orderBy = buildOrderBy(params?.sortBy, params?.sortDir);
+
+  const [packages, total] = await Promise.all([
+    prisma.package.findMany({
+      where,
+      orderBy,
+      skip: (page - 1) * limit,
+      take: limit,
+      include: packageInclude,
+    }),
+    prisma.package.count({ where }),
+  ]);
+
+  return { packages, total, page, limit };
 }
 
 /**
@@ -20,20 +94,16 @@ export async function findActivePackagesByVendor(vendorId: string) {
   return prisma.package.findMany({
     where: { vendorId, isActive: true },
     orderBy: { sortOrder: "asc" },
-    include: {
-      items: { orderBy: { sortOrder: "asc" } },
-    },
+    include: packageInclude,
   });
 }
 
 /**
- * Find a single package by ID (with items).
+ * Find a single package by ID (with items + category info).
  */
 export async function findPackageById(id: string) {
   return prisma.package.findUnique({
     where: { id },
-    include: {
-      items: { orderBy: { sortOrder: "asc" } },
-    },
+    include: packageInclude,
   });
 }

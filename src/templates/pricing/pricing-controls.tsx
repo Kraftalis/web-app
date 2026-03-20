@@ -3,6 +3,11 @@
 import React from "react";
 import { Select } from "@/components/ui";
 
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
 interface Props {
   sortBy: string;
   setSortBy: (v: "name" | "price" | "status") => void;
@@ -10,10 +15,12 @@ interface Props {
   setSortDir: (v: "asc" | "desc") => void;
   pageSize: number;
   setPageSize: (v: number) => void;
-  category: string;
-  setCategory: (v: string) => void;
-  subcategory: string;
-  setSubcategory: (v: string) => void;
+  categoryId: string;
+  setCategoryId: (v: string) => void;
+  subcategoryId: string;
+  setSubcategoryId: (v: string) => void;
+  categoryOptions: SelectOption[];
+  subcategoryOptions: SelectOption[];
 }
 
 /**
@@ -28,36 +35,31 @@ export default function PricingControls({
   setSortDir,
   pageSize,
   setPageSize,
-  category,
-  setCategory,
-  subcategory,
-  setSubcategory,
+  categoryId,
+  setCategoryId,
+  subcategoryId,
+  setSubcategoryId,
+  categoryOptions,
+  subcategoryOptions,
 }: Props) {
   return (
     <>
       <Select
-        value={category}
-        onChange={(e) => setCategory(e.target.value)}
-        options={[
-          { value: "", label: "All categories" },
-          { value: "Photography", label: "Photography" },
-        ]}
+        value={categoryId}
+        onChange={(e) => {
+          setCategoryId(e.target.value);
+          setSubcategoryId(""); // reset subcategory when category changes
+        }}
+        options={[{ value: "", label: "All categories" }, ...categoryOptions]}
         className="w-auto"
       />
 
       <Select
-        value={subcategory}
-        onChange={(e) => setSubcategory(e.target.value)}
-        options={[
-          { value: "", label: "All types" },
-          { value: "Wedding", label: "Wedding" },
-          { value: "Pre-wedding", label: "Pre-wedding" },
-          { value: "Graduation", label: "Graduation" },
-          { value: "Family", label: "Family" },
-          { value: "Community", label: "Community" },
-          { value: "Maternity", label: "Maternity" },
-        ]}
+        value={subcategoryId}
+        onChange={(e) => setSubcategoryId(e.target.value)}
+        options={[{ value: "", label: "All types" }, ...subcategoryOptions]}
         className="w-auto"
+        disabled={!categoryId}
       />
 
       <Select

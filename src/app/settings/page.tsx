@@ -1,10 +1,8 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import PricingTemplate from "@/templates/pricing/pricing-template";
+import SettingsTemplate from "@/templates/settings/settings-template";
 
-// ─── Page ───────────────────────────────────────────────────
-
-export default async function PricingPage() {
+export default async function SettingsPage() {
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -12,7 +10,7 @@ export default async function PricingPage() {
   }
 
   return (
-    <PricingTemplate
+    <SettingsTemplate
       user={{
         name: session.user.name ?? null,
         email: session.user.email ?? null,

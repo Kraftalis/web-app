@@ -15,12 +15,20 @@ export {
 export {
   pricingKeys,
   usePricing,
+  useAddOns,
+  useCategories,
   useCreatePackage,
   useUpdatePackage,
   useDeletePackage,
   useCreateAddOn,
   useUpdateAddOn,
   useDeleteAddOn,
+  useCreateCategory,
+  useUpdateCategory,
+  useDeleteCategory,
+  useCreateSubcategory,
+  useUpdateSubcategory,
+  useDeleteSubcategory,
 } from "./pricing";
 
 // ─── User hooks ─────────────────────────────────────────────

@@ -13,3 +13,17 @@ export {
 } from "./get-addons";
 export { createAddOn, updateAddOn } from "./upsert-addon";
 export { deleteAddOn } from "./delete-addon";
+export {
+  findAllCategories,
+  findCategoryById,
+  findCategoryByName,
+} from "./get-categories";
+export {
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  findSubcategoryById,
+  createSubcategory,
+  updateSubcategory,
+  deleteSubcategory,
+} from "./upsert-category";

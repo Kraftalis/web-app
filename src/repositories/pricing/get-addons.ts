@@ -1,13 +1,54 @@
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/generated/prisma/client";
+import type { PaginationInput } from "@/lib/validations/pricing";
 
 /**
- * Find all add-ons belonging to a vendor.
+ * Build the shared `where` clause for add-on queries.
  */
-export async function findAddOnsByVendor(vendorId: string) {
-  return prisma.addOn.findMany({
-    where: { vendorId },
-    orderBy: { sortOrder: "asc" },
-  });
+function buildAddOnWhere(
+  vendorId: string,
+  params?: Partial<PaginationInput>,
+): Prisma.AddOnWhereInput {
+  const where: Prisma.AddOnWhereInput = { vendorId };
+
+  if (params?.search) {
+    where.OR = [
+      { name: { contains: params.search, mode: "insensitive" } },
+      { description: { contains: params.search, mode: "insensitive" } },
+    ];
+  }
+  if (params?.isActive === "true") {
+    where.isActive = true;
+  } else if (params?.isActive === "false") {
+    where.isActive = false;
+  }
+
+  return where;
+}
+
+/**
+ * Find add-ons with pagination and search.
+ */
+export async function findAddOnsByVendor(
+  vendorId: string,
+  params?: Partial<PaginationInput>,
+) {
+  const where = buildAddOnWhere(vendorId, params);
+  const page = params?.page ?? 1;
+  const limit = params?.limit ?? 50;
+  const dir = params?.sortDir ?? "asc";
+
+  const [addOns, total] = await Promise.all([
+    prisma.addOn.findMany({
+      where,
+      orderBy: { sortOrder: dir },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.addOn.count({ where }),
+  ]);
+
+  return { addOns, total, page, limit };
 }
 
 /**

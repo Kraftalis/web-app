@@ -19,6 +19,22 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function serializePackage(pkg: any) {
+  return {
+    ...pkg,
+    price: String(pkg.price),
+    items: (pkg.items ?? []).map((item: any) => ({
+      // eslint-disable-line @typescript-eslint/no-explicit-any
+      ...item,
+      price: String(item.price),
+    })),
+    category: pkg.category ?? null,
+    subcategory: pkg.subcategory ?? null,
+    inclusions: pkg.inclusions ?? [],
+  };
+}
+
 /**
  * GET /api/pricing/packages/[id]
  * Get a single package by ID.
@@ -34,14 +50,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     if (!pkg) return notFoundError("Package not found.");
     if (pkg.vendorId !== userId) return forbiddenError();
 
-    return successResponse({
-      ...pkg,
-      price: String(pkg.price),
-      items: pkg.items.map((item) => ({
-        ...item,
-        price: String(item.price),
-      })),
-    });
+    return successResponse(serializePackage(pkg));
   } catch (err) {
     console.error("[API] GET /api/pricing/packages/[id] error:", err);
     return internalError();
@@ -69,10 +78,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return validationError("Validation failed.", result.error);
 
     const updated = await updatePackage(id, result.data);
-    return successResponse({
-      ...updated,
-      price: String(updated.price),
-    });
+    return successResponse(serializePackage(updated));
   } catch (err) {
     console.error("[API] PUT /api/pricing/packages/[id] error:", err);
     return internalError();

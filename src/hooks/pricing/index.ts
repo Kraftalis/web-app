@@ -1,8 +1,18 @@
 export { pricingKeys } from "./keys";
 export { usePricing } from "./use-pricing";
+export { useAddOns } from "./use-addons";
+export { useCategories } from "./use-categories";
 export { useCreatePackage } from "./use-create-package";
 export { useUpdatePackage } from "./use-update-package";
 export { useDeletePackage } from "./use-delete-package";
 export { useCreateAddOn } from "./use-create-addon";
 export { useUpdateAddOn } from "./use-update-addon";
 export { useDeleteAddOn } from "./use-delete-addon";
+export {
+  useCreateCategory,
+  useUpdateCategory,
+  useDeleteCategory,
+  useCreateSubcategory,
+  useUpdateSubcategory,
+  useDeleteSubcategory,
+} from "./use-category-mutations";
