@@ -77,6 +77,13 @@ interface BookingFormProps {
   eventTypes: { value: string; label: string }[];
   packages: VendorPackage[];
   addOns: VendorAddOn[];
+  prefill?: {
+    clientName?: string;
+    clientPhone?: string;
+    eventDate?: string;
+    eventTime?: string;
+    eventLocation?: string;
+  };
 }
 
 export interface BookingFormData {
@@ -110,19 +117,22 @@ export function BookingForm({
   eventTypes,
   packages,
   addOns,
+  prefill,
 }: BookingFormProps) {
   const [step, setStep] = useState<FormStep>("client");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Form state
-  const [clientName, setClientName] = useState("");
-  const [clientPhone, setClientPhone] = useState("");
+  // Form state (with prefill from booking link)
+  const [clientName, setClientName] = useState(prefill?.clientName ?? "");
+  const [clientPhone, setClientPhone] = useState(prefill?.clientPhone ?? "");
   const [clientEmail, setClientEmail] = useState("");
   const [eventType, setEventType] = useState("");
-  const [eventDate, setEventDate] = useState("");
-  const [eventTime, setEventTime] = useState("");
-  const [eventLocation, setEventLocation] = useState("");
+  const [eventDate, setEventDate] = useState(prefill?.eventDate ?? "");
+  const [eventTime, setEventTime] = useState(prefill?.eventTime ?? "");
+  const [eventLocation, setEventLocation] = useState(
+    prefill?.eventLocation ?? "",
+  );
   const [notes, setNotes] = useState("");
   const [selectedPkgId, setSelectedPkgId] = useState<string | null>(null);
   const [selectedVariationId, setSelectedVariationId] = useState<string | null>(

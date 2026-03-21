@@ -10,6 +10,8 @@ import { eventStatusVariant, paymentStatusVariant } from "./types";
 
 interface PortalHeaderProps {
   event: PortalEvent;
+  vendorName: string;
+  vendorImage: string | null;
   vendorPhone?: string;
   eventStatusLabel: Record<string, string>;
   paymentStatusLabel: Record<string, string>;
@@ -22,6 +24,8 @@ interface PortalHeaderProps {
 
 export function PortalHeader({
   event,
+  vendorName,
+  vendorImage,
   vendorPhone,
   eventStatusLabel,
   paymentStatusLabel,
@@ -36,23 +40,21 @@ export function PortalHeader({
       <div className="relative flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
         {/* Left: vendor + welcome */}
         <div className="flex items-start gap-4">
-          {event.vendorImage ? (
+          {vendorImage ? (
             <Image
-              src={event.vendorImage}
-              alt={event.vendorName}
+              src={vendorImage}
+              alt={vendorName}
               width={56}
               height={56}
               className="h-14 w-14 rounded-full border-2 border-white/30 object-cover"
             />
           ) : (
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-white/30 bg-white/10 text-xl font-bold">
-              {event.vendorName.charAt(0).toUpperCase()}
+              {vendorName.charAt(0).toUpperCase()}
             </div>
           )}
           <div>
-            <p className="text-sm font-medium text-blue-100">
-              {event.vendorName}
-            </p>
+            <p className="text-sm font-medium text-blue-100">{vendorName}</p>
             <h1 className="mt-0.5 text-xl font-bold leading-tight sm:text-2xl">
               {labels.portalWelcome}
             </h1>

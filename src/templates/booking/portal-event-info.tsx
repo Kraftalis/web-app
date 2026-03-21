@@ -40,6 +40,9 @@ export function PortalEventInfo({
   addOnLabels,
   formatDate,
 }: PortalEventInfoProps) {
+  const pkg = event.packageSnapshot;
+  const addOns = event.addOnsSnapshot ?? [];
+
   return (
     <div className="space-y-4">
       {/* Event Details */}
@@ -80,7 +83,7 @@ export function PortalEventInfo({
         </CardBody>
       </Card>
 
-      {/* Package */}
+      {/* Package (from snapshot) */}
       <Card>
         <CardHeader>
           <h2 className="text-sm font-semibold text-gray-900">
@@ -88,40 +91,43 @@ export function PortalEventInfo({
           </h2>
         </CardHeader>
         <CardBody>
-          {event.package ? (
+          {pkg ? (
             <div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-semibold text-gray-900">
-                    {event.package.name}
-                  </p>
-                  {event.package.description && (
+                  <p className="font-semibold text-gray-900">{pkg.name}</p>
+                  {pkg.variationLabel && (
+                    <p className="mt-0.5 text-xs text-blue-600">
+                      {pkg.variationLabel}
+                    </p>
+                  )}
+                  {pkg.description && (
                     <p className="mt-0.5 text-xs text-gray-500">
-                      {event.package.description}
+                      {pkg.description}
                     </p>
                   )}
                 </div>
                 <p className="text-sm font-bold text-blue-600">
-                  {formatCurrency(event.package.price, event.package.currency)}
+                  {formatCurrency(pkg.price, pkg.currency)}
                 </p>
               </div>
 
-              {event.package.items.length > 0 && (
+              {pkg.inclusions && pkg.inclusions.length > 0 && (
                 <div className="mt-4 space-y-2">
                   <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
                     {labels.portalIncluded}
                   </p>
                   <ul className="space-y-1.5">
-                    {event.package.items.map((item) => (
+                    {pkg.inclusions.map((item, idx) => (
                       <li
-                        key={item.id}
+                        key={idx}
                         className="flex items-center gap-2 text-sm text-gray-600"
                       >
                         <IconCheck
                           size={14}
                           className="shrink-0 text-green-500"
                         />
-                        {item.label}
+                        {item}
                       </li>
                     ))}
                   </ul>
@@ -136,8 +142,8 @@ export function PortalEventInfo({
         </CardBody>
       </Card>
 
-      {/* Add-ons */}
-      {event.addOns.length > 0 && (
+      {/* Add-ons (from snapshot) */}
+      {addOns.length > 0 && (
         <Card>
           <CardHeader>
             <h2 className="text-sm font-semibold text-gray-900">
@@ -146,29 +152,28 @@ export function PortalEventInfo({
           </CardHeader>
           <CardBody>
             <div className="divide-y divide-gray-100">
-              {event.addOns.map((ea) => (
+              {addOns.map((ao, idx) => (
                 <div
-                  key={ea.id}
+                  key={idx}
                   className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0"
                 >
                   <div>
                     <p className="text-sm font-medium text-gray-900">
-                      {ea.addOn.name}
+                      {ao.name}
                     </p>
-                    {ea.addOn.description && (
-                      <p className="text-xs text-gray-500">
-                        {ea.addOn.description}
-                      </p>
+                    {ao.description && (
+                      <p className="text-xs text-gray-500">{ao.description}</p>
                     )}
                   </div>
                   <div className="text-right text-sm">
                     <p className="font-medium text-gray-900">
-                      {formatCurrency(ea.unitPrice)}
+                      {formatCurrency(ao.price, ao.currency)}
                     </p>
-                    {ea.quantity > 1 && (
+                    {ao.quantity > 1 && (
                       <p className="text-xs text-gray-400">
-                        {addOnLabels.qty}: {ea.quantity} ×{" "}
-                        {formatCurrency(ea.unitPrice)} {addOnLabels.perUnit}
+                        {addOnLabels.qty}: {ao.quantity} ×{" "}
+                        {formatCurrency(ao.price, ao.currency)}{" "}
+                        {addOnLabels.perUnit}
                       </p>
                     )}
                   </div>

@@ -1,19 +1,14 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { Card, CardBody } from "@/components/ui";
 import { useDictionary } from "@/i18n";
 import type { Dictionary } from "@/i18n/dictionaries/en";
 import type { Locale } from "@/i18n/config";
-import type {
-  PortalEvent,
-  PortalPayment,
-  VendorPackage,
-  VendorAddOn,
-} from "./types";
-import { BookingForm } from "./booking-form";
-import type { BookingFormData } from "./booking-form";
+import type { PortalEvent, BookingLinkFullData } from "./types";
+import { BookingCheckout } from "./booking-checkout";
+import type { CheckoutSubmitData } from "./booking-checkout";
 import { PortalHeader } from "./portal-header";
 import { PortalStatusTracker } from "./portal-status-tracker";
 import { PortalEventInfo } from "./portal-event-info";
@@ -27,199 +22,171 @@ import {
 
 interface BookingFormTemplateProps {
   token: string;
-  vendorName: string;
-  vendorImage: string | null;
-  status: "valid" | "expired" | "used" | "invalid";
   serverDict: Dictionary;
   serverLocale: Locale;
-  packages: VendorPackage[];
-  addOns: VendorAddOn[];
+  bookingData: BookingLinkFullData | null;
 }
 
-// ─── Mock portal data builder ───────────────────────────────
+// ─── Helper: upload file to S3 via presigned URL ────────────
 
-function buildMockPortalEvent(
-  data: BookingFormData,
-  vendorName: string,
-  vendorImage: string | null,
-  packages: VendorPackage[],
-  vendorAddOns: VendorAddOn[],
-): PortalEvent {
-  const selectedPkg = packages.find((p) => p.id === data.packageId) ?? null;
-  const selectedAddOns = vendorAddOns.filter((a) =>
-    data.selectedAddOnIds.includes(a.id),
-  );
+async function uploadReceiptFile(
+  file: File,
+): Promise<{ publicUrl: string; key: string }> {
+  // 1. Get presigned URL
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      fileName: file.name,
+      contentType: file.type,
+      fileSize: file.size,
+      folder: "receipts",
+    }),
+  });
 
-  const pkgPrice = selectedPkg ? parseFloat(selectedPkg.price) : 0;
-  const addOnsTotal = selectedAddOns.reduce(
-    (s, a) => s + parseFloat(a.price),
-    0,
-  );
-  const totalAmount = pkgPrice + addOnsTotal;
-  const dpNum = parseFloat(data.dpAmount) || 0;
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error?.message ?? "Failed to get upload URL.");
+  }
 
-  return {
-    id: "mock-event-portal",
-    vendorName,
-    vendorImage,
-    clientName: data.clientName,
-    clientPhone: data.clientPhone,
-    clientEmail: data.clientEmail,
-    eventType: data.eventType,
-    eventDate: data.eventDate,
-    eventTime: data.eventTime,
-    eventLocation: data.eventLocation,
-    amount: totalAmount.toString(),
-    dpAmount: dpNum.toString(),
-    eventStatus: "WAITING_PAYMENT",
-    paymentStatus: dpNum > 0 ? "DP_PAID" : "UNPAID",
-    notes: data.notes,
-    package: selectedPkg
-      ? {
-          id: selectedPkg.id,
-          name: selectedPkg.name,
-          description: selectedPkg.description,
-          price: selectedPkg.price,
-          currency: selectedPkg.currency,
-          items: selectedPkg.items.map((item) => ({
-            id: item.id,
-            label: item.label,
-            description: item.description,
-            price: item.price,
-          })),
-        }
-      : null,
-    addOns: selectedAddOns.map((ao) => ({
-      id: "eao-" + ao.id,
-      quantity: 1,
-      unitPrice: ao.price,
-      addOn: { id: ao.id, name: ao.name, description: ao.description },
-    })),
-    payments:
-      dpNum > 0
-        ? [
-            {
-              id: "pay-001",
-              amount: dpNum.toString(),
-              paymentType: "DOWN_PAYMENT",
-              receiptUrl: data.receiptFile
-                ? URL.createObjectURL(data.receiptFile)
-                : null,
-              note: "Initial DP",
-              isVerified: false,
-              createdAt: new Date().toISOString(),
-            },
-          ]
-        : [],
-  };
+  const { uploadUrl, publicUrl } = (await res.json()).data;
+
+  // 2. Upload directly to S3
+  const uploadRes = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: { "Content-Type": file.type },
+    body: file,
+  });
+
+  if (!uploadRes.ok) {
+    throw new Error("Failed to upload file.");
+  }
+
+  return { publicUrl, key: publicUrl };
 }
 
 // ─── Component ──────────────────────────────────────────────
 
 export default function BookingFormTemplate({
   token,
-  vendorName,
-  vendorImage,
-  status,
   serverDict,
-  packages,
-  addOns,
+  bookingData,
 }: BookingFormTemplateProps) {
   const i18n = useDictionary();
   const dict = i18n?.dict ?? serverDict;
   const b = dict.booking;
 
-  // Portal state: null = show form, PortalEvent = show portal
-  const [portalEvent, setPortalEvent] = useState<PortalEvent | null>(null);
+  // Portal event state (for real-time updates after submission)
+  const [portalEvent, setPortalEvent] = useState<PortalEvent | null>(
+    bookingData?.event ?? null,
+  );
   const [message, setMessage] = useState<string | null>(null);
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
 
-  // ─── Invalid states ─────────────────────────────────────
-  if (status !== "valid") {
-    const messages: Record<string, string> = {
-      expired: b.linkExpired,
-      used: b.linkUsed,
-      invalid: b.linkInvalid,
-    };
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-        <Card className="w-full max-w-md text-center">
-          <CardBody className="space-y-4 py-12">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-              <svg
-                className="h-8 w-8 text-red-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
-                />
-              </svg>
-            </div>
-            <p className="text-lg font-semibold text-gray-900">
-              {messages[status] ?? b.linkInvalid}
-            </p>
-            <Link
-              href="/"
-              className="inline-block text-sm font-medium text-blue-600 hover:text-blue-500"
-            >
-              {b.goHome}
-            </Link>
-          </CardBody>
-        </Card>
-      </div>
-    );
+  // Track if user just submitted the checkout (to transition from checkout → portal)
+  const [justSubmitted, setJustSubmitted] = useState(false);
+
+  // ─── Invalid / not found ────────────────────────────────
+  if (!bookingData) {
+    return <InvalidState message={b.linkInvalid} goHomeLabel={b.goHome} />;
   }
 
-  // ─── Event types ────────────────────────────────────────
-  const eventTypes = [
-    { value: "Wedding", label: b.typeWedding },
-    { value: "Engagement", label: b.typeEngagement },
-    { value: "Birthday", label: b.typeBirthday },
-    { value: "Graduation", label: b.typeGraduation },
-    { value: "Corporate", label: b.typeCorporate },
-    { value: "Other", label: b.typeOther },
-  ];
+  // If booking link has an event (status = "used"), show portal
+  const showPortal = bookingData.status === "used" || justSubmitted;
 
-  // ─── Form submission → transition to portal ─────────────
-  async function handleFormSubmit(data: BookingFormData) {
+  // ─── Expired state ──────────────────────────────────────
+  if (bookingData.status === "expired") {
+    return <InvalidState message={b.linkExpired} goHomeLabel={b.goHome} />;
+  }
+
+  // ─── Checkout submit → create event via API ─────────────
+  async function handleCheckoutSubmit(data: CheckoutSubmitData) {
+    // The booking link already has packageSnapshot, addOnsSnapshot, totalAmount
+    // We just need to create the event and optionally the first DP payment
+    const totalAmount = bookingData!.totalAmount
+      ? parseFloat(bookingData!.totalAmount)
+      : 0;
+
     const res = await fetch("/api/booking", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, ...data, receiptFile: undefined }),
+      body: JSON.stringify({
+        token,
+        clientName: data.clientName,
+        clientPhone: data.clientPhone,
+        clientEmail: data.clientEmail || null,
+        eventType: "Booking", // default, since vendor pre-filled everything
+        eventDate:
+          bookingData!.eventDate ?? new Date().toISOString().split("T")[0],
+        eventTime: bookingData!.eventTime ?? null,
+        eventLocation: bookingData!.eventLocation ?? null,
+        packageSnapshot: bookingData!.packageSnapshot ?? null,
+        addOnsSnapshot: bookingData!.addOnsSnapshot ?? null,
+        amount: totalAmount || null,
+        currency: bookingData!.packageSnapshot?.currency ?? "IDR",
+        notes: null,
+      }),
     });
 
     if (!res.ok) {
       const json = await res.json();
-      throw new Error(json.error || "Something went wrong");
+      throw new Error(json.error?.message ?? "Something went wrong");
     }
 
-    const ev = buildMockPortalEvent(
-      data,
-      vendorName,
-      vendorImage,
-      packages,
-      addOns,
-    );
-    setPortalEvent(ev);
+    await res.json();
+
+    // Upload receipt + create payment if DP was provided
+    if (data.dpAmount && parseFloat(data.dpAmount) > 0) {
+      let receiptUrl: string | null = null;
+      let receiptName: string | null = null;
+
+      if (data.receiptFile) {
+        try {
+          const upload = await uploadReceiptFile(data.receiptFile);
+          receiptUrl = upload.publicUrl;
+          receiptName = data.receiptFile.name;
+        } catch {
+          console.warn(
+            "Receipt upload failed, creating payment without receipt",
+          );
+        }
+      }
+
+      await fetch(`/api/booking/${token}/payments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: parseFloat(data.dpAmount),
+          paymentType: "DOWN_PAYMENT",
+          receiptUrl,
+          receiptName,
+          note: "Initial DP",
+        }),
+      });
+    }
+
+    // Fetch updated event data and transition to portal
+    const eventRes = await fetch(`/api/booking/${token}`);
+    if (eventRes.ok) {
+      const { data: bookingInfo } = await eventRes.json();
+      if (bookingInfo.event) {
+        setPortalEvent(bookingInfo.event);
+      }
+    }
+
+    setJustSubmitted(true);
   }
 
-  // ─── Show booking form if not yet submitted ─────────────
-  if (!portalEvent) {
+  // ─── Show checkout (single-view receipt) ────────────────
+  if (!showPortal) {
     return (
-      <BookingForm
-        vendorName={vendorName}
-        vendorImage={vendorImage}
-        onSubmit={handleFormSubmit}
-        packages={packages}
-        addOns={addOns}
+      <BookingCheckout
+        bookingData={bookingData}
+        onSubmit={handleCheckoutSubmit}
         labels={{
           pageTitle: b.pageTitle,
-          pageSubtitle: b.pageSubtitle,
+          checkoutSubtitle: b.checkoutSubtitle,
+          vendorLabel: b.vendorLabel,
           clientInfoTitle: b.clientInfoTitle,
           fullName: b.fullName,
           fullNamePlaceholder: b.fullNamePlaceholder,
@@ -227,61 +194,52 @@ export default function BookingFormTemplate({
           phonePlaceholder: b.phonePlaceholder,
           email: b.email,
           emailPlaceholder: b.emailPlaceholder,
-          eventInfoTitle: b.eventInfoTitle,
-          eventType: b.eventType,
-          selectEventType: b.selectEventType,
+          editInfo: b.editInfo,
+          cancelEdit: b.cancelEdit,
+          eventSummaryTitle: b.eventSummaryTitle,
           eventDate: b.eventDate,
           eventTime: b.eventTime,
           eventLocation: b.eventLocation,
-          eventLocationPlaceholder: b.eventLocationPlaceholder,
-          notesTitle: b.notesTitle,
-          notesPlaceholder: b.notesPlaceholder,
-          submitting: b.submitting,
-          submitBooking: b.submitBooking,
-          selectPackageTitle: b.selectPackageTitle,
-          selectPackageDesc: b.selectPackageDesc,
-          packageIncludes: b.packageIncludes,
-          selectedLabel: b.selectedLabel,
-          selectLabel: b.selectLabel,
-          selectVariation: b.selectVariation,
-          variationRequired: b.variationRequired,
-          addOnsOptional: b.addOnsOptional,
-          addOnsOptionalDesc: b.addOnsOptionalDesc,
+          packageLabel: b.packageLabel,
+          noPackage: b.portalNoPackage,
+          variationLabel: b.selectVariation,
+          includes: b.packageIncludes,
+          addOnsLabel: b.addOnsLabel,
+          noAddOns: b.portalNoAddOns,
           perItem: b.perItem,
-          added: b.added,
-          add: b.add,
+          qty: b.qty,
+          subtotalLabel: b.subtotalLabel,
+          addOnsTotalLabel: b.addOnsTotalLabel,
+          grandTotal: b.grandTotal,
           dpPaymentTitle: b.dpPaymentTitle,
           dpPaymentDesc: b.dpPaymentDesc,
           dpAmountLabel: b.dpAmountLabel,
           dpAmountPlaceholder: b.dpAmountPlaceholder,
-          minimumDp: b.minimumDp,
-          receiptUploadTitle: b.receiptUploadTitle,
-          receiptUploadDesc: b.receiptUploadDesc,
           receiptLabel: b.receiptLabel,
+          receiptDesc: b.receiptUploadDesc,
           dragOrClick: b.dragOrClick,
           acceptedFormats: b.acceptedFormats,
           changeFile: b.changeFile,
-          orderSummary: b.orderSummary,
-          packageLabel: b.packageLabel,
-          addOnsLabel: b.addOnsLabel,
-          dpLabel: b.dpLabel,
-          grandTotal: b.grandTotal,
-          free: b.free,
-          stepClientInfo: b.stepClientInfo,
-          stepPackage: b.stepPackage,
-          stepEvent: b.stepEvent,
-          stepPayment: b.stepPayment,
+          confirmAndPay: b.confirmAndPay,
+          processing: b.processing,
         }}
-        eventTypes={eventTypes}
       />
     );
   }
 
   // ─── Show portal ────────────────────────────────────────
+  const event = portalEvent ?? bookingData.event;
+  if (!event) {
+    return <InvalidState message={b.linkInvalid} goHomeLabel={b.goHome} />;
+  }
+
   return (
     <BookingPortal
-      event={portalEvent}
+      token={token}
+      event={event}
       setEvent={setPortalEvent}
+      vendorName={bookingData.vendor.name ?? "Vendor"}
+      vendorImage={bookingData.vendor.image}
       message={message}
       setMessage={setMessage}
       isSubmittingPayment={isSubmittingPayment}
@@ -291,19 +249,66 @@ export default function BookingFormTemplate({
   );
 }
 
+// ─── Invalid state ──────────────────────────────────────────
+
+function InvalidState({
+  message,
+  goHomeLabel,
+}: {
+  message: string;
+  goHomeLabel: string;
+}) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+      <Card className="w-full max-w-md text-center">
+        <CardBody className="space-y-4 py-12">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+            <svg
+              className="h-8 w-8 text-red-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+              />
+            </svg>
+          </div>
+          <p className="text-lg font-semibold text-gray-900">{message}</p>
+          <Link
+            href="/"
+            className="inline-block text-sm font-medium text-blue-600 hover:text-blue-500"
+          >
+            {goHomeLabel}
+          </Link>
+        </CardBody>
+      </Card>
+    </div>
+  );
+}
+
 // ─── Portal sub-component ───────────────────────────────────
 
 function BookingPortal({
+  token,
   event,
   setEvent,
+  vendorName,
+  vendorImage,
   message,
   setMessage,
   isSubmittingPayment,
   setIsSubmittingPayment,
   dict,
 }: {
+  token: string;
   event: PortalEvent;
   setEvent: React.Dispatch<React.SetStateAction<PortalEvent | null>>;
+  vendorName: string;
+  vendorImage: string | null;
   message: string | null;
   setMessage: React.Dispatch<React.SetStateAction<string | null>>;
   isSubmittingPayment: boolean;
@@ -334,10 +339,7 @@ function BookingPortal({
   };
 
   const totalPaid = useMemo(
-    () =>
-      event.payments
-        .filter((p) => p.isVerified)
-        .reduce((sum, p) => sum + parseFloat(p.amount), 0),
+    () => event.payments.reduce((sum, p) => sum + parseFloat(p.amount), 0),
     [event.payments],
   );
 
@@ -358,31 +360,68 @@ function BookingPortal({
       day: "numeric",
     });
 
-  function handleAddPayment(data: {
-    amount: string;
-    paymentType: string;
-    note: string;
-    receiptFile: File | null;
-  }) {
-    setIsSubmittingPayment(true);
-    const newPayment: PortalPayment = {
-      id: "pay-" + Date.now(),
-      amount: data.amount,
-      paymentType: data.paymentType,
-      receiptUrl: data.receiptFile
-        ? URL.createObjectURL(data.receiptFile)
-        : null,
-      note: data.note || null,
-      isVerified: false,
-      createdAt: new Date().toISOString(),
-    };
-    setEvent((prev) =>
-      prev ? { ...prev, payments: [...prev.payments, newPayment] } : prev,
-    );
-    setIsSubmittingPayment(false);
-    setMessage(b.portalPaymentSent);
-    setTimeout(() => setMessage(null), 4000);
-  }
+  // ─── Handle payment submission with S3 upload ───────────
+  const handleAddPayment = useCallback(
+    async (data: {
+      amount: string;
+      paymentType: string;
+      note: string;
+      receiptFile: File | null;
+    }) => {
+      setIsSubmittingPayment(true);
+      try {
+        let receiptUrl: string | null = null;
+        let receiptName: string | null = null;
+
+        // Upload receipt file if provided
+        if (data.receiptFile) {
+          try {
+            const upload = await uploadReceiptFile(data.receiptFile);
+            receiptUrl = upload.publicUrl;
+            receiptName = data.receiptFile.name;
+          } catch {
+            console.warn("Receipt upload failed");
+          }
+        }
+
+        // Submit payment via API
+        const res = await fetch(`/api/booking/${token}/payments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: parseFloat(data.amount),
+            paymentType: data.paymentType,
+            receiptUrl,
+            receiptName,
+            note: data.note || null,
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error?.message ?? "Failed to submit payment.");
+        }
+
+        const { data: newPayment } = await res.json();
+
+        // Update local state
+        setEvent((prev) =>
+          prev ? { ...prev, payments: [newPayment, ...prev.payments] } : prev,
+        );
+
+        setMessage(b.portalPaymentSent);
+        setTimeout(() => setMessage(null), 4000);
+      } catch (err) {
+        setMessage(
+          err instanceof Error ? err.message : "Failed to submit payment.",
+        );
+        setTimeout(() => setMessage(null), 4000);
+      } finally {
+        setIsSubmittingPayment(false);
+      }
+    },
+    [token, b.portalPaymentSent, setEvent, setMessage, setIsSubmittingPayment],
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -395,6 +434,8 @@ function BookingPortal({
 
         <PortalHeader
           event={event}
+          vendorName={vendorName}
+          vendorImage={vendorImage}
           eventStatusLabel={eventStatusLabel}
           paymentStatusLabel={paymentStatusLabel}
           labels={{

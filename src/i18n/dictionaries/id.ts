@@ -498,6 +498,17 @@ const id: Dictionary = {
     dpLabel: "Uang Muka",
     grandTotal: "Total Keseluruhan",
     free: "Gratis",
+
+    // Single-view checkout
+    checkoutSubtitle: "Tinjau detail booking dan konfirmasi pembayaran.",
+    vendorLabel: "Vendor",
+    editInfo: "Ubah",
+    cancelEdit: "Batal",
+    eventSummaryTitle: "Detail Acara",
+    subtotalLabel: "Subtotal Paket",
+    addOnsTotalLabel: "Subtotal Tambahan",
+    confirmAndPay: "Konfirmasi & Bayar",
+    processing: "Memproses...",
   },
 
   // ─── Pricing & Package Page (Vendor) ─────────────────────

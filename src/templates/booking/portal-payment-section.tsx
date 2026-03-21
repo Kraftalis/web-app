@@ -214,7 +214,7 @@ interface PortalUploadPaymentProps {
     paymentType: string;
     note: string;
     receiptFile: File | null;
-  }) => void;
+  }) => void | Promise<void>;
   isSubmitting: boolean;
   labels: {
     uploadReceipt: string;

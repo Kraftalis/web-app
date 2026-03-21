@@ -8,7 +8,20 @@ const withSerwist = withSerwistInit({
 });
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      {
+        // Google user profile photos (OAuth sign-in via Google)
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
+        // Supabase Storage public files (vendor avatars, event images, receipts)
+        protocol: "https",
+        hostname: "vrcedxsfglrrpxkawvsy.supabase.co",
+      },
+    ],
+  },
 };
 
 export default withSerwist(nextConfig);

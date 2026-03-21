@@ -1,6 +1,27 @@
 import type { BadgeVariant } from "@/components/ui";
 
-// ─── Vendor package / add-on (for booking form) ────────────
+// ─── Snapshot types (matches DB JSONB) ──────────────────────
+
+export interface PackageSnapshotData {
+  name: string;
+  description: string | null;
+  price: number;
+  currency: string;
+  variationLabel: string | null;
+  inclusions: string[];
+  isCustom?: boolean;
+}
+
+export interface AddOnSnapshotData {
+  name: string;
+  description: string | null;
+  price: number;
+  currency: string;
+  quantity: number;
+  isCustom?: boolean;
+}
+
+// ─── Vendor package / add-on (for booking form - from vendor catalog) ───
 
 export interface VendorPackageVariation {
   id: string;
@@ -15,6 +36,7 @@ export interface VendorPackage {
   description: string | null;
   price: string; // base / fallback price
   currency: string;
+  inclusions: string[];
   items: VendorPackageVariation[]; // price variations (empty = flat price)
 }
 
@@ -26,49 +48,24 @@ export interface VendorAddOn {
   currency: string;
 }
 
-// ─── Booking portal data ────────────────────────────────────
-
-export interface PortalPackageVariation {
-  id: string;
-  label: string;
-  description: string | null;
-  price: string;
-}
-
-export interface PortalPackage {
-  id: string;
-  name: string;
-  description: string | null;
-  price: string;
-  currency: string;
-  items: PortalPackageVariation[];
-}
-
-export interface PortalAddOn {
-  id: string;
-  quantity: number;
-  unitPrice: string;
-  addOn: {
-    id: string;
-    name: string;
-    description: string | null;
-  };
-}
+// ─── Payment record ─────────────────────────────────────────
 
 export interface PortalPayment {
   id: string;
   amount: string;
   paymentType: string;
   receiptUrl: string | null;
+  receiptName: string | null;
   note: string | null;
   isVerified: boolean;
+  paidAt: string;
   createdAt: string;
 }
 
+// ─── Booking portal event (from GET /api/booking/[token]) ───
+
 export interface PortalEvent {
   id: string;
-  vendorName: string;
-  vendorImage: string | null;
   clientName: string;
   clientPhone: string;
   clientEmail: string | null;
@@ -76,14 +73,39 @@ export interface PortalEvent {
   eventDate: string;
   eventTime: string | null;
   eventLocation: string | null;
+  packageSnapshot: PackageSnapshotData | null;
+  addOnsSnapshot: AddOnSnapshotData[] | null;
   amount: string | null;
-  dpAmount: string | null;
+  currency: string;
   eventStatus: string;
   paymentStatus: string;
   notes: string | null;
-  package: PortalPackage | null;
-  addOns: PortalAddOn[];
+  createdAt: string;
+  updatedAt: string;
   payments: PortalPayment[];
+}
+
+// ─── Full booking link data (from API) ──────────────────────
+
+export interface BookingLinkFullData {
+  token: string;
+  status: "valid" | "expired" | "used";
+  vendorId: string;
+  vendor: {
+    id: string;
+    name: string | null;
+    image: string | null;
+  };
+  clientName: string | null;
+  clientPhone: string | null;
+  eventDate: string | null;
+  eventTime: string | null;
+  eventLocation: string | null;
+  packageSnapshot: PackageSnapshotData | null;
+  addOnsSnapshot: AddOnSnapshotData[] | null;
+  totalAmount: string | null;
+  expiresAt: string;
+  event: PortalEvent | null;
 }
 
 // ─── Status helpers ─────────────────────────────────────────
@@ -117,11 +139,11 @@ export function paymentStatusVariant(status: string): BadgeVariant {
 }
 
 export function formatCurrency(
-  amount: string | null,
+  amount: string | number | null,
   currency = "IDR",
 ): string {
-  if (!amount) return "-";
-  const num = parseFloat(amount);
+  if (amount === null || amount === undefined) return "-";
+  const num = typeof amount === "number" ? amount : parseFloat(amount);
   if (isNaN(num)) return "-";
   return `${currency} ${num.toLocaleString()}`;
 }

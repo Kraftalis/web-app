@@ -496,6 +496,17 @@ const en = {
     dpLabel: "Down Payment",
     grandTotal: "Grand Total",
     free: "Free",
+
+    // Single-view checkout
+    checkoutSubtitle: "Review your booking details and confirm payment.",
+    vendorLabel: "Vendor",
+    editInfo: "Edit",
+    cancelEdit: "Cancel",
+    eventSummaryTitle: "Event Details",
+    subtotalLabel: "Package Subtotal",
+    addOnsTotalLabel: "Add-ons Subtotal",
+    confirmAndPay: "Confirm & Pay",
+    processing: "Processing...",
   },
 
   // ─── Pricing & Package Page (Vendor) ─────────────────────
