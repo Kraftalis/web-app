@@ -27,7 +27,7 @@ const en = {
     home: "Home",
     schedule: "Schedule",
     event: "Event",
-    pricingPackage: "Pricing & Package",
+    pricingPackage: "Pricing",
     settings: "Settings",
     main: "Main",
     other: "Other",

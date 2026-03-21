@@ -132,7 +132,7 @@ export default function AppLayout({ children, user }: AppLayoutProps) {
 
       {/* ─── Mobile Bottom Tab Bar ──────────────────────── */}
       <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-(--border) bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
-        <div className="flex items-center justify-around">
+        <div className="flex items-center justify-around py-2">
           {navItems.map((item) => {
             const isActive =
               item.href === "/"
@@ -142,8 +142,10 @@ export default function AppLayout({ children, user }: AppLayoutProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
-                  isActive ? "text-accent" : "text-(--text-tertiary)"
+                className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[12px] font-medium transition-colors ${
+                  isActive
+                    ? "text-accent font-semibold"
+                    : "text-(--text-tertiary)"
                 }`}
               >
                 <item.icon
@@ -156,16 +158,6 @@ export default function AppLayout({ children, user }: AppLayoutProps) {
               </Link>
             );
           })}
-
-          {/* Center FAB-like create action */}
-          <Link
-            href="/event"
-            className="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium text-(--text-tertiary)"
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-white shadow-lg shadow-blue-500/25">
-              <IconPlus size={16} />
-            </div>
-          </Link>
         </div>
       </nav>
 

@@ -29,7 +29,7 @@ const id: Dictionary = {
     home: "Beranda",
     schedule: "Jadwal",
     event: "Acara",
-    pricingPackage: "Harga & Paket",
+    pricingPackage: "Harga",
     settings: "Pengaturan",
     main: "Utama",
     other: "Lainnya",

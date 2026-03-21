@@ -33,3 +33,6 @@ export {
 
 // ─── User hooks ─────────────────────────────────────────────
 export { userKeys, useProfile, useUpdateProfile } from "./user";
+
+// ─── Shared hooks ───────────────────────────────────────────
+export { useConfirmDelete } from "./use-confirm-delete";

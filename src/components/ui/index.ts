@@ -18,3 +18,12 @@ export type { ModalProps } from "./modal";
 
 export { default as Textarea } from "./textarea";
 export type { TextareaProps } from "./textarea";
+
+export {
+  Skeleton,
+  SkeletonText,
+  SkeletonCircle,
+  SkeletonCard,
+  SkeletonTableRow,
+  SkeletonWrapper,
+} from "./skeleton";

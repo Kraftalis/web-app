@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Select } from "@/components/ui";
+import { IconGrid, IconList } from "@/components/icons";
 
 interface SelectOption {
   value: string;
@@ -21,12 +22,13 @@ interface Props {
   setSubcategoryId: (v: string) => void;
   categoryOptions: SelectOption[];
   subcategoryOptions: SelectOption[];
+  viewMode: "grid" | "list";
+  setViewMode: (v: "grid" | "list") => void;
 }
 
 /**
- * Inline filter selects for the pricing page.
- * Renders as a flat row of selects — no wrapper flex container.
- * The parent is responsible for the row layout.
+ * Inline filter selects + view toggle for the pricing page.
+ * Renders as a flat row — the parent owns the flex container.
  */
 export default function PricingControls({
   sortBy,
@@ -41,6 +43,8 @@ export default function PricingControls({
   setSubcategoryId,
   categoryOptions,
   subcategoryOptions,
+  viewMode,
+  setViewMode,
 }: Props) {
   return (
     <>
@@ -48,12 +52,11 @@ export default function PricingControls({
         value={categoryId}
         onChange={(e) => {
           setCategoryId(e.target.value);
-          setSubcategoryId(""); // reset subcategory when category changes
+          setSubcategoryId("");
         }}
         options={[{ value: "", label: "All categories" }, ...categoryOptions]}
         className="w-auto"
       />
-
       <Select
         value={subcategoryId}
         onChange={(e) => setSubcategoryId(e.target.value)}
@@ -61,7 +64,6 @@ export default function PricingControls({
         className="w-auto"
         disabled={!categoryId}
       />
-
       <Select
         value={`${sortBy}_${sortDir}`}
         onChange={(e) => {
@@ -78,7 +80,6 @@ export default function PricingControls({
         ]}
         className="w-auto"
       />
-
       <Select
         value={String(pageSize)}
         onChange={(e) => setPageSize(parseInt(e.target.value, 10))}
@@ -89,6 +90,32 @@ export default function PricingControls({
         ]}
         className="w-auto"
       />
+
+      {/* View toggle */}
+      <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 shrink-0">
+        <button
+          onClick={() => setViewMode("grid")}
+          className={`rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
+            viewMode === "grid"
+              ? "bg-blue-600 text-white"
+              : "text-gray-600 hover:bg-gray-100"
+          }`}
+          title="Grid view"
+        >
+          <IconGrid size={16} />
+        </button>
+        <button
+          onClick={() => setViewMode("list")}
+          className={`rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
+            viewMode === "list"
+              ? "bg-blue-600 text-white"
+              : "text-gray-600 hover:bg-gray-100"
+          }`}
+          title="List view"
+        >
+          <IconList size={16} />
+        </button>
+      </div>
     </>
   );
 }
