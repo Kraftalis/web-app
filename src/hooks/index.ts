@@ -31,6 +31,9 @@ export {
   useDeleteSubcategory,
 } from "./pricing";
 
+// ─── Booking hooks ──────────────────────────────────────────
+export { bookingKeys, useBookingLinks, useCreateBookingLink } from "./booking";
+
 // ─── User hooks ─────────────────────────────────────────────
 export { userKeys, useProfile, useUpdateProfile } from "./user";
 

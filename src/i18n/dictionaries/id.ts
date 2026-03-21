@@ -207,6 +207,13 @@ const id: Dictionary = {
     noMatchingEvents: "Tidak ada acara yang cocok",
     noMatchingEventsDesc: "Coba sesuaikan pencarian atau filter Anda.",
 
+    // Stats
+    totalEvents: "Total Acara",
+    upcoming: "Mendatang",
+    confirmed: "Dikonfirmasi",
+    revenue: "Pendapatan",
+    thisMonth: "bulan ini",
+
     // View modes
     listView: "Daftar",
     kanbanView: "Papan",
@@ -219,6 +226,7 @@ const id: Dictionary = {
     colPaymentStatus: "Pembayaran",
     colEventStatus: "Status",
     colActions: "Aksi",
+    colAmount: "Nominal",
 
     // Event statuses
     statusInquiry: "Permintaan",
@@ -239,6 +247,11 @@ const id: Dictionary = {
     // Kanban
     kanbanNoEvents: "Tidak ada acara di tahap ini",
     kanbanDragHint: "Seret kartu untuk memindahkan antar tahap",
+
+    // Loading
+    loading: "Memuat acara...",
+    errorLoading: "Gagal memuat acara.",
+    retry: "Coba Lagi",
   },
 
   // ─── Event Detail Page ───────────────────────────────────

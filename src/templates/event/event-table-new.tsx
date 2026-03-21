@@ -139,10 +139,7 @@ function EventCard({
                 <Badge variant={eventStatusVariant(event.eventStatus)} dot>
                   {eventStatusLabel[event.eventStatus] ?? event.eventStatus}
                 </Badge>
-                <Badge
-                  variant={paymentStatusVariant(event.paymentStatus)}
-                  dot
-                >
+                <Badge variant={paymentStatusVariant(event.paymentStatus)} dot>
                   {paymentStatusLabel[event.paymentStatus] ??
                     event.paymentStatus}
                 </Badge>

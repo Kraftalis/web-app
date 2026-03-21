@@ -1,5 +1,3 @@
-import type { Package, AddOn } from "@/services/pricing/types";
-
 // ─── Event list item ────────────────────────────────────────
 
 export interface EventItem {
@@ -13,8 +11,10 @@ export interface EventItem {
   eventTime: string | null;
   eventLocation: string | null;
   packageName: string | null;
+  packageSnapshot: unknown;
+  addOnsSnapshot: unknown;
   amount: string | null;
-  dpAmount: string | null;
+  currency: string;
   eventStatus: string;
   paymentStatus: string;
   notes: string | null;
@@ -24,35 +24,6 @@ export interface EventItem {
 }
 
 // ─── Event detail ───────────────────────────────────────────
-
-export interface EventDetailPackageItem {
-  id: string;
-  name: string;
-  description: string | null;
-}
-
-export interface EventDetailPackage {
-  id: string;
-  name: string;
-  description: string | null;
-  price: string;
-  currency: string;
-  duration: string | null;
-  capacity: string | null;
-  isActive: boolean;
-  items: EventDetailPackageItem[];
-}
-
-export interface EventDetailAddOn {
-  id: string;
-  quantity: number;
-  unitPrice: string;
-  addOn: {
-    id: string;
-    name: string;
-    description: string | null;
-  };
-}
 
 export interface EventDetailPayment {
   id: string;
@@ -74,17 +45,15 @@ export interface EventDetail {
   eventDate: string;
   eventTime: string | null;
   eventLocation: string | null;
-  packageId: string | null;
   packageSnapshot: unknown;
+  addOnsSnapshot: unknown;
   amount: string | null;
-  dpAmount: string | null;
+  currency: string;
   eventStatus: string;
   paymentStatus: string;
   notes: string | null;
   createdAt: string;
   updatedAt: string;
-  package: EventDetailPackage | null;
-  eventAddOns: EventDetailAddOn[];
   bookingToken: string | null;
   payments: EventDetailPayment[];
 }
@@ -99,10 +68,10 @@ export interface CreateEventPayload {
   eventDate: string;
   eventTime?: string | null;
   eventLocation?: string | null;
-  packageId?: string | null;
-  addOnIds?: { addOnId: string; quantity: number }[];
+  packageSnapshot?: unknown;
+  addOnsSnapshot?: unknown;
   amount?: number | null;
-  dpAmount?: number | null;
+  currency?: string;
   notes?: string | null;
 }
 
@@ -119,8 +88,6 @@ export interface BookingLinkData {
   vendor: { id: string; name: string | null; image: string | null };
   eventId: string | null;
   expiresAt: string;
-  packages: Package[];
-  addOns: AddOn[];
 }
 
 export interface BookingSubmitPayload {
@@ -132,9 +99,10 @@ export interface BookingSubmitPayload {
   eventDate: string;
   eventTime?: string | null;
   eventLocation?: string | null;
-  packageId: string;
-  addOnIds?: { addOnId: string; quantity: number }[];
-  dpAmount: number;
+  packageSnapshot?: unknown;
+  addOnsSnapshot?: unknown;
+  amount?: number;
+  currency?: string;
   notes?: string | null;
 }
 

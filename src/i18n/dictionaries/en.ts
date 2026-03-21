@@ -203,6 +203,13 @@ const en = {
     noMatchingEvents: "No matching events",
     noMatchingEventsDesc: "Try adjusting your search or filters.",
 
+    // Stats
+    totalEvents: "Total Events",
+    upcoming: "Upcoming",
+    confirmed: "Confirmed",
+    revenue: "Revenue",
+    thisMonth: "this month",
+
     // View modes
     listView: "List",
     kanbanView: "Board",
@@ -215,6 +222,7 @@ const en = {
     colPaymentStatus: "Payment",
     colEventStatus: "Status",
     colActions: "Actions",
+    colAmount: "Amount",
 
     // Event statuses
     statusInquiry: "Inquiry",
@@ -235,6 +243,11 @@ const en = {
     // Kanban
     kanbanNoEvents: "No events in this stage",
     kanbanDragHint: "Drag cards to move between stages",
+
+    // Loading
+    loading: "Loading events...",
+    errorLoading: "Failed to load events.",
+    retry: "Retry",
   },
 
   // ─── Event Detail Page ───────────────────────────────────

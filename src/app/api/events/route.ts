@@ -21,6 +21,14 @@ export async function GET() {
   try {
     const events = await findEventsByVendor(userId);
 
+    // Extract package name from JSONB snapshot
+    const extractPkgName = (snap: unknown): string | null => {
+      if (snap && typeof snap === "object" && "name" in snap) {
+        return (snap as { name: string }).name;
+      }
+      return null;
+    };
+
     return successResponse(
       events.map((e) => ({
         id: e.id,
@@ -32,9 +40,11 @@ export async function GET() {
         eventDate: e.eventDate.toISOString(),
         eventTime: e.eventTime,
         eventLocation: e.eventLocation,
-        packageName: e.package?.name ?? null,
+        packageSnapshot: e.packageSnapshot,
+        addOnsSnapshot: e.addOnsSnapshot,
+        packageName: extractPkgName(e.packageSnapshot),
         amount: e.amount ? String(e.amount) : null,
-        dpAmount: e.dpAmount ? String(e.dpAmount) : null,
+        currency: e.currency,
         eventStatus: e.eventStatus,
         paymentStatus: e.paymentStatus,
         notes: e.notes,
@@ -69,7 +79,6 @@ export async function POST(request: NextRequest) {
       ...event,
       eventDate: event.eventDate.toISOString(),
       amount: event.amount ? String(event.amount) : null,
-      dpAmount: event.dpAmount ? String(event.dpAmount) : null,
       createdAt: event.createdAt.toISOString(),
       updatedAt: event.updatedAt.toISOString(),
     });

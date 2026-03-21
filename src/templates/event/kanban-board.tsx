@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { Badge } from "@/components/ui";
-import { IconEye, IconClock, IconMapPin } from "@/components/icons";
+import { IconEye, IconClock, IconMapPin, IconPhone } from "@/components/icons";
 import type { EventItem } from "./types";
 import {
   paymentStatusVariant,
+  formatCurrency,
   EVENT_STATUSES,
   EVENT_STATUS_COLORS,
 } from "./types";
@@ -29,7 +30,6 @@ export function KanbanBoard({
   viewLabel,
   formatDate,
 }: KanbanBoardProps) {
-  // Group events by status
   const columns = EVENT_STATUSES.map((status) => ({
     status,
     label: eventStatusLabel[status] ?? status,
@@ -93,7 +93,7 @@ function KanbanColumn({
       {/* Column body */}
       <div
         className="flex-1 space-y-2 overflow-y-auto p-2"
-        style={{ maxHeight: "calc(100vh - 320px)" }}
+        style={{ maxHeight: "calc(100vh - 380px)" }}
       >
         {events.length === 0 ? (
           <div className="py-8 text-center">
@@ -131,50 +131,61 @@ function KanbanCard({
   formatDate,
 }: KanbanCardProps) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md">
-      {/* Client name + type */}
-      <div className="mb-2">
-        <p className="truncate text-sm font-semibold text-slate-900">
-          {event.clientName}
-        </p>
-        <p className="text-xs text-slate-500">{event.eventType}</p>
+    <Link
+      href={`/event/${event.id}`}
+      className="block rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition-all hover:shadow-md hover:border-blue-200 group"
+    >
+      {/* Client name + type badge */}
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-slate-900 group-hover:text-blue-700">
+            {event.clientName}
+          </p>
+          <p className="text-xs text-slate-500">{event.eventType}</p>
+        </div>
+        {event.amount && (
+          <p className="shrink-0 text-xs font-bold text-slate-700">
+            {formatCurrency(event.amount, event.currency)}
+          </p>
+        )}
       </div>
 
-      {/* Date & location */}
+      {/* Date & time */}
       <div className="mb-2 space-y-1">
         <p className="flex items-center gap-1.5 text-xs text-slate-500">
-          <IconClock size={12} />
+          <IconClock size={12} className="shrink-0" />
           {formatDate(event.eventDate)}
           {event.eventTime && ` · ${event.eventTime}`}
         </p>
         {event.eventLocation && (
           <p className="flex items-center gap-1.5 text-xs text-slate-500">
-            <IconMapPin size={12} />
+            <IconMapPin size={12} className="shrink-0" />
             <span className="truncate">{event.eventLocation}</span>
           </p>
         )}
+        <p className="flex items-center gap-1.5 text-xs text-slate-400">
+          <IconPhone size={12} className="shrink-0" />
+          {event.clientPhone}
+        </p>
       </div>
 
       {/* Package */}
       {event.packageName && (
-        <p className="mb-2 truncate text-xs text-slate-400">
+        <p className="mb-2 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
           📦 {event.packageName}
         </p>
       )}
 
-      {/* Footer: payment badge + view link */}
-      <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+      {/* Footer: payment badge */}
+      <div className="flex items-center justify-between pt-2 border-t border-slate-100">
         <Badge variant={paymentStatusVariant(event.paymentStatus)} dot>
           {paymentStatusLabel[event.paymentStatus] ?? event.paymentStatus}
         </Badge>
-        <Link
-          href={`/event/${event.id}`}
-          className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-500"
-        >
+        <span className="flex items-center gap-1 text-xs font-medium text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
           <IconEye size={12} />
           {viewLabel}
-        </Link>
+        </span>
       </div>
-    </div>
+    </Link>
   );
 }

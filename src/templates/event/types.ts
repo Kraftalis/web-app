@@ -31,8 +31,10 @@ export interface EventItem {
   eventTime: string | null;
   eventLocation: string | null;
   packageName: string | null;
+  packageSnapshot: unknown;
+  addOnsSnapshot: unknown;
   amount: string | null;
-  dpAmount: string | null;
+  currency: string;
   eventStatus: string;
   paymentStatus: string;
   notes: string | null;
@@ -42,35 +44,6 @@ export interface EventItem {
 }
 
 // ─── Event Detail ───────────────────────────────────────────
-
-export interface PackageItemSerialized {
-  id: string;
-  name: string;
-  description: string | null;
-}
-
-export interface PackageSerialized {
-  id: string;
-  name: string;
-  description: string | null;
-  price: string;
-  currency: string;
-  duration: string | null;
-  capacity: string | null;
-  isActive: boolean;
-  items: PackageItemSerialized[];
-}
-
-export interface EventAddOnSerialized {
-  id: string;
-  quantity: number;
-  unitPrice: string;
-  addOn: {
-    id: string;
-    name: string;
-    description: string | null;
-  };
-}
 
 export interface PaymentSerialized {
   id: string;
@@ -92,17 +65,15 @@ export interface EventDetail {
   eventDate: string;
   eventTime: string | null;
   eventLocation: string | null;
-  packageId: string | null;
   packageSnapshot: unknown;
+  addOnsSnapshot: unknown;
   amount: string | null;
-  dpAmount: string | null;
+  currency: string;
   eventStatus: string;
   paymentStatus: string;
   notes: string | null;
   createdAt: string;
   updatedAt: string;
-  package: PackageSerialized | null;
-  eventAddOns: EventAddOnSerialized[];
   bookingToken: string | null;
   payments: PaymentSerialized[];
 }

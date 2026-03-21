@@ -15,17 +15,10 @@ export const createEventSchema = z.object({
   eventDate: z.string().min(1, "Event date is required."), // ISO date string
   eventTime: z.string().max(20).optional().nullable(),
   eventLocation: z.string().max(2000).optional().nullable(),
-  packageId: z.string().uuid().optional().nullable(),
-  addOnIds: z
-    .array(
-      z.object({
-        addOnId: z.string().uuid(),
-        quantity: z.number().int().min(1).default(1),
-      }),
-    )
-    .optional(),
+  packageSnapshot: z.any().optional().nullable(),
+  addOnsSnapshot: z.any().optional().nullable(),
   amount: z.number().min(0).optional().nullable(),
-  dpAmount: z.number().min(0).optional().nullable(),
+  currency: z.string().max(10).optional().default("IDR"),
   notes: z.string().max(5000).optional().nullable(),
 });
 
@@ -52,16 +45,10 @@ export const bookingSubmitSchema = z.object({
   eventDate: z.string().min(1, "Event date is required."),
   eventTime: z.string().max(20).optional().nullable(),
   eventLocation: z.string().max(2000).optional().nullable(),
-  packageId: z.string().uuid("Package selection is required."),
-  addOnIds: z
-    .array(
-      z.object({
-        addOnId: z.string().uuid(),
-        quantity: z.number().int().min(1).default(1),
-      }),
-    )
-    .optional(),
-  dpAmount: z.number().min(1, "Down payment is required."),
+  packageSnapshot: z.any().optional().nullable(),
+  addOnsSnapshot: z.any().optional().nullable(),
+  amount: z.number().optional().nullable(),
+  currency: z.string().max(10).optional().default("IDR"),
   notes: z.string().max(5000).optional().nullable(),
 });
 

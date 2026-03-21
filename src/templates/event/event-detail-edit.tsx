@@ -33,7 +33,6 @@ interface EventDetailEditProps {
     eventLocation: string;
     paymentInfo: string;
     totalAmount: string;
-    dpAmount: string;
     notes: string;
     saveChanges: string;
     updateStatus: string;
@@ -167,13 +166,6 @@ export function EventDetailEdit({
             type="number"
             label={labels.totalAmount}
             defaultValue={event.amount ?? ""}
-          />
-          <Input
-            id="dpAmount"
-            name="dpAmount"
-            type="number"
-            label={labels.dpAmount}
-            defaultValue={event.dpAmount ?? ""}
           />
         </CardBody>
       </Card>

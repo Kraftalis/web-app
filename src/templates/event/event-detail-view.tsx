@@ -8,7 +8,6 @@ import {
   IconClock,
   IconCalendar,
   IconNotes,
-  IconCheck,
 } from "@/components/icons";
 import type { EventDetail } from "./types";
 import { formatCurrency } from "./types";
@@ -33,7 +32,6 @@ interface EventDetailViewProps {
     addOns: string;
     paymentInfo: string;
     totalAmount: string;
-    dpAmount: string;
     notes: string;
     noNotes: string;
   };
@@ -103,71 +101,24 @@ export function EventDetailView({
         </CardBody>
       </Card>
 
-      {/* Package */}
-      {event.package && (
-        <Card>
-          <CardHeader>
-            <h2 className="text-base font-semibold text-gray-900">
-              {labels.packageInfo}
-            </h2>
-          </CardHeader>
-          <CardBody className="space-y-3">
-            <InfoRow label={labels.packageName}>{event.package.name}</InfoRow>
-            {event.package.description && (
-              <p className="text-sm text-gray-600">
-                {event.package.description}
-              </p>
-            )}
-            <p className="text-sm font-medium text-gray-900">
-              {formatCurrency(event.package.price, event.package.currency)}
-            </p>
-            {event.package.items.length > 0 && (
-              <ul className="mt-2 space-y-1">
-                {event.package.items.map((item) => (
-                  <li
-                    key={item.id}
-                    className="flex items-center gap-2 text-sm text-gray-600"
-                  >
-                    <IconCheck size={14} className="text-green-500" />
-                    {item.name}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardBody>
-        </Card>
+      {/* Package (from snapshot) */}
+      {event.packageSnapshot != null && (
+        <PackageSnapshotCard
+          snapshot={event.packageSnapshot as Record<string, unknown>}
+          currency={event.currency}
+          labels={labels}
+        />
       )}
 
-      {/* Add-ons */}
-      {event.eventAddOns.length > 0 && (
-        <Card>
-          <CardHeader>
-            <h2 className="text-base font-semibold text-gray-900">
-              {labels.addOns}
-            </h2>
-          </CardHeader>
-          <CardBody>
-            <div className="space-y-2">
-              {event.eventAddOns.map((ea) => (
-                <div
-                  key={ea.id}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <span className="text-gray-700">
-                    {ea.addOn.name}
-                    {ea.quantity > 1 && (
-                      <span className="ml-1 text-gray-400">×{ea.quantity}</span>
-                    )}
-                  </span>
-                  <span className="font-medium text-gray-900">
-                    {formatCurrency(ea.unitPrice)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardBody>
-        </Card>
-      )}
+      {/* Add-ons (from snapshot) */}
+      {Array.isArray(event.addOnsSnapshot) &&
+        (event.addOnsSnapshot as Record<string, unknown>[]).length > 0 && (
+          <AddOnsSnapshotCard
+            snapshot={event.addOnsSnapshot as Record<string, unknown>[]}
+            currency={event.currency}
+            label={labels.addOns}
+          />
+        )}
 
       {/* Payment Summary */}
       <Card>
@@ -178,10 +129,7 @@ export function EventDetailView({
         </CardHeader>
         <CardBody className="space-y-3">
           <InfoRow label={labels.totalAmount}>
-            {formatCurrency(event.amount)}
-          </InfoRow>
-          <InfoRow label={labels.dpAmount}>
-            {formatCurrency(event.dpAmount)}
+            {formatCurrency(event.amount, event.currency)}
           </InfoRow>
           <InfoRow label={bookingLabels.totalPaid}>
             <span className="text-green-600">
@@ -235,5 +183,84 @@ function InfoRow({
         {children}
       </span>
     </div>
+  );
+}
+
+// ─── Package Snapshot Card ──────────────────────────────────
+
+function PackageSnapshotCard({
+  snapshot,
+  currency,
+  labels,
+}: {
+  snapshot: Record<string, unknown>;
+  currency: string;
+  labels: { packageInfo: string; packageName: string };
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <h2 className="text-base font-semibold text-gray-900">
+          {labels.packageInfo}
+        </h2>
+      </CardHeader>
+      <CardBody className="space-y-3">
+        <InfoRow label={labels.packageName}>
+          {(snapshot.name as string) ?? "-"}
+        </InfoRow>
+        {typeof snapshot.description === "string" && snapshot.description && (
+          <p className="text-sm text-gray-600">{snapshot.description}</p>
+        )}
+        {snapshot.price != null && (
+          <p className="text-sm font-medium text-gray-900">
+            {formatCurrency(String(snapshot.price), currency)}
+          </p>
+        )}
+      </CardBody>
+    </Card>
+  );
+}
+
+// ─── AddOns Snapshot Card ───────────────────────────────────
+
+function AddOnsSnapshotCard({
+  snapshot,
+  currency,
+  label,
+}: {
+  snapshot: Record<string, unknown>[];
+  currency: string;
+  label: string;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <h2 className="text-base font-semibold text-gray-900">{label}</h2>
+      </CardHeader>
+      <CardBody>
+        <div className="space-y-2">
+          {snapshot.map((addon, idx) => (
+            <div
+              key={idx}
+              className="flex items-center justify-between text-sm"
+            >
+              <span className="text-gray-700">
+                {addon.name as string}
+                {(addon.quantity as number) > 1 && (
+                  <span className="ml-1 text-gray-400">
+                    ×{addon.quantity as number}
+                  </span>
+                )}
+              </span>
+              {addon.price != null && (
+                <span className="font-medium text-gray-900">
+                  {formatCurrency(String(addon.price), currency)}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </CardBody>
+    </Card>
   );
 }

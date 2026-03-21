@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { AppLayout } from "@/components/layout";
 import { Button, Input, Select } from "@/components/ui";
 import {
@@ -10,15 +9,16 @@ import {
   IconSearch,
   IconList,
   IconKanban,
+  IconRefresh,
 } from "@/components/icons";
 import { useDictionary } from "@/i18n";
-import { createEventAction, generateBookingLinkAction } from "./actions";
+import { useEvents } from "@/hooks/event";
 import type { EventItem } from "./types";
+import { EventStats } from "./event-stats";
 import { EventTable } from "./event-table";
 import { KanbanBoard } from "./kanban-board";
+import { EventListSkeleton } from "./event-list-skeleton";
 import { CreateEventModal, BookingLinkModal } from "./event-modals";
-import type { BookingLinkConfig } from "./event-modals";
-import type { VendorPackage, VendorAddOn } from "@/templates/booking/types";
 
 export type { EventItem };
 
@@ -28,21 +28,14 @@ interface EventListTemplateProps {
     email: string | null;
     image: string | null;
   } | null;
-  events: EventItem[];
-  packages?: VendorPackage[];
-  addOns?: VendorAddOn[];
 }
 
 type ViewMode = "list" | "kanban";
 
-export default function EventListTemplate({
-  user,
-  events,
-  packages = [],
-  addOns = [],
-}: EventListTemplateProps) {
+export default function EventListTemplate({ user }: EventListTemplateProps) {
   const { dict } = useDictionary();
-  const router = useRouter();
+
+  const { data: events = [], isLoading, isError, refetch } = useEvents();
 
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [search, setSearch] = useState("");
@@ -50,13 +43,7 @@ export default function EventListTemplate({
   const [paymentFilter, setPaymentFilter] = useState("");
 
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [isCreating, startCreateTransition] = useTransition();
-  const [createError, setCreateError] = useState<string | null>(null);
-
   const [showLinkModal, setShowLinkModal] = useState(false);
-  const [generatedToken, setGeneratedToken] = useState<string | null>(null);
-  const [isGenerating, startGenTransition] = useTransition();
-  const [linkCopied, setLinkCopied] = useState(false);
 
   const eventStatusLabel: Record<string, string> = {
     INQUIRY: dict.event.statusInquiry,
@@ -79,48 +66,12 @@ export default function EventListTemplate({
       const q = search.toLowerCase();
       return (
         e.clientName.toLowerCase().includes(q) ||
-        e.eventType.toLowerCase().includes(q)
+        e.eventType.toLowerCase().includes(q) ||
+        (e.eventLocation?.toLowerCase().includes(q) ?? false)
       );
     }
     return true;
   });
-
-  function handleCreateEvent(formData: FormData) {
-    setCreateError(null);
-    startCreateTransition(async () => {
-      const result = await createEventAction(formData);
-      if (result.error) {
-        setCreateError(result.error);
-      } else {
-        setShowCreateModal(false);
-        router.refresh();
-      }
-    });
-  }
-
-  function handleGenerateLink(config: BookingLinkConfig) {
-    startGenTransition(async () => {
-      const result = await generateBookingLinkAction(config);
-      if (result.token) {
-        setGeneratedToken(result.token);
-        setShowLinkModal(true);
-      }
-    });
-  }
-
-  function handleCopyLink() {
-    if (!generatedToken) return;
-    const url = `${window.location.origin}/booking/${generatedToken}`;
-    navigator.clipboard.writeText(url);
-    setLinkCopied(true);
-    setTimeout(() => setLinkCopied(false), 2000);
-  }
-
-  function handleShareWhatsApp() {
-    if (!generatedToken) return;
-    const url = `${window.location.origin}/booking/${generatedToken}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(url)}`, "_blank");
-  }
 
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString("en-US", {
@@ -153,7 +104,6 @@ export default function EventListTemplate({
             variant="outline"
             size="md"
             onClick={() => setShowLinkModal(true)}
-            isLoading={isGenerating}
           >
             <IconLink size={16} />
             {dict.event.generateLink}
@@ -165,109 +115,138 @@ export default function EventListTemplate({
         </div>
       </div>
 
-      {/* Filters + View Toggle */}
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
-          <IconSearch
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10"
-          />
-          <Input
-            type="text"
-            placeholder={dict.event.searchPlaceholder}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+      {/* Loading / Error / Content */}
+      {isLoading ? (
+        <EventListSkeleton />
+      ) : isError ? (
+        <div className="flex flex-col items-center py-20">
+          <p className="text-sm text-red-500 mb-3">{dict.event.errorLoading}</p>
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <IconRefresh size={14} />
+            {dict.event.retry}
+          </Button>
         </div>
-        <Select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          options={[
-            { value: "", label: dict.event.allStatuses },
-            { value: "INQUIRY", label: dict.event.statusInquiry },
-            {
-              value: "WAITING_PAYMENT",
-              label: dict.event.statusWaitingPayment,
-            },
-            { value: "CONFIRMED", label: dict.event.statusConfirmed },
-            { value: "ONGOING", label: dict.event.statusOngoing },
-            { value: "COMPLETED", label: dict.event.statusCompleted },
-          ]}
-          className="w-auto"
-        />
-        <Select
-          value={paymentFilter}
-          onChange={(e) => setPaymentFilter(e.target.value)}
-          options={[
-            { value: "", label: dict.event.allPayments },
-            { value: "UNPAID", label: dict.event.paymentUnpaid },
-            { value: "DP_PAID", label: dict.event.paymentDpPaid },
-            { value: "PAID", label: dict.event.paymentPaid },
-          ]}
-          className="w-auto"
-        />
-
-        {/* View toggle */}
-        <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1">
-          <button
-            onClick={() => setViewMode("list")}
-            className={`rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
-              viewMode === "list"
-                ? "bg-blue-600 text-white"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
-            title={dict.event.listView}
-          >
-            <IconList size={16} />
-          </button>
-          <button
-            onClick={() => setViewMode("kanban")}
-            className={`rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
-              viewMode === "kanban"
-                ? "bg-blue-600 text-white"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
-            title={dict.event.kanbanView}
-          >
-            <IconKanban size={16} />
-          </button>
-        </div>
-      </div>
-
-      {/* Content */}
-      {viewMode === "list" ? (
-        <EventTable
-          events={filtered}
-          allEventsCount={events.length}
-          eventStatusLabel={eventStatusLabel}
-          paymentStatusLabel={paymentStatusLabel}
-          viewLabel={dict.event.view}
-          formatDate={formatDate}
-          columns={dict.event}
-          emptyLabels={dict.event}
-        />
       ) : (
-        <KanbanBoard
-          events={filtered}
-          eventStatusLabel={eventStatusLabel}
-          paymentStatusLabel={paymentStatusLabel}
-          noEventsLabel={dict.event.kanbanNoEvents}
-          viewLabel={dict.event.view}
-          formatDate={formatDate}
-        />
+        <>
+          {/* Stats */}
+          <div className="mb-6">
+            <EventStats
+              events={events}
+              labels={{
+                totalEvents: dict.event.totalEvents,
+                upcoming: dict.event.upcoming,
+                confirmed: dict.event.confirmed,
+                revenue: dict.event.revenue,
+                thisMonth: dict.event.thisMonth,
+              }}
+            />
+          </div>
+
+          {/* Filters + View Toggle */}
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <IconSearch
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10"
+              />
+              <Input
+                type="text"
+                placeholder={dict.event.searchPlaceholder}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              options={[
+                { value: "", label: dict.event.allStatuses },
+                { value: "INQUIRY", label: dict.event.statusInquiry },
+                {
+                  value: "WAITING_PAYMENT",
+                  label: dict.event.statusWaitingPayment,
+                },
+                { value: "CONFIRMED", label: dict.event.statusConfirmed },
+                { value: "ONGOING", label: dict.event.statusOngoing },
+                { value: "COMPLETED", label: dict.event.statusCompleted },
+              ]}
+              className="w-auto"
+            />
+            <Select
+              value={paymentFilter}
+              onChange={(e) => setPaymentFilter(e.target.value)}
+              options={[
+                { value: "", label: dict.event.allPayments },
+                { value: "UNPAID", label: dict.event.paymentUnpaid },
+                { value: "DP_PAID", label: dict.event.paymentDpPaid },
+                { value: "PAID", label: dict.event.paymentPaid },
+              ]}
+              className="w-auto"
+            />
+
+            {/* View toggle */}
+            <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1">
+              <button
+                onClick={() => setViewMode("list")}
+                className={`rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
+                  viewMode === "list"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+                title={dict.event.listView}
+              >
+                <IconList size={16} />
+              </button>
+              <button
+                onClick={() => setViewMode("kanban")}
+                className={`rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
+                  viewMode === "kanban"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+                title={dict.event.kanbanView}
+              >
+                <IconKanban size={16} />
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          {viewMode === "list" ? (
+            <EventTable
+              events={filtered}
+              allEventsCount={events.length}
+              eventStatusLabel={eventStatusLabel}
+              paymentStatusLabel={paymentStatusLabel}
+              viewLabel={dict.event.view}
+              formatDate={formatDate}
+              columns={dict.event}
+              emptyLabels={dict.event}
+            />
+          ) : (
+            <KanbanBoard
+              events={filtered}
+              eventStatusLabel={eventStatusLabel}
+              paymentStatusLabel={paymentStatusLabel}
+              noEventsLabel={dict.event.kanbanNoEvents}
+              viewLabel={dict.event.view}
+              formatDate={formatDate}
+            />
+          )}
+        </>
       )}
 
       {/* Modals */}
       <CreateEventModal
         open={showCreateModal}
-        onClose={() => {
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={() => {
           setShowCreateModal(false);
-          setCreateError(null);
+          refetch();
         }}
-        onSubmit={handleCreateEvent}
-        isCreating={isCreating}
-        createError={createError}
+        isCreating={false}
+        createError={null}
         eventTypes={eventTypes}
         labels={dict.createEventModal}
         cancelLabel={dict.common.cancel}
@@ -275,21 +254,8 @@ export default function EventListTemplate({
 
       <BookingLinkModal
         open={showLinkModal}
-        onClose={() => {
-          setShowLinkModal(false);
-          setGeneratedToken(null);
-          setLinkCopied(false);
-        }}
-        packages={packages}
-        addOns={addOns}
-        token={generatedToken}
-        isGenerating={isGenerating}
-        onGenerate={handleGenerateLink}
-        onCopyLink={handleCopyLink}
-        onShareWhatsApp={handleShareWhatsApp}
-        linkCopied={linkCopied}
+        onClose={() => setShowLinkModal(false)}
         labels={dict.bookingLink}
-        cancelLabel={dict.common.cancel}
       />
     </AppLayout>
   );

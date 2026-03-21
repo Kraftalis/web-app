@@ -9,13 +9,11 @@ import {
 import { bookingSubmitSchema } from "@/lib/validations/event";
 import { findBookingLinkByToken } from "@/repositories/event";
 import { createEvent } from "@/repositories/event";
-import { createPayment } from "@/repositories/event";
-import { findPackageById } from "@/repositories/pricing";
 import { prisma } from "@/lib/prisma";
 
 /**
  * POST /api/booking — handles public booking form submission.
- * Creates an event + links it to the booking link + creates DP payment record.
+ * Creates an event using snapshot data sent by the client.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -34,25 +32,7 @@ export async function POST(request: NextRequest) {
     if (link.eventId)
       return validationError("This booking link has already been used.");
 
-    // 2. Snapshot the selected package
-    const pkg = await findPackageById(data.packageId);
-    if (!pkg) return notFoundError("Selected package not found.");
-
-    // 3. Calculate total amount
-    const packagePrice = Number(pkg.price);
-    let addOnsTotal = 0;
-    if (data.addOnIds?.length) {
-      const addOnRecords = await prisma.addOn.findMany({
-        where: { id: { in: data.addOnIds.map((a) => a.addOnId) } },
-      });
-      for (const sel of data.addOnIds) {
-        const addon = addOnRecords.find((a) => a.id === sel.addOnId);
-        if (addon) addOnsTotal += Number(addon.price) * sel.quantity;
-      }
-    }
-    const totalAmount = packagePrice + addOnsTotal;
-
-    // 4. Create event
+    // 2. Create event with snapshot data
     const event = await createEvent(link.vendorId, {
       clientName: data.clientName,
       clientPhone: data.clientPhone,
@@ -61,30 +41,33 @@ export async function POST(request: NextRequest) {
       eventDate: data.eventDate,
       eventTime: data.eventTime,
       eventLocation: data.eventLocation,
-      packageId: data.packageId,
-      addOnIds: data.addOnIds,
-      amount: totalAmount,
-      dpAmount: data.dpAmount,
+      packageSnapshot: data.packageSnapshot,
+      addOnsSnapshot: data.addOnsSnapshot,
+      amount: data.amount,
+      currency: data.currency ?? "IDR",
       notes: data.notes,
     });
 
-    // 5. Link event to booking link
+    // 3. Link event to booking link + update booking link with snapshots
     await prisma.bookingLink.update({
       where: { id: link.id },
-      data: { eventId: event.id },
+      data: {
+        eventId: event.id,
+        clientName: data.clientName,
+        clientPhone: data.clientPhone,
+        eventDate: new Date(data.eventDate),
+        eventTime: data.eventTime,
+        eventLocation: data.eventLocation,
+        packageSnapshot: data.packageSnapshot ?? undefined,
+        addOnsSnapshot: data.addOnsSnapshot ?? undefined,
+        totalAmount: data.amount ?? undefined,
+      },
     });
 
-    // 6. Create DP payment record
-    await createPayment({
-      eventId: event.id,
-      paymentType: "DOWN_PAYMENT",
-      amount: data.dpAmount,
-    });
-
-    // 7. Update event status to WAITING_PAYMENT
+    // 4. Update event status to WAITING_PAYMENT
     await prisma.event.update({
       where: { id: event.id },
-      data: { eventStatus: "WAITING_PAYMENT", paymentStatus: "DP_PAID" },
+      data: { eventStatus: "WAITING_PAYMENT" },
     });
 
     return successResponse({

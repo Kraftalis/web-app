@@ -269,7 +269,6 @@ export default function EventDetailTemplate({
                 eventLocation: dict.eventDetail.eventLocation,
                 paymentInfo: dict.eventDetail.paymentInfo,
                 totalAmount: dict.eventDetail.totalAmount,
-                dpAmount: dict.eventDetail.dpAmount,
                 notes: dict.eventDetail.notes,
                 saveChanges: dict.eventDetail.saveChanges,
                 updateStatus: dict.eventDetail.updateStatus,
@@ -296,7 +295,6 @@ export default function EventDetailTemplate({
                 addOns: dict.eventDetail.addOns,
                 paymentInfo: dict.eventDetail.paymentInfo,
                 totalAmount: dict.eventDetail.totalAmount,
-                dpAmount: dict.eventDetail.dpAmount,
                 notes: dict.eventDetail.notes,
                 noNotes: dict.eventDetail.noNotes,
               }}

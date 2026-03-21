@@ -1,9 +1,6 @@
 export type {
   EventItem,
   EventDetail,
-  EventDetailPackage,
-  EventDetailPackageItem,
-  EventDetailAddOn,
   EventDetailPayment,
   CreateEventPayload,
   UpdateEventPayload,

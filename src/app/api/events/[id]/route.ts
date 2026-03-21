@@ -63,7 +63,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       ...updated,
       eventDate: updated.eventDate.toISOString(),
       amount: updated.amount ? String(updated.amount) : null,
-      dpAmount: updated.dpAmount ? String(updated.dpAmount) : null,
+      currency: updated.currency,
+      packageSnapshot: updated.packageSnapshot,
+      addOnsSnapshot: updated.addOnsSnapshot,
       createdAt: updated.createdAt.toISOString(),
       updatedAt: updated.updatedAt.toISOString(),
     });
@@ -110,57 +112,17 @@ function serializeEventDetail(event: any) {
     eventDate: event.eventDate.toISOString(),
     eventTime: event.eventTime,
     eventLocation: event.eventLocation,
-    packageId: event.packageId,
     packageSnapshot: event.packageSnapshot,
+    addOnsSnapshot: event.addOnsSnapshot,
     amount: event.amount ? String(event.amount) : null,
-    dpAmount: event.dpAmount ? String(event.dpAmount) : null,
+    currency: event.currency,
     eventStatus: event.eventStatus,
     paymentStatus: event.paymentStatus,
     notes: event.notes,
     createdAt: event.createdAt.toISOString(),
     updatedAt: event.updatedAt.toISOString(),
-    package: event.package
-      ? {
-          id: event.package.id,
-          name: event.package.name,
-          description: event.package.description,
-          price: String(event.package.price),
-          currency: event.package.currency,
-          duration: event.package.duration,
-          capacity: event.package.capacity,
-          isActive: event.package.isActive,
-          items: event.package.items.map(
-            (i: { id: string; label: string }) => ({
-              id: i.id,
-              name: i.label,
-              description: null,
-            }),
-          ),
-        }
-      : null,
-    eventAddOns: event.eventAddOns.map(
-      (ea: {
-        id: string;
-        quantity: number;
-        addOn: {
-          id: string;
-          name: string;
-          description: string | null;
-          price: unknown;
-        };
-      }) => ({
-        id: ea.id,
-        quantity: ea.quantity,
-        unitPrice: String(ea.addOn.price),
-        addOn: {
-          id: ea.addOn.id,
-          name: ea.addOn.name,
-          description: ea.addOn.description,
-        },
-      }),
-    ),
     bookingToken: event.bookingLink?.token ?? null,
-    payments: event.payments.map(
+    payments: (event.payments ?? []).map(
       (p: {
         id: string;
         amount: unknown;
