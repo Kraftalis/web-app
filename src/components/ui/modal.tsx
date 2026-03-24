@@ -61,7 +61,7 @@ export default function Modal({
       >
         {/* Header — sticky so title stays visible while body scrolls */}
         {title && (
-          <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-lg border-b border-gray-200 bg-white px-6 py-4">
+          <div className="flex items-center justify-between rounded-t-lg border-b border-gray-200 bg-white px-6 py-4">
             <h2 className="text-lg font-medium text-gray-900">{title}</h2>
             <button
               onClick={onClose}
@@ -73,13 +73,13 @@ export default function Modal({
         )}
 
         {/* Body — scrollable when content exceeds viewport */}
-        <div className="max-h-[calc(100dvh-12rem)] overflow-y-auto px-6 py-4">
+        <div className="max-h-[calc(100dvh-16rem)] overflow-y-auto px-6 py-4">
           {children}
         </div>
 
         {/* Footer — sticky action bar, always visible */}
         {footer && (
-          <div className="sticky bottom-0 flex justify-end gap-3 rounded-b-lg border-t border-gray-200 bg-white px-6 py-4">
+          <div className="flex justify-end gap-3 rounded-b-lg border-t border-gray-200 bg-white px-6 py-4">
             {footer}
           </div>
         )}
