@@ -45,4 +45,31 @@ export async function generatePresignedUploadUrl(
   return { uploadUrl, publicUrl };
 }
 
+/**
+ * Upload a file buffer directly to S3 from the server.
+ * This avoids CORS issues with browser-direct uploads.
+ *
+ * @param key          Object key (path) in the bucket
+ * @param body         File contents as Buffer or Uint8Array
+ * @param contentType  MIME type
+ * @returns Public URL for the uploaded object
+ */
+export async function uploadToS3(
+  key: string,
+  body: Buffer | Uint8Array,
+  contentType: string,
+): Promise<string> {
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+    }),
+  );
+
+  const baseUrl = process.env.S3_ENDPOINT_URL!.replace("/s3", "");
+  return `${baseUrl}/object/public/${BUCKET}/${key}`;
+}
+
 export { s3, BUCKET };

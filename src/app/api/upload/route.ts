@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { successResponse, validationError, internalError } from "@/lib/api";
-import { generatePresignedUploadUrl } from "@/lib/s3";
+import { uploadToS3 } from "@/lib/s3";
 import { randomUUID } from "crypto";
 
 /**
@@ -18,44 +18,42 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 /**
  * POST /api/upload
- * Returns a presigned S3 PUT URL for direct client upload.
+ * Accepts a FormData body with a `file` field and optional `folder` field.
+ * Uploads the file server-side to S3 (avoids browser CORS issues).
  *
- * Body: { fileName: string, contentType: string, fileSize: number, folder?: string }
- * Returns: { uploadUrl, publicUrl, key }
+ * Returns: { publicUrl, fileName }
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { fileName, contentType, fileSize, folder } = body;
+    const formData = await request.formData();
+    const file = formData.get("file") as File | null;
+    const folder = (formData.get("folder") as string) ?? "receipts";
 
-    // Validate required fields
-    if (!fileName || !contentType) {
-      return validationError("fileName and contentType are required.");
+    if (!file || !(file instanceof File)) {
+      return validationError("A file is required.");
     }
 
     // Validate content type
-    if (!ALLOWED_TYPES.includes(contentType)) {
+    if (!ALLOWED_TYPES.includes(file.type)) {
       return validationError(
         `Unsupported file type. Allowed: ${ALLOWED_TYPES.join(", ")}`,
       );
     }
 
     // Validate file size
-    if (fileSize && fileSize > MAX_FILE_SIZE) {
+    if (file.size > MAX_FILE_SIZE) {
       return validationError("File too large. Maximum size is 5 MB.");
     }
 
-    // Build object key: folder/uuid-originalname
-    const ext = fileName.split(".").pop() ?? "bin";
-    const prefix = folder ?? "receipts";
-    const key = `${prefix}/${randomUUID()}.${ext}`;
+    // Build object key: folder/uuid.ext
+    const ext = file.name.split(".").pop() ?? "bin";
+    const key = `${folder}/${randomUUID()}.${ext}`;
 
-    const { uploadUrl, publicUrl } = await generatePresignedUploadUrl(
-      key,
-      contentType,
-    );
+    // Read file into buffer and upload server-side
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const publicUrl = await uploadToS3(key, buffer, file.type);
 
-    return successResponse({ uploadUrl, publicUrl, key });
+    return successResponse({ publicUrl, fileName: file.name });
   } catch (err) {
     console.error("[API] POST /api/upload error:", err);
     return internalError();

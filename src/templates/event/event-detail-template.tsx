@@ -203,25 +203,18 @@ export default function EventDetailTemplate({
     // Upload receipt if provided
     if (data.receiptFile) {
       try {
+        const formData = new FormData();
+        formData.append("file", data.receiptFile);
+        formData.append("folder", "receipts");
+
         const uploadRes = await fetch("/api/upload", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fileName: data.receiptFile.name,
-            contentType: data.receiptFile.type,
-            fileSize: data.receiptFile.size,
-            folder: "receipts",
-          }),
+          body: formData,
         });
         const uploadData = await uploadRes.json();
-        if (uploadData.data?.uploadUrl) {
-          await fetch(uploadData.data.uploadUrl, {
-            method: "PUT",
-            headers: { "Content-Type": data.receiptFile.type },
-            body: data.receiptFile,
-          });
+        if (uploadData.data?.publicUrl) {
           receiptUrl = uploadData.data.publicUrl;
-          receiptName = data.receiptFile.name;
+          receiptName = uploadData.data.fileName;
         }
       } catch (err) {
         console.error("Receipt upload failed:", err);

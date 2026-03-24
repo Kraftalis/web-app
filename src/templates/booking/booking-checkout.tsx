@@ -29,6 +29,7 @@ export interface CheckoutSubmitData {
   clientName: string;
   clientPhone: string;
   clientEmail: string;
+  eventLocation: string;
   dpAmount: string;
   receiptFile: File | null;
 }
@@ -57,6 +58,7 @@ export interface BookingCheckoutProps {
     eventDate: string;
     eventTime: string;
     eventLocation: string;
+    eventLocationPlaceholder: string;
     // Package
     packageLabel: string;
     noPackage: string;
@@ -95,10 +97,19 @@ export function BookingCheckout({
   labels,
 }: BookingCheckoutProps) {
   // ─── Client info state ──────────────────────────────────
-  const [isEditingInfo, setIsEditingInfo] = useState(false);
+  // Auto-open edit mode when required fields are missing
+  const needsClientInfo =
+    !bookingData.clientName?.trim() || !bookingData.clientPhone?.trim();
+  const [isEditingInfo, setIsEditingInfo] = useState(needsClientInfo);
   const [clientName, setClientName] = useState(bookingData.clientName ?? "");
   const [clientPhone, setClientPhone] = useState(bookingData.clientPhone ?? "");
   const [clientEmail, setClientEmail] = useState("");
+
+  // ─── Event location state (editable when missing) ──────
+  const [eventLocation, setEventLocation] = useState(
+    bookingData.eventLocation ?? "",
+  );
+  const needsLocation = !bookingData.eventLocation?.trim();
 
   // ─── Payment state ─────────────────────────────────────
   const [dpAmount, setDpAmount] = useState("");
@@ -159,6 +170,7 @@ export function BookingCheckout({
         clientName: clientName.trim(),
         clientPhone: clientPhone.trim(),
         clientEmail: clientEmail.trim(),
+        eventLocation: eventLocation.trim(),
         dpAmount,
         receiptFile,
       });
@@ -306,11 +318,20 @@ export function BookingCheckout({
                     value={bookingData.eventTime}
                   />
                 )}
-                {bookingData.eventLocation && (
+                {needsLocation ? (
+                  <div className="sm:col-span-2">
+                    <Input
+                      label={labels.eventLocation}
+                      value={eventLocation}
+                      onChange={(e) => setEventLocation(e.target.value)}
+                      placeholder={labels.eventLocationPlaceholder}
+                    />
+                  </div>
+                ) : (
                   <InfoRow
                     icon={<IconMapPin size={14} className="text-gray-400" />}
                     label={labels.eventLocation}
-                    value={bookingData.eventLocation}
+                    value={eventLocation || "—"}
                     className="sm:col-span-2"
                   />
                 )}

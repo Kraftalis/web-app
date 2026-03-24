@@ -297,31 +297,26 @@ export default function BookingLinkForm({
 
   const [isUploading, setIsUploading] = useState(false);
 
-  /** Upload receipt file to S3 via presigned URL */
+  /** Upload receipt file to S3 via server */
   const uploadReceipt = async (
     file: File,
   ): Promise<{ url: string; name: string }> => {
-    // Get presigned URL
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("folder", "receipts");
+
     const res = await fetch("/api/upload", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        fileName: file.name,
-        contentType: file.type,
-        folder: "receipts",
-      }),
-    });
-    const json = await res.json();
-    const { uploadUrl, publicUrl } = json.data;
-
-    // PUT the file to S3
-    await fetch(uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": file.type },
-      body: file,
+      body: formData,
     });
 
-    return { url: publicUrl, name: file.name };
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error?.message ?? "Failed to upload receipt.");
+    }
+
+    const { publicUrl, fileName } = (await res.json()).data;
+    return { url: publicUrl, name: fileName };
   };
 
   const handleSubmit = async () => {

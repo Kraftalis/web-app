@@ -114,24 +114,17 @@ export default function BusinessProfileForm() {
 
       setUploading(true);
       try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("folder", "logos");
+
         const res = await fetch("/api/upload", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fileName: file.name,
-            contentType: file.type,
-            fileSize: file.size,
-            folder: "logos",
-          }),
+          body: formData,
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error ?? "Upload failed");
 
-        await fetch(json.data.uploadUrl, {
-          method: "PUT",
-          headers: { "Content-Type": file.type },
-          body: file,
-        });
         setLogoUrl(json.data.publicUrl);
       } catch (err) {
         console.error("[Settings] Logo upload error:", err);

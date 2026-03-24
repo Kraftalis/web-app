@@ -27,42 +27,27 @@ interface BookingFormTemplateProps {
   bookingData: BookingLinkFullData | null;
 }
 
-// ─── Helper: upload file to S3 via presigned URL ────────────
+// ─── Helper: upload file to S3 via server ───────────────────
 
 async function uploadReceiptFile(
   file: File,
-): Promise<{ publicUrl: string; key: string }> {
-  // 1. Get presigned URL
+): Promise<{ publicUrl: string; fileName: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("folder", "receipts");
+
   const res = await fetch("/api/upload", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      fileName: file.name,
-      contentType: file.type,
-      fileSize: file.size,
-      folder: "receipts",
-    }),
+    body: formData,
   });
 
   if (!res.ok) {
     const err = await res.json();
-    throw new Error(err.error?.message ?? "Failed to get upload URL.");
+    throw new Error(err.error?.message ?? "Failed to upload file.");
   }
 
-  const { uploadUrl, publicUrl } = (await res.json()).data;
-
-  // 2. Upload directly to S3
-  const uploadRes = await fetch(uploadUrl, {
-    method: "PUT",
-    headers: { "Content-Type": file.type },
-    body: file,
-  });
-
-  if (!uploadRes.ok) {
-    throw new Error("Failed to upload file.");
-  }
-
-  return { publicUrl, key: publicUrl };
+  const { publicUrl, fileName } = (await res.json()).data;
+  return { publicUrl, fileName };
 }
 
 // ─── Component ──────────────────────────────────────────────
@@ -119,7 +104,7 @@ export default function BookingFormTemplate({
         eventDate:
           bookingData!.eventDate ?? new Date().toISOString().split("T")[0],
         eventTime: bookingData!.eventTime ?? null,
-        eventLocation: bookingData!.eventLocation ?? null,
+        eventLocation: data.eventLocation || bookingData!.eventLocation || null,
         packageSnapshot: bookingData!.packageSnapshot ?? null,
         addOnsSnapshot: bookingData!.addOnsSnapshot ?? null,
         amount: totalAmount || null,
@@ -200,6 +185,7 @@ export default function BookingFormTemplate({
           eventDate: b.eventDate,
           eventTime: b.eventTime,
           eventLocation: b.eventLocation,
+          eventLocationPlaceholder: b.eventLocationPlaceholder,
           packageLabel: b.packageLabel,
           noPackage: b.portalNoPackage,
           variationLabel: b.selectVariation,
