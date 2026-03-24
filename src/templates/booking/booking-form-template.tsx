@@ -320,8 +320,8 @@ function BookingPortal({
 
   const eventStatusLabel: Record<string, string> = {
     INQUIRY: ev.statusInquiry,
-    WAITING_PAYMENT: ev.statusWaitingPayment,
-    CONFIRMED: ev.statusConfirmed,
+    WAITING_CONFIRMATION: ev.statusWaitingConfirmation,
+    BOOKED: ev.statusBooked,
     ONGOING: ev.statusOngoing,
     COMPLETED: ev.statusCompleted,
   };

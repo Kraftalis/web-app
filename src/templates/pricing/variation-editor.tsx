@@ -8,6 +8,7 @@ interface Variation {
   label: string;
   description: string;
   price: string;
+  inclusions: string;
 }
 
 interface Props {
@@ -15,7 +16,7 @@ interface Props {
   onAdd: () => void;
   onChange: (
     i: number,
-    field: "label" | "description" | "price",
+    field: "label" | "description" | "price" | "inclusions",
     value: string,
   ) => void;
   onRemove: (i: number) => void;
@@ -57,6 +58,10 @@ export default function VariationEditor({
               onRemove={onRemove}
               labelPlaceholder={pricing.variationLabelPlaceholder}
               descPlaceholder={pricing.variationDescPlaceholder}
+              inclusionsPlaceholder={
+                pricing.variationInclusionsPlaceholder ??
+                "Enter each inclusion on a new line"
+              }
             />
           ))}
         </div>

@@ -21,6 +21,14 @@ export interface EventItem {
   bookingToken: string | null;
   createdAt: string;
   updatedAt: string;
+  latestPendingPayment: {
+    id: string;
+    amount: string;
+    paymentType: string;
+    receiptUrl: string | null;
+    paidBy: string;
+    createdAt: string;
+  } | null;
 }
 
 // ─── Event detail ───────────────────────────────────────────
@@ -30,8 +38,10 @@ export interface EventDetailPayment {
   amount: string;
   paymentType: string;
   receiptUrl: string | null;
+  receiptName: string | null;
   note: string | null;
   isVerified: boolean;
+  paidBy: string; // "VENDOR" | "CLIENT"
   createdAt: string;
 }
 

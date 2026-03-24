@@ -9,6 +9,7 @@ interface Variation {
   label: string;
   description: string;
   price: string;
+  inclusions: string;
 }
 
 interface Props {
@@ -28,7 +29,7 @@ interface Props {
   onAddVariation: () => void;
   onUpdateVariation: (
     i: number,
-    field: "label" | "description" | "price",
+    field: "label" | "description" | "price" | "inclusions",
     value: string,
   ) => void;
   onRemoveVariation: (i: number) => void;
@@ -123,22 +124,24 @@ export default function PackageFormFields({
         />
       </div>
 
-      {/* Inclusions */}
-      <div>
-        <p className="text-sm font-medium text-gray-700">
-          {pricing.inclusionsTitle || "Includes"}
-        </p>
-        <p className="mt-0.5 text-xs text-gray-400">
-          Enter each inclusion on a new line.
-        </p>
-        <Textarea
-          name="inclusions"
-          value={inclusionDraft}
-          onChange={(e) => setInclusionDraft(e.target.value)}
-          placeholder="e.g. 2 photographers\n3 hours coverage"
-          rows={4}
-        />
-      </div>
+      {/* Inclusions — only shown when package has no variations */}
+      {variations.length === 0 && (
+        <div>
+          <p className="text-sm font-medium text-gray-700">
+            {pricing.inclusionsTitle || "Includes"}
+          </p>
+          <p className="mt-0.5 text-xs text-gray-400">
+            Enter each inclusion on a new line.
+          </p>
+          <Textarea
+            name="inclusions"
+            value={inclusionDraft}
+            onChange={(e) => setInclusionDraft(e.target.value)}
+            placeholder="e.g. 2 photographers\n3 hours coverage"
+            rows={4}
+          />
+        </div>
+      )}
 
       {/* Flat price */}
       {variations.length === 0 && (

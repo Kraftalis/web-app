@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 
 /**
  * Find all events belonging to a vendor (list view).
- * Package/add-on data now lives in JSONB snapshot columns.
+ * Includes the latest unverified client payment for quick-action.
  */
 export async function findEventsByVendor(vendorId: string) {
   return prisma.event.findMany({
@@ -10,6 +10,11 @@ export async function findEventsByVendor(vendorId: string) {
     orderBy: { eventDate: "desc" },
     include: {
       bookingLink: { select: { token: true } },
+      payments: {
+        where: { isVerified: false, paidBy: "CLIENT" },
+        orderBy: { paidAt: "desc" },
+        take: 1,
+      },
     },
   });
 }

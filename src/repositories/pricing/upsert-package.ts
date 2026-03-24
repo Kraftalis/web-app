@@ -36,6 +36,7 @@ export async function createPackage(
               description: v.description ?? undefined,
               price: v.price,
               sortOrder: v.sortOrder ?? index,
+              inclusions: v.inclusions ?? [],
             })),
           }
         : undefined,
@@ -62,6 +63,7 @@ export async function updatePackage(id: string, data: UpdatePackageInput) {
           description: v.description ?? undefined,
           price: v.price,
           sortOrder: v.sortOrder ?? index,
+          inclusions: v.inclusions ?? [],
         })),
       });
     }

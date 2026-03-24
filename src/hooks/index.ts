@@ -9,6 +9,8 @@ export {
   useBookingLink,
   useGenerateBookingLink,
   useSubmitBooking,
+  useAddPayment,
+  useVerifyPayment,
 } from "./event";
 
 // ─── Pricing hooks ──────────────────────────────────────────

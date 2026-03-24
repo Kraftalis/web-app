@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { Card, CardBody, Badge } from "@/components/ui";
+import { Card, CardBody, Badge, Button } from "@/components/ui";
 import {
   IconEvent,
   IconEye,
   IconClock,
   IconMapPin,
   IconPhone,
+  IconCheck,
+  IconDollar,
+  IconImage,
 } from "@/components/icons";
 import type { EventItem } from "./types";
 import {
@@ -39,6 +42,16 @@ interface EventTableProps {
     noMatchingEvents: string;
     noMatchingEventsDesc: string;
   };
+  /** Quick-verify handler for pending client payments */
+  onQuickVerify?: (eventId: string, paymentId: string) => void;
+  /** Whether the quick-verify mutation is loading */
+  isVerifying?: boolean;
+  /** Labels for the quick verify action */
+  quickVerifyLabels?: {
+    verifyPayment: string;
+    pendingPayment: string;
+    viewReceipt: string;
+  };
 }
 
 export function EventTable({
@@ -48,6 +61,9 @@ export function EventTable({
   paymentStatusLabel,
   viewLabel,
   emptyLabels,
+  onQuickVerify,
+  isVerifying,
+  quickVerifyLabels,
 }: EventTableProps) {
   if (events.length === 0) {
     return (
@@ -82,6 +98,9 @@ export function EventTable({
           eventStatusLabel={eventStatusLabel}
           paymentStatusLabel={paymentStatusLabel}
           viewLabel={viewLabel}
+          onQuickVerify={onQuickVerify}
+          isVerifying={isVerifying}
+          quickVerifyLabels={quickVerifyLabels}
         />
       ))}
     </div>
@@ -95,6 +114,13 @@ interface EventCardProps {
   eventStatusLabel: Record<string, string>;
   paymentStatusLabel: Record<string, string>;
   viewLabel: string;
+  onQuickVerify?: (eventId: string, paymentId: string) => void;
+  isVerifying?: boolean;
+  quickVerifyLabels?: {
+    verifyPayment: string;
+    pendingPayment: string;
+    viewReceipt: string;
+  };
 }
 
 function EventCard({
@@ -102,6 +128,9 @@ function EventCard({
   eventStatusLabel,
   paymentStatusLabel,
   viewLabel,
+  onQuickVerify,
+  isVerifying,
+  quickVerifyLabels,
 }: EventCardProps) {
   const isUpcoming = new Date(event.eventDate) >= new Date();
 
@@ -201,6 +230,60 @@ function EventCard({
             </Link>
           </div>
         </div>
+
+        {/* Quick-verify banner for pending client payment */}
+        {event.latestPendingPayment && quickVerifyLabels && (
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-100">
+                <IconDollar size={14} className="text-amber-600" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-amber-800">
+                  {quickVerifyLabels.pendingPayment}
+                </p>
+                <p className="text-xs text-amber-600">
+                  {formatCurrency(
+                    event.latestPendingPayment.amount,
+                    event.currency,
+                  )}{" "}
+                  &middot;{" "}
+                  {event.latestPendingPayment.paymentType === "DOWN_PAYMENT"
+                    ? "DP"
+                    : "Full"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {event.latestPendingPayment.receiptUrl && (
+                <a
+                  href={event.latestPendingPayment.receiptUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                >
+                  <IconImage size={12} />
+                  {quickVerifyLabels.viewReceipt}
+                </a>
+              )}
+              <Button
+                size="sm"
+                variant="primary"
+                disabled={isVerifying}
+                onClick={() =>
+                  onQuickVerify?.(
+                    event.id,
+                    event.latestPendingPayment!.id,
+                  )
+                }
+                className="px-2.5! py-1! text-xs! rounded-md!"
+              >
+                <IconCheck size={12} />
+                {quickVerifyLabels.verifyPayment}
+              </Button>
+            </div>
+          </div>
+        )}
       </CardBody>
     </Card>
   );

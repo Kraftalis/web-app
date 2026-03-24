@@ -29,7 +29,7 @@ const clientEventUpdateSchema = z.object({
 /**
  * PATCH /api/booking/[token]/event
  * Client self-service: update their own event details.
- * Only allowed for events in INQUIRY or WAITING_PAYMENT status.
+ * Only allowed for events in INQUIRY or WAITING_CONFIRMATION status.
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
@@ -53,7 +53,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     if (!event) return notFoundError("Event not found.");
 
-    const editableStatuses = ["INQUIRY", "WAITING_PAYMENT"];
+    const editableStatuses = ["INQUIRY", "WAITING_CONFIRMATION"];
     if (!editableStatuses.includes(event.eventStatus)) {
       return validationError(
         "Event details can only be edited before confirmation.",

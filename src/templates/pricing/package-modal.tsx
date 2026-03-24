@@ -30,6 +30,7 @@ export interface PackageFormPayload {
     description: string | null;
     price: number;
     sortOrder: number;
+    inclusions: string[];
   }[];
 }
 
@@ -45,13 +46,14 @@ export default function PackageModal({
   const pricing = dict.pricing;
 
   const [variations, setVariations] = useState<
-    { label: string; description: string; price: string }[]
+    { label: string; description: string; price: string; inclusions: string }[]
   >(
     editingPkg
       ? editingPkg.items.map((v) => ({
           label: v.label,
           description: v.description ?? "",
           price: v.price,
+          inclusions: (v.inclusions ?? []).join("\n"),
         }))
       : [],
   );
@@ -65,12 +67,12 @@ export default function PackageModal({
   const addVariation = () =>
     setVariations((prev) => [
       ...prev,
-      { label: "", description: "", price: "" },
+      { label: "", description: "", price: "", inclusions: "" },
     ]);
 
   const updateVariation = (
     i: number,
-    field: "label" | "description" | "price",
+    field: "label" | "description" | "price" | "inclusions",
     value: string,
   ) =>
     setVariations((prev) =>
@@ -112,6 +114,10 @@ export default function PackageModal({
         description: v.description.trim() || null,
         price: parseFloat(v.price) || 0,
         sortOrder: i,
+        inclusions: v.inclusions
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean),
       })),
     });
   };

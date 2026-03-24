@@ -35,8 +35,8 @@ export interface CalendarDay {
 export function eventStatusVariant(status: string): BadgeVariant {
   const map: Record<string, BadgeVariant> = {
     INQUIRY: "info",
-    WAITING_PAYMENT: "warning",
-    CONFIRMED: "success",
+    WAITING_CONFIRMATION: "warning",
+    BOOKED: "success",
     ONGOING: "primary",
     COMPLETED: "default",
   };

@@ -7,6 +7,7 @@ import type {
 
 /**
  * Create a booking link with snapshot data.
+ * If payment data is provided, auto-create an Event (BOOKED) + Payment record.
  */
 export async function createBookingLink(
   vendorId: string,
@@ -26,6 +27,73 @@ export async function createBookingLink(
     ) ?? 0;
   const totalAmount = pkgPrice + addOnsTotal;
 
+  // If vendor provides payment data → create event + payment in a transaction
+  if (input.payment) {
+    return prisma.$transaction(async (tx) => {
+      // 1. Create the event with BOOKED status
+      const event = await tx.event.create({
+        data: {
+          vendorId,
+          clientName: input.clientName ?? "—",
+          clientPhone: input.clientPhone ?? "—",
+          eventType: "Other",
+          eventDate: input.eventDate ? new Date(input.eventDate) : new Date(),
+          eventTime: input.eventTime ?? undefined,
+          eventLocation: input.eventLocation ?? undefined,
+          packageSnapshot: input.packageSnapshot ?? undefined,
+          addOnsSnapshot: input.addOnsSnapshot ?? undefined,
+          amount: totalAmount > 0 ? totalAmount : undefined,
+          currency: "IDR",
+          eventStatus: "BOOKED",
+          paymentStatus:
+            input.payment!.paymentType === "FULL_PAYMENT" &&
+            input.payment!.amount >= totalAmount &&
+            totalAmount > 0
+              ? "PAID"
+              : input.payment!.amount > 0
+                ? "DP_PAID"
+                : "UNPAID",
+        },
+      });
+
+      // 2. Create the payment record (vendor-recorded → auto-verified)
+      await tx.payment.create({
+        data: {
+          eventId: event.id,
+          paymentType: input.payment!.paymentType,
+          amount: input.payment!.amount,
+          currency: "IDR",
+          note: input.payment!.note ?? undefined,
+          receiptUrl: input.payment!.receiptUrl ?? undefined,
+          receiptName: input.payment!.receiptName ?? undefined,
+          paidBy: "VENDOR",
+          isVerified: true,
+        },
+      });
+
+      // 3. Create the booking link, linked to the event
+      const link = await tx.bookingLink.create({
+        data: {
+          vendorId,
+          token,
+          expiresAt,
+          eventId: event.id,
+          clientName: input.clientName ?? undefined,
+          clientPhone: input.clientPhone ?? undefined,
+          eventDate: input.eventDate ? new Date(input.eventDate) : undefined,
+          eventTime: input.eventTime ?? undefined,
+          eventLocation: input.eventLocation ?? undefined,
+          packageSnapshot: input.packageSnapshot ?? undefined,
+          addOnsSnapshot: input.addOnsSnapshot ?? undefined,
+          totalAmount: totalAmount > 0 ? totalAmount : undefined,
+        },
+      });
+
+      return link;
+    });
+  }
+
+  // No payment → simple booking link creation (original flow)
   return prisma.bookingLink.create({
     data: {
       vendorId,
@@ -91,10 +159,12 @@ export async function findBookingLinkById(id: string) {
 /**
  * Update a booking link (vendor side — only if no event yet).
  * Recalculates totalAmount from snapshots.
+ * If payment data is provided, auto-create Event + Payment (same as create flow).
  */
 export async function updateBookingLinkById(
   id: string,
   input: UpdateBookingLinkInput,
+  vendorId?: string,
 ) {
   // Calculate total from new snapshots
   const pkgPrice =
@@ -114,6 +184,87 @@ export async function updateBookingLinkById(
     totalAmount = (pkgPrice ?? 0) + (addOnsTotal ?? 0);
   }
 
+  // If vendor provides payment data → create event + payment in a transaction
+  if (input.payment && vendorId) {
+    const total = totalAmount ?? 0;
+
+    return prisma.$transaction(async (tx) => {
+      // 1. Create the event
+      const event = await tx.event.create({
+        data: {
+          vendorId,
+          clientName: input.clientName ?? "—",
+          clientPhone: input.clientPhone ?? "—",
+          eventType: "Other",
+          eventDate: input.eventDate ? new Date(input.eventDate) : new Date(),
+          eventTime: input.eventTime ?? undefined,
+          eventLocation: input.eventLocation ?? undefined,
+          packageSnapshot: input.packageSnapshot ?? undefined,
+          addOnsSnapshot: input.addOnsSnapshot ?? undefined,
+          amount: total > 0 ? total : undefined,
+          currency: "IDR",
+          eventStatus: "BOOKED",
+          paymentStatus:
+            input.payment!.paymentType === "FULL_PAYMENT" &&
+            input.payment!.amount >= total &&
+            total > 0
+              ? "PAID"
+              : input.payment!.amount > 0
+                ? "DP_PAID"
+                : "UNPAID",
+        },
+      });
+
+      // 2. Create payment record
+      await tx.payment.create({
+        data: {
+          eventId: event.id,
+          paymentType: input.payment!.paymentType,
+          amount: input.payment!.amount,
+          currency: "IDR",
+          note: input.payment!.note ?? undefined,
+          receiptUrl: input.payment!.receiptUrl ?? undefined,
+          receiptName: input.payment!.receiptName ?? undefined,
+          paidBy: "VENDOR",
+          isVerified: true,
+        },
+      });
+
+      // 3. Update the booking link with data + event link
+      return tx.bookingLink.update({
+        where: { id },
+        data: {
+          eventId: event.id,
+          ...(input.clientName !== undefined && {
+            clientName: input.clientName ?? undefined,
+          }),
+          ...(input.clientPhone !== undefined && {
+            clientPhone: input.clientPhone ?? undefined,
+          }),
+          ...(input.eventDate !== undefined && {
+            eventDate: input.eventDate ? new Date(input.eventDate) : undefined,
+          }),
+          ...(input.eventTime !== undefined && {
+            eventTime: input.eventTime ?? undefined,
+          }),
+          ...(input.eventLocation !== undefined && {
+            eventLocation: input.eventLocation ?? undefined,
+          }),
+          ...(input.packageSnapshot !== undefined && {
+            packageSnapshot: input.packageSnapshot ?? undefined,
+          }),
+          ...(input.addOnsSnapshot !== undefined && {
+            addOnsSnapshot: input.addOnsSnapshot ?? undefined,
+          }),
+          ...(total !== undefined && {
+            totalAmount: total > 0 ? total : undefined,
+          }),
+        },
+      });
+    });
+  }
+
+  // No payment → simple update
   return prisma.bookingLink.update({
     where: { id },
     data: {

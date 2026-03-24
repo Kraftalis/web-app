@@ -41,6 +41,15 @@ export interface EventItem {
   bookingToken: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Latest unverified client payment — for quick verify action */
+  latestPendingPayment: {
+    id: string;
+    amount: string;
+    paymentType: string;
+    receiptUrl: string | null;
+    paidBy: string;
+    createdAt: string;
+  } | null;
 }
 
 // ─── Event Detail ───────────────────────────────────────────
@@ -50,8 +59,10 @@ export interface PaymentSerialized {
   amount: string;
   paymentType: string;
   receiptUrl: string | null;
+  receiptName: string | null;
   note: string | null;
   isVerified: boolean;
+  paidBy: string; // "VENDOR" | "CLIENT"
   createdAt: string;
 }
 
@@ -83,8 +94,8 @@ export interface EventDetail {
 export function eventStatusVariant(status: string): BadgeVariant {
   const map: Record<string, BadgeVariant> = {
     INQUIRY: "info",
-    WAITING_PAYMENT: "warning",
-    CONFIRMED: "success",
+    WAITING_CONFIRMATION: "warning",
+    BOOKED: "success",
     ONGOING: "primary",
     COMPLETED: "default",
   };
@@ -112,8 +123,8 @@ export function formatCurrency(
 
 export const EVENT_STATUSES = [
   "INQUIRY",
-  "WAITING_PAYMENT",
-  "CONFIRMED",
+  "WAITING_CONFIRMATION",
+  "BOOKED",
   "ONGOING",
   "COMPLETED",
 ] as const;
@@ -122,8 +133,8 @@ export type EventStatus = (typeof EVENT_STATUSES)[number];
 
 export const EVENT_STATUS_COLORS: Record<string, string> = {
   INQUIRY: "bg-sky-500",
-  WAITING_PAYMENT: "bg-amber-500",
-  CONFIRMED: "bg-green-500",
+  WAITING_CONFIRMATION: "bg-amber-500",
+  BOOKED: "bg-green-500",
   ONGOING: "bg-blue-500",
   COMPLETED: "bg-slate-400",
 };

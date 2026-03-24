@@ -121,7 +121,8 @@ const id: Dictionary = {
     // Event pipeline
     eventPipeline: "Pipeline Acara",
     inquiry: "Pertanyaan",
-    waitingPayment: "Menunggu Pembayaran",
+    waitingConfirmation: "Menunggu Konfirmasi",
+    booked: "Terbooking",
     ongoing: "Berlangsung",
     completed: "Selesai",
     noEventsInPipeline: "Belum ada acara di pipeline",
@@ -249,7 +250,7 @@ const id: Dictionary = {
     // Stats
     totalEvents: "Total Acara",
     upcoming: "Mendatang",
-    confirmed: "Dikonfirmasi",
+    booked: "Terbooking",
     revenue: "Pendapatan",
     thisMonth: "bulan ini",
 
@@ -269,8 +270,8 @@ const id: Dictionary = {
 
     // Event statuses
     statusInquiry: "Permintaan",
-    statusWaitingPayment: "Menunggu Pembayaran",
-    statusConfirmed: "Dikonfirmasi",
+    statusWaitingConfirmation: "Menunggu Konfirmasi",
+    statusBooked: "Terbooking",
     statusOngoing: "Berlangsung",
     statusCompleted: "Selesai",
 
@@ -282,6 +283,9 @@ const id: Dictionary = {
     // Actions
     view: "Lihat",
     edit: "Ubah",
+
+    // Quick verify
+    pendingPayment: "Pembayaran klien menunggu konfirmasi",
 
     // Kanban
     kanbanNoEvents: "Tidak ada acara di tahap ini",
@@ -359,6 +363,7 @@ const id: Dictionary = {
     rejectPayment: "Tolak",
     paymentVerified: "Pembayaran berhasil diverifikasi!",
     paymentRejected: "Pembayaran ditolak.",
+    paymentAdded: "Pembayaran berhasil dicatat!",
     viewReceipt: "Lihat Bukti",
     amountLabel: "Jumlah",
     typeLabel: "Jenis",
@@ -391,6 +396,22 @@ const id: Dictionary = {
     generateButton: "Buat Link",
     generating: "Membuat…",
     updateLink: "Perbarui Link Booking",
+    uploading: "Mengunggah…",
+    // Payment section (optional)
+    paymentSectionTitle: "Pembayaran (opsional)",
+    paymentSectionDesc:
+      "Catat pembayaran untuk otomatis menandai acara sebagai terbooking.",
+    paymentTypeLabel: "Jenis Pembayaran",
+    noPayment: "Tidak ada pembayaran",
+    dpOption: "Uang Muka (DP)",
+    fullPaymentOption: "Pelunasan",
+    paymentAmountLabel: "Nominal Pembayaran",
+    receiptLabel: "Bukti Transfer (opsional)",
+    selectReceipt: "Pilih file",
+    removeFile: "Hapus",
+    acceptedFormats: "JPG, PNG, atau PDF (maks 5 MB)",
+    paymentNoteLabel: "Catatan (opsional)",
+    paymentNotePlaceholder: "cth. DP transfer via BCA",
     // Step 2 — result
     modalTitle: "Link Booking Siap",
     modalDesc:
@@ -608,6 +629,10 @@ const id: Dictionary = {
     variationDescPlaceholder:
       "cth. termasuk edit tak terbatas, soft file via GDrive",
     variationPrice: "Harga",
+    variationInclusions: "Termasuk",
+    variationInclusionsPlaceholder: "Masukkan setiap item per baris baru",
+    variationInclusionsHint:
+      "Jika paket memiliki variasi, daftar termasuk didefinisikan per variasi.",
     noVariations: "Harga tunggal",
     flatPrice: "Harga Satuan",
     flatPriceHint: "Digunakan jika tidak ada variasi harga.",

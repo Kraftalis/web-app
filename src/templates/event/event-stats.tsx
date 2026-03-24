@@ -15,7 +15,7 @@ interface EventStatsProps {
   labels: {
     totalEvents: string;
     upcoming: string;
-    confirmed: string;
+    booked: string;
     revenue: string;
     thisMonth: string;
   };
@@ -29,7 +29,7 @@ export function EventStats({ events, labels }: EventStatsProps) {
   ).length;
 
   const confirmedCount = events.filter(
-    (e) => e.eventStatus === "CONFIRMED" || e.eventStatus === "ONGOING",
+    (e) => e.eventStatus === "BOOKED" || e.eventStatus === "ONGOING",
   ).length;
 
   const totalRevenue = events.reduce((sum, e) => {
@@ -58,7 +58,7 @@ export function EventStats({ events, labels }: EventStatsProps) {
       bg: "bg-amber-50",
     },
     {
-      label: labels.confirmed,
+      label: labels.booked,
       value: confirmedCount.toString(),
       icon: IconCheck,
       color: "text-green-600",

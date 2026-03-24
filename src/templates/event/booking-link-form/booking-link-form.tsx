@@ -18,6 +18,7 @@ import ClientEventFields from "./client-event-fields";
 import PackageSelector from "./package-selector";
 import AddOnSelector from "./addon-selector";
 import PriceSummary from "./price-summary";
+import PaymentSection from "./payment-section";
 import BookingLinkResult from "./booking-link-result";
 import {
   type BookingLinkFormState,
@@ -45,6 +46,10 @@ const INITIAL_STATE: BookingLinkFormState = {
   customPkgInclusions: "",
   selectedAddOnIds: [],
   customAddOns: [],
+  paymentType: "",
+  paymentAmount: "",
+  paymentReceipt: null,
+  paymentNote: "",
 };
 
 function mapPackages(raw: PkgType[]): SourcePackage[] {
@@ -62,6 +67,7 @@ function mapPackages(raw: PkgType[]): SourcePackage[] {
         label: v.label,
         description: v.description,
         price: v.price,
+        inclusions: v.inclusions ?? [],
       })),
     }));
 }
@@ -166,6 +172,10 @@ function buildEditState(
     customPkgInclusions,
     selectedAddOnIds,
     customAddOns: customAddOnDrafts,
+    paymentType: "",
+    paymentAmount: "",
+    paymentReceipt: null,
+    paymentNote: "",
   };
 }
 
@@ -272,7 +282,68 @@ export default function BookingLinkForm({
 
   // ─── Submit ─────────────────────────────────────────────
 
-  const handleSubmit = () => {
+  const [isUploading, setIsUploading] = useState(false);
+
+  /** Upload receipt file to S3 via presigned URL */
+  const uploadReceipt = async (
+    file: File,
+  ): Promise<{ url: string; name: string }> => {
+    // Get presigned URL
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fileName: file.name,
+        contentType: file.type,
+        folder: "receipts",
+      }),
+    });
+    const json = await res.json();
+    const { uploadUrl, publicUrl } = json.data;
+
+    // PUT the file to S3
+    await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": file.type },
+      body: file,
+    });
+
+    return { url: publicUrl, name: file.name };
+  };
+
+  const handleSubmit = async () => {
+    // Build payment data if vendor filled in payment fields
+    let payment:
+      | {
+          paymentType: "DOWN_PAYMENT" | "FULL_PAYMENT";
+          amount: number;
+          note?: string;
+          receiptUrl?: string;
+          receiptName?: string;
+        }
+      | undefined;
+
+    const paymentAmt = parseFloat(state.paymentAmount);
+    if (state.paymentType && paymentAmt > 0) {
+      payment = {
+        paymentType: state.paymentType as "DOWN_PAYMENT" | "FULL_PAYMENT",
+        amount: paymentAmt,
+        note: state.paymentNote || undefined,
+      };
+
+      // Upload receipt if provided
+      if (state.paymentReceipt) {
+        try {
+          setIsUploading(true);
+          const uploaded = await uploadReceipt(state.paymentReceipt);
+          payment.receiptUrl = uploaded.url;
+          payment.receiptName = uploaded.name;
+        } finally {
+          setIsUploading(false);
+        }
+      }
+    }
+
     const payload = {
       clientName: state.clientName || null,
       clientPhone: state.clientPhone || null,
@@ -282,6 +353,7 @@ export default function BookingLinkForm({
       packageSnapshot: pkgSnapshot,
       addOnsSnapshot:
         addOnsSnapshot && addOnsSnapshot.length > 0 ? addOnsSnapshot : null,
+      payment,
     };
 
     if (isEditMode && editingLink) {
@@ -403,6 +475,22 @@ export default function BookingLinkForm({
         </>
       )}
 
+      {/* Divider */}
+      <hr className="border-gray-100" />
+
+      {/* Section 5 — Payment (optional) */}
+      <PaymentSection
+        paymentType={state.paymentType}
+        setPaymentType={(v) => set("paymentType", v)}
+        paymentAmount={state.paymentAmount}
+        setPaymentAmount={(v) => set("paymentAmount", v)}
+        paymentReceipt={state.paymentReceipt}
+        setPaymentReceipt={(v) => set("paymentReceipt", v)}
+        paymentNote={state.paymentNote}
+        setPaymentNote={(v) => set("paymentNote", v)}
+        labels={labels}
+      />
+
       {/* Actions */}
       <div className="flex items-center justify-between pt-2">
         {onClose && (
@@ -419,13 +507,16 @@ export default function BookingLinkForm({
           <Button
             onClick={handleSubmit}
             isLoading={
-              isEditMode ? updateMutation.isPending : createMutation.isPending
+              isUploading ||
+              (isEditMode ? updateMutation.isPending : createMutation.isPending)
             }
             disabled={!hasData}
           >
-            {isEditMode
-              ? (labels.updateLink ?? "Update Booking Link")
-              : (labels.generateLink ?? "Generate Booking Link")}
+            {isUploading
+              ? (labels.uploading ?? "Uploading…")
+              : isEditMode
+                ? (labels.updateLink ?? "Update Booking Link")
+                : (labels.generateLink ?? "Generate Booking Link")}
           </Button>
         </div>
       </div>

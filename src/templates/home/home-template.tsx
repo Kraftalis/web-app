@@ -61,16 +61,16 @@ function daysUntil(dateStr: string): number {
 
 const PIPELINE_BAR_COLORS: Record<string, string> = {
   INQUIRY: "#3b82f6",
-  WAITING_PAYMENT: "#f59e0b",
-  CONFIRMED: "#22c55e",
+  WAITING_CONFIRMATION: "#f59e0b",
+  BOOKED: "#22c55e",
   ONGOING: "#a855f7",
   COMPLETED: "#6b7280",
 };
 
 const STATUS_PILL: Record<string, string> = {
   INQUIRY: "bg-blue-100 text-blue-700",
-  WAITING_PAYMENT: "bg-amber-100 text-amber-700",
-  CONFIRMED: "bg-green-100 text-green-700",
+  WAITING_CONFIRMATION: "bg-amber-100 text-amber-700",
+  BOOKED: "bg-green-100 text-green-700",
   ONGOING: "bg-purple-100 text-purple-700",
   COMPLETED: "bg-gray-100 text-gray-600",
 };
@@ -125,8 +125,8 @@ export default function HomeTemplate({ user }: HomeTemplateProps) {
     // Event pipeline counts
     const pipeline: Record<string, number> = {
       INQUIRY: 0,
-      WAITING_PAYMENT: 0,
-      CONFIRMED: 0,
+      WAITING_CONFIRMATION: 0,
+      BOOKED: 0,
       ONGOING: 0,
       COMPLETED: 0,
     };
@@ -212,8 +212,8 @@ export default function HomeTemplate({ user }: HomeTemplateProps) {
   const pipelineData = useMemo(() => {
     const labels: Record<string, string> = {
       INQUIRY: dict.dashboard.inquiry,
-      WAITING_PAYMENT: dict.dashboard.waitingPayment,
-      CONFIRMED: dict.dashboard.confirmed,
+      WAITING_CONFIRMATION: dict.dashboard.waitingConfirmation,
+      BOOKED: dict.dashboard.booked,
       ONGOING: dict.dashboard.ongoing,
       COMPLETED: dict.dashboard.completed,
     };
@@ -524,9 +524,9 @@ export default function HomeTemplate({ user }: HomeTemplateProps) {
                       <div className="flex flex-col items-end gap-1">
                         <Badge
                           variant={
-                            event.eventStatus === "CONFIRMED"
+                            event.eventStatus === "BOOKED"
                               ? "success"
-                              : event.eventStatus === "WAITING_PAYMENT"
+                              : event.eventStatus === "WAITING_CONFIRMATION"
                                 ? "warning"
                                 : "default"
                           }

@@ -64,10 +64,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // 4. Update event status to WAITING_PAYMENT
+    // 4. Update event status to WAITING_CONFIRMATION
+    //    Client has submitted booking + payment; vendor needs to confirm.
     await prisma.event.update({
       where: { id: event.id },
-      data: { eventStatus: "WAITING_PAYMENT" },
+      data: { eventStatus: "WAITING_CONFIRMATION" },
     });
 
     return successResponse({

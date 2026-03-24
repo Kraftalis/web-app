@@ -8,6 +8,7 @@ export const packageVariationSchema = z.object({
   description: z.string().max(2000).optional().nullable(),
   price: z.number().min(0, "Price must be a positive number."),
   sortOrder: z.number().int().min(0).default(0),
+  inclusions: z.array(z.string().max(500)).optional().default([]),
 });
 
 export type PackageVariationInput = z.infer<typeof packageVariationSchema>;

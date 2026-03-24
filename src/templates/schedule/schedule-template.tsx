@@ -67,8 +67,8 @@ export default function ScheduleTemplate({ user }: ScheduleTemplateProps) {
 
   const eventStatusMap: Record<string, string> = {
     INQUIRY: eventDict.statusInquiry,
-    WAITING_PAYMENT: eventDict.statusWaitingPayment,
-    CONFIRMED: eventDict.statusConfirmed,
+    WAITING_CONFIRMATION: eventDict.statusWaitingConfirmation,
+    BOOKED: eventDict.statusBooked,
     ONGOING: eventDict.statusOngoing,
     COMPLETED: eventDict.statusCompleted,
   };

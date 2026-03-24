@@ -7,3 +7,5 @@ export { useDeleteEvent } from "./use-delete-event";
 export { useBookingLink } from "./use-booking-link";
 export { useGenerateBookingLink } from "./use-generate-booking-link";
 export { useSubmitBooking } from "./use-submit-booking";
+export { useAddPayment, useVerifyPayment } from "./use-event-payments";
+export { useQuickVerifyPayment } from "./use-quick-verify-payment";

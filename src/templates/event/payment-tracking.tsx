@@ -217,7 +217,18 @@ function PaymentRow({
   return (
     <tr className="border-b border-gray-100 last:border-0">
       <td className="px-3 py-2.5 text-gray-700">
-        {paymentTypeMap[payment.paymentType] ?? payment.paymentType}
+        <div className="flex items-center gap-1.5">
+          {paymentTypeMap[payment.paymentType] ?? payment.paymentType}
+          <span
+            className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium leading-none ${
+              payment.paidBy === "VENDOR"
+                ? "bg-purple-50 text-purple-600"
+                : "bg-sky-50 text-sky-600"
+            }`}
+          >
+            {payment.paidBy === "VENDOR" ? "Vendor" : "Client"}
+          </span>
+        </div>
         {payment.note && (
           <p className="mt-0.5 text-[10px] text-gray-400">{payment.note}</p>
         )}

@@ -2,19 +2,25 @@
 
 import React from "react";
 import { IconTrash } from "@/components/icons";
-import { Input } from "@/components/ui";
+import { Input, Textarea } from "@/components/ui";
 
 interface Props {
-  variation: { label: string; description: string; price: string };
+  variation: {
+    label: string;
+    description: string;
+    price: string;
+    inclusions: string;
+  };
   index: number;
   onChange: (
     index: number,
-    field: "label" | "description" | "price",
+    field: "label" | "description" | "price" | "inclusions",
     value: string,
   ) => void;
   onRemove: (index: number) => void;
   labelPlaceholder: string;
   descPlaceholder: string;
+  inclusionsPlaceholder: string;
 }
 
 export default function VariationRow({
@@ -24,6 +30,7 @@ export default function VariationRow({
   onRemove,
   labelPlaceholder,
   descPlaceholder,
+  inclusionsPlaceholder,
 }: Props) {
   return (
     <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-2">
@@ -49,6 +56,12 @@ export default function VariationRow({
             value={variation.description}
             onChange={(e) => onChange(index, "description", e.target.value)}
             placeholder={descPlaceholder}
+          />
+          <Textarea
+            value={variation.inclusions}
+            onChange={(e) => onChange(index, "inclusions", e.target.value)}
+            placeholder={inclusionsPlaceholder}
+            rows={3}
           />
         </div>
         <button

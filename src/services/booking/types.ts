@@ -44,6 +44,14 @@ export interface BookingLinkItem {
 
 // ─── Create payload ─────────────────────────────────────────
 
+export interface BookingLinkPaymentData {
+  paymentType: "DOWN_PAYMENT" | "FULL_PAYMENT";
+  amount: number;
+  note?: string;
+  receiptUrl?: string;
+  receiptName?: string;
+}
+
 export interface CreateBookingLinkPayload {
   clientName?: string | null;
   clientPhone?: string | null;
@@ -53,6 +61,7 @@ export interface CreateBookingLinkPayload {
   packageSnapshot?: PackageSnapshot | null;
   addOnsSnapshot?: AddOnSnapshot[] | null;
   expiresInDays?: number;
+  payment?: BookingLinkPaymentData;
 }
 
 // ─── Update payload ─────────────────────────────────────────
@@ -65,6 +74,7 @@ export interface UpdateBookingLinkPayload {
   eventLocation?: string | null;
   packageSnapshot?: PackageSnapshot | null;
   addOnsSnapshot?: AddOnSnapshot[] | null;
+  payment?: BookingLinkPaymentData;
 }
 
 // ─── Create response ────────────────────────────────────────

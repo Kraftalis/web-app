@@ -13,6 +13,7 @@ import {
 } from "@/components/icons";
 import { useDictionary } from "@/i18n";
 import { useEvents } from "@/hooks/event";
+import { useQuickVerifyPayment } from "@/hooks/event";
 import { useBookingLinks } from "@/hooks/booking";
 import type { EventItem } from "./types";
 import type { BookingLinkItem } from "@/services/booking";
@@ -41,6 +42,7 @@ export default function EventListTemplate({ user }: EventListTemplateProps) {
   const { data: events = [], isLoading, isError, refetch } = useEvents();
   const { data: bookingLinks = [], isLoading: isLinksLoading } =
     useBookingLinks();
+  const quickVerify = useQuickVerifyPayment();
 
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [search, setSearch] = useState("");
@@ -53,8 +55,8 @@ export default function EventListTemplate({ user }: EventListTemplateProps) {
 
   const eventStatusLabel: Record<string, string> = {
     INQUIRY: dict.event.statusInquiry,
-    WAITING_PAYMENT: dict.event.statusWaitingPayment,
-    CONFIRMED: dict.event.statusConfirmed,
+    WAITING_CONFIRMATION: dict.event.statusWaitingConfirmation,
+    BOOKED: dict.event.statusBooked,
     ONGOING: dict.event.statusOngoing,
     COMPLETED: dict.event.statusCompleted,
   };
@@ -141,7 +143,7 @@ export default function EventListTemplate({ user }: EventListTemplateProps) {
               labels={{
                 totalEvents: dict.event.totalEvents,
                 upcoming: dict.event.upcoming,
-                confirmed: dict.event.confirmed,
+                booked: dict.event.booked,
                 revenue: dict.event.revenue,
                 thisMonth: dict.event.thisMonth,
               }}
@@ -181,10 +183,10 @@ export default function EventListTemplate({ user }: EventListTemplateProps) {
                 { value: "", label: dict.event.allStatuses },
                 { value: "INQUIRY", label: dict.event.statusInquiry },
                 {
-                  value: "WAITING_PAYMENT",
-                  label: dict.event.statusWaitingPayment,
+                  value: "WAITING_CONFIRMATION",
+                  label: dict.event.statusWaitingConfirmation,
                 },
-                { value: "CONFIRMED", label: dict.event.statusConfirmed },
+                { value: "BOOKED", label: dict.event.statusBooked },
                 { value: "ONGOING", label: dict.event.statusOngoing },
                 { value: "COMPLETED", label: dict.event.statusCompleted },
               ]}
@@ -240,6 +242,15 @@ export default function EventListTemplate({ user }: EventListTemplateProps) {
               formatDate={formatDate}
               columns={dict.event}
               emptyLabels={dict.event}
+              onQuickVerify={(eventId, paymentId) =>
+                quickVerify.mutate({ eventId, paymentId, action: "verify" })
+              }
+              isVerifying={quickVerify.isPending}
+              quickVerifyLabels={{
+                verifyPayment: dict.eventDetail.verifyPayment,
+                pendingPayment: dict.event.pendingPayment,
+                viewReceipt: dict.eventDetail.viewReceipt,
+              }}
             />
           ) : (
             <KanbanBoard

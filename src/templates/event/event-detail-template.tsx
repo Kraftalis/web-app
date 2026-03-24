@@ -14,7 +14,12 @@ import {
 import { useDictionary } from "@/i18n";
 // types imported from services when needed
 import { eventStatusVariant, paymentStatusVariant } from "./types";
-import { useEventDetail, useUpdateEvent } from "@/hooks/event";
+import {
+  useEventDetail,
+  useUpdateEvent,
+  useAddPayment,
+  useVerifyPayment,
+} from "@/hooks/event";
 import { EventDetailView } from "./event-detail-view";
 import { EventDetailEdit } from "./event-detail-edit";
 import {
@@ -43,6 +48,8 @@ export default function EventDetailTemplate({
 
   const { data: eventData, isLoading, isError } = useEventDetail(eventId);
   const updateEvent = useUpdateEvent();
+  const addPaymentMut = useAddPayment(eventId);
+  const verifyPaymentMut = useVerifyPayment(eventId);
 
   const [editing, setEditing] = useState(false);
   const [isSaving, startSaveTransition] = useTransition();
@@ -82,8 +89,8 @@ export default function EventDetailTemplate({
 
   const eventStatusLabel: Record<string, string> = {
     INQUIRY: dict.event.statusInquiry,
-    WAITING_PAYMENT: dict.event.statusWaitingPayment,
-    CONFIRMED: dict.event.statusConfirmed,
+    WAITING_CONFIRMATION: dict.event.statusWaitingConfirmation,
+    BOOKED: dict.event.statusBooked,
     ONGOING: dict.event.statusOngoing,
     COMPLETED: dict.event.statusCompleted,
   };
@@ -111,8 +118,11 @@ export default function EventDetailTemplate({
 
   const eventStatusOptions = [
     { value: "INQUIRY", label: dict.event.statusInquiry },
-    { value: "WAITING_PAYMENT", label: dict.event.statusWaitingPayment },
-    { value: "CONFIRMED", label: dict.event.statusConfirmed },
+    {
+      value: "WAITING_CONFIRMATION",
+      label: dict.event.statusWaitingConfirmation,
+    },
+    { value: "BOOKED", label: dict.event.statusBooked },
     { value: "ONGOING", label: dict.event.statusOngoing },
     { value: "COMPLETED", label: dict.event.statusCompleted },
   ];
@@ -153,29 +163,94 @@ export default function EventDetailTemplate({
     setTimeout(() => setLinkCopied(false), 2000);
   }
 
-  function handleVerifyPayment(_paymentId: string) {
-    void _paymentId;
-    // optimistic local update placeholder
-    setMessage(dict.eventDetail.paymentVerified);
-    setTimeout(() => setMessage(null), 3000);
+  function handleVerifyPayment(paymentId: string) {
+    verifyPaymentMut.mutate(
+      { paymentId, action: "verify" },
+      {
+        onSuccess: () => {
+          setMessage(dict.eventDetail.paymentVerified);
+          setTimeout(() => setMessage(null), 3000);
+        },
+      },
+    );
   }
 
-  function handleRejectPayment(_paymentId: string) {
-    void _paymentId;
-    setMessage(dict.eventDetail.paymentRejected);
-    setTimeout(() => setMessage(null), 3000);
+  function handleRejectPayment(paymentId: string) {
+    verifyPaymentMut.mutate(
+      { paymentId, action: "reject" },
+      {
+        onSuccess: () => {
+          setMessage(dict.eventDetail.paymentRejected);
+          setTimeout(() => setMessage(null), 3000);
+        },
+      },
+    );
   }
 
-  function handleAddPayment(_data: {
+  async function handleAddPayment(data: {
     amount: string;
     paymentType: string;
     note: string;
     receiptFile: File | null;
   }) {
-    void _data;
-    // TODO: hook to API to persist payment; currently mock UX only
-    setIsSubmittingPayment(false);
-    setShowAddPayment(false);
+    setIsSubmittingPayment(true);
+
+    let receiptUrl: string | null = null;
+    let receiptName: string | null = null;
+
+    // Upload receipt if provided
+    if (data.receiptFile) {
+      try {
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileName: data.receiptFile.name,
+            contentType: data.receiptFile.type,
+            fileSize: data.receiptFile.size,
+            folder: "receipts",
+          }),
+        });
+        const uploadData = await uploadRes.json();
+        if (uploadData.data?.uploadUrl) {
+          await fetch(uploadData.data.uploadUrl, {
+            method: "PUT",
+            headers: { "Content-Type": data.receiptFile.type },
+            body: data.receiptFile,
+          });
+          receiptUrl = uploadData.data.publicUrl;
+          receiptName = data.receiptFile.name;
+        }
+      } catch (err) {
+        console.error("Receipt upload failed:", err);
+      }
+    }
+
+    addPaymentMut.mutate(
+      {
+        amount: parseFloat(data.amount) || 0,
+        paymentType: data.paymentType as
+          | "DOWN_PAYMENT"
+          | "INSTALLMENT"
+          | "FULL_PAYMENT",
+        note: data.note || null,
+        receiptUrl,
+        receiptName,
+      },
+      {
+        onSuccess: () => {
+          setIsSubmittingPayment(false);
+          setShowAddPayment(false);
+          setMessage(
+            dict.eventDetail.paymentAdded ?? "Payment recorded successfully.",
+          );
+          setTimeout(() => setMessage(null), 3000);
+        },
+        onError: () => {
+          setIsSubmittingPayment(false);
+        },
+      },
+    );
   }
 
   // ─── Render ───────────────────────────────────────────────

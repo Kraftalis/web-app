@@ -23,6 +23,16 @@ export const addOnSnapshotSchema = z.object({
   isCustom: z.boolean().default(false),
 });
 
+// ─── Payment data embedded in booking link creation ─────────
+
+export const bookingLinkPaymentSchema = z.object({
+  paymentType: z.enum(["DOWN_PAYMENT", "FULL_PAYMENT"]),
+  amount: z.number().min(1),
+  note: z.string().max(2000).optional(),
+  receiptUrl: z.string().url().optional(),
+  receiptName: z.string().max(255).optional(),
+});
+
 // ─── Create booking link (vendor side) ──────────────────────
 
 export const createBookingLinkSchema = z.object({
@@ -34,6 +44,7 @@ export const createBookingLinkSchema = z.object({
   packageSnapshot: packageSnapshotSchema.optional().nullable(),
   addOnsSnapshot: z.array(addOnSnapshotSchema).optional().nullable(),
   expiresInDays: z.number().int().min(1).max(90).default(30),
+  payment: bookingLinkPaymentSchema.optional(),
 });
 
 // ─── Update booking link (vendor side) ──────────────────────
@@ -46,6 +57,7 @@ export const updateBookingLinkSchema = z.object({
   eventLocation: z.string().max(2000).optional().nullable(),
   packageSnapshot: packageSnapshotSchema.optional().nullable(),
   addOnsSnapshot: z.array(addOnSnapshotSchema).optional().nullable(),
+  payment: bookingLinkPaymentSchema.optional(),
 });
 
 // ─── Inferred types ─────────────────────────────────────────

@@ -110,25 +110,38 @@ export default function PackageSelector({
             />
           )}
 
-          {/* Show inclusions preview */}
-          {selectedPkg && selectedPkg.inclusions.length > 0 && (
-            <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
-              <p className="mb-1 text-xs font-medium text-gray-500">
-                {labels.includes ?? "Includes"}
-              </p>
-              <ul className="space-y-0.5">
-                {selectedPkg.inclusions.map((inc, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-1.5 text-xs text-gray-600"
-                  >
-                    <span className="mt-0.5 text-green-500">✓</span>
-                    {inc}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {/* Show inclusions preview — variation inclusions take priority */}
+          {selectedPkg &&
+            (() => {
+              const selectedVar = selectedPkg.items.find(
+                (v) => v.id === selectedVariationId,
+              );
+              const inclusions =
+                selectedVar && selectedVar.inclusions.length > 0
+                  ? selectedVar.inclusions
+                  : selectedPkg.inclusions;
+
+              if (inclusions.length === 0) return null;
+
+              return (
+                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
+                  <p className="mb-1 text-xs font-medium text-gray-500">
+                    {labels.includes ?? "Includes"}
+                  </p>
+                  <ul className="space-y-0.5">
+                    {inclusions.map((inc, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-1.5 text-xs text-gray-600"
+                      >
+                        <span className="mt-0.5 text-green-500">✓</span>
+                        {inc}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })()}
         </div>
       )}
 

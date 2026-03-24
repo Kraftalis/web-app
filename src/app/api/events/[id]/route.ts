@@ -128,16 +128,20 @@ function serializeEventDetail(event: any) {
         amount: unknown;
         paymentType: string;
         receiptUrl: string | null;
+        receiptName: string | null;
         note: string | null;
         isVerified: boolean;
+        paidBy: string;
         createdAt: Date;
       }) => ({
         id: p.id,
         amount: String(p.amount),
         paymentType: p.paymentType,
         receiptUrl: p.receiptUrl,
+        receiptName: p.receiptName,
         note: p.note,
         isVerified: p.isVerified,
+        paidBy: p.paidBy,
         createdAt: p.createdAt.toISOString(),
       }),
     ),

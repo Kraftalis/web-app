@@ -7,4 +7,11 @@ export {
 export { createEvent, updateEvent } from "./upsert-event";
 export { deleteEvent } from "./delete-event";
 export { createBookingLink, findBookingLinkByToken } from "./booking-link";
-export { createPayment, verifyPayment, findPaymentsByEvent } from "./payment";
+export {
+  createPayment,
+  verifyPayment,
+  rejectPayment,
+  findPaymentById,
+  findPaymentsByEvent,
+  recalcPaymentStatus,
+} from "./payment";

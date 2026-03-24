@@ -3,6 +3,7 @@ export interface PackageVariation {
   label: string;
   description: string | null;
   price: string;
+  inclusions: string[];
 }
 
 export interface CategoryRef {

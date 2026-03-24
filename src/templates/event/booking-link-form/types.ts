@@ -25,6 +25,12 @@ export interface BookingLinkFormState {
   // Add-ons
   selectedAddOnIds: string[];
   customAddOns: CustomAddOnDraft[];
+
+  // Payment (optional — vendor pre-records payment)
+  paymentType: "DOWN_PAYMENT" | "FULL_PAYMENT" | "";
+  paymentAmount: string;
+  paymentReceipt: File | null;
+  paymentNote: string;
 }
 
 export interface CustomAddOnDraft {
@@ -49,6 +55,7 @@ export interface SourceVariation {
   label: string;
   description: string | null;
   price: string;
+  inclusions: string[];
 }
 
 export interface SourceAddOn {
@@ -93,13 +100,19 @@ export function buildPackageSnapshot(
     ? parseFloat(variation.price) || 0
     : parseFloat(pkg.price) || 0;
 
+  // Prefer variation-level inclusions when a variation is selected
+  const inclusions =
+    variation && variation.inclusions.length > 0
+      ? variation.inclusions
+      : pkg.inclusions;
+
   return {
     name: pkg.name,
     description: pkg.description,
     price,
     currency: pkg.currency,
     variationLabel: variation?.label ?? null,
-    inclusions: pkg.inclusions,
+    inclusions,
     isCustom: false,
   };
 }

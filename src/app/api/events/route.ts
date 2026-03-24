@@ -30,28 +30,42 @@ export async function GET() {
     };
 
     return successResponse(
-      events.map((e) => ({
-        id: e.id,
-        vendorId: e.vendorId,
-        clientName: e.clientName,
-        clientPhone: e.clientPhone,
-        clientEmail: e.clientEmail,
-        eventType: e.eventType,
-        eventDate: e.eventDate.toISOString(),
-        eventTime: e.eventTime,
-        eventLocation: e.eventLocation,
-        packageSnapshot: e.packageSnapshot,
-        addOnsSnapshot: e.addOnsSnapshot,
-        packageName: extractPkgName(e.packageSnapshot),
-        amount: e.amount ? String(e.amount) : null,
-        currency: e.currency,
-        eventStatus: e.eventStatus,
-        paymentStatus: e.paymentStatus,
-        notes: e.notes,
-        bookingToken: e.bookingLink?.token ?? null,
-        createdAt: e.createdAt.toISOString(),
-        updatedAt: e.updatedAt.toISOString(),
-      })),
+      events.map((e) => {
+        const pendingPayment = e.payments?.[0] ?? null;
+        return {
+          id: e.id,
+          vendorId: e.vendorId,
+          clientName: e.clientName,
+          clientPhone: e.clientPhone,
+          clientEmail: e.clientEmail,
+          eventType: e.eventType,
+          eventDate: e.eventDate.toISOString(),
+          eventTime: e.eventTime,
+          eventLocation: e.eventLocation,
+          packageSnapshot: e.packageSnapshot,
+          addOnsSnapshot: e.addOnsSnapshot,
+          packageName: extractPkgName(e.packageSnapshot),
+          amount: e.amount ? String(e.amount) : null,
+          currency: e.currency,
+          eventStatus: e.eventStatus,
+          paymentStatus: e.paymentStatus,
+          notes: e.notes,
+          bookingToken: e.bookingLink?.token ?? null,
+          createdAt: e.createdAt.toISOString(),
+          updatedAt: e.updatedAt.toISOString(),
+          // Latest unverified client payment for quick-action
+          latestPendingPayment: pendingPayment
+            ? {
+                id: pendingPayment.id,
+                amount: String(pendingPayment.amount),
+                paymentType: pendingPayment.paymentType,
+                receiptUrl: pendingPayment.receiptUrl,
+                paidBy: pendingPayment.paidBy,
+                createdAt: pendingPayment.createdAt.toISOString(),
+              }
+            : null,
+        };
+      }),
     );
   } catch (err) {
     console.error("[API] GET /api/events error:", err);

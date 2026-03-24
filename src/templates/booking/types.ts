@@ -112,8 +112,8 @@ export interface BookingLinkFullData {
 
 export const EVENT_STATUS_STEPS = [
   "INQUIRY",
-  "WAITING_PAYMENT",
-  "CONFIRMED",
+  "WAITING_CONFIRMATION",
+  "BOOKED",
   "ONGOING",
   "COMPLETED",
 ] as const;
@@ -121,8 +121,8 @@ export const EVENT_STATUS_STEPS = [
 export function eventStatusVariant(status: string): BadgeVariant {
   const map: Record<string, BadgeVariant> = {
     INQUIRY: "info",
-    WAITING_PAYMENT: "warning",
-    CONFIRMED: "success",
+    WAITING_CONFIRMATION: "warning",
+    BOOKED: "success",
     ONGOING: "primary",
     COMPLETED: "default",
   };

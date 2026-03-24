@@ -117,7 +117,8 @@ const en = {
     // Event pipeline
     eventPipeline: "Event Pipeline",
     inquiry: "Inquiry",
-    waitingPayment: "Waiting Payment",
+    waitingConfirmation: "Waiting Confirmation",
+    booked: "Booked",
     ongoing: "Ongoing",
     completed: "Completed",
     noEventsInPipeline: "No events in pipeline",
@@ -245,7 +246,7 @@ const en = {
     // Stats
     totalEvents: "Total Events",
     upcoming: "Upcoming",
-    confirmed: "Confirmed",
+    booked: "Booked",
     revenue: "Revenue",
     thisMonth: "this month",
 
@@ -265,8 +266,8 @@ const en = {
 
     // Event statuses
     statusInquiry: "Inquiry",
-    statusWaitingPayment: "Waiting Payment",
-    statusConfirmed: "Confirmed",
+    statusWaitingConfirmation: "Waiting Confirmation",
+    statusBooked: "Booked",
     statusOngoing: "Ongoing",
     statusCompleted: "Completed",
 
@@ -278,6 +279,9 @@ const en = {
     // Actions
     view: "View",
     edit: "Edit",
+
+    // Quick verify
+    pendingPayment: "Pending client payment",
 
     // Kanban
     kanbanNoEvents: "No events in this stage",
@@ -354,6 +358,7 @@ const en = {
     rejectPayment: "Reject",
     paymentVerified: "Payment verified successfully!",
     paymentRejected: "Payment rejected.",
+    paymentAdded: "Payment recorded successfully!",
     viewReceipt: "View Receipt",
     amountLabel: "Amount",
     typeLabel: "Type",
@@ -386,6 +391,22 @@ const en = {
     generateButton: "Generate Link",
     generating: "Generating…",
     updateLink: "Update Booking Link",
+    uploading: "Uploading…",
+    // Payment section (optional)
+    paymentSectionTitle: "Payment (optional)",
+    paymentSectionDesc:
+      "Record a payment to automatically mark the event as booked.",
+    paymentTypeLabel: "Payment Type",
+    noPayment: "No payment",
+    dpOption: "Down Payment (DP)",
+    fullPaymentOption: "Full Payment",
+    paymentAmountLabel: "Payment Amount",
+    receiptLabel: "Transfer Receipt (optional)",
+    selectReceipt: "Select file",
+    removeFile: "Remove",
+    acceptedFormats: "JPG, PNG, or PDF (max 5 MB)",
+    paymentNoteLabel: "Note (optional)",
+    paymentNotePlaceholder: "e.g. DP transfer via BCA",
     // Step 2 — result
     modalTitle: "Booking Link Ready",
     modalDesc:
@@ -606,6 +627,10 @@ const en = {
     variationDescPlaceholder:
       "e.g. includes unlimited edits, soft file via GDrive",
     variationPrice: "Price",
+    variationInclusions: "Inclusions",
+    variationInclusionsPlaceholder: "Enter each inclusion on a new line",
+    variationInclusionsHint:
+      "When a package has variations, inclusions are defined per variation.",
     noVariations: "Single flat price",
     flatPrice: "Flat Price",
     flatPriceHint: "Used when no variations are defined.",

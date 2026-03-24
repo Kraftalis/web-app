@@ -47,6 +47,7 @@ export interface PackageVariation {
   description: string | null; // Optional detail text / inclusions
   price: string; // Decimal as string
   sortOrder: number;
+  inclusions: string[]; // Per-variation inclusions
 }
 
 /**
@@ -135,6 +136,7 @@ export interface PackageVariationPayload {
   description?: string | null;
   price: number;
   sortOrder?: number;
+  inclusions?: string[];
 }
 
 export interface CreatePackagePayload {

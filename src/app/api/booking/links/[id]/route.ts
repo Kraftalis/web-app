@@ -43,7 +43,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (result.error)
       return validationError("Validation failed.", result.error);
 
-    const updated = await updateBookingLinkById(id, result.data);
+    const updated = await updateBookingLinkById(id, result.data, userId);
 
     return successResponse({
       id: updated.id,
