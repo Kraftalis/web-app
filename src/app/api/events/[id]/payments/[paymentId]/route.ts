@@ -5,7 +5,7 @@ import {
   notFoundError,
   forbiddenError,
   internalError,
-  requireAuth,
+  requireBusinessProfile,
 } from "@/lib/api";
 import {
   findEventById,
@@ -25,7 +25,7 @@ interface RouteParams {
  * Body: { action: "verify" | "reject" }
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
@@ -34,7 +34,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // Verify event ownership
     const event = await findEventById(id);
     if (!event) return notFoundError("Event not found.");
-    if (event.vendorId !== userId) return forbiddenError();
+    if (event.businessProfileId !== businessProfileId) return forbiddenError();
 
     // Verify payment belongs to event
     const payment = await findPaymentById(paymentId);

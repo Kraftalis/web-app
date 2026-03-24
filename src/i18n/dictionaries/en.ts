@@ -714,6 +714,11 @@ const en = {
   settings: {
     title: "Settings",
     subtitle: "Manage application settings and master data.",
+    tabBusinessProfile: "Business Profile",
+    tabNotifications: "Notifications",
+    tabCategories: "Service Categories",
+    profileUpdated: "Business profile updated!",
+    saveProfile: "Save Changes",
     categoriesTitle: "Service Categories",
     categoriesSubtitle:
       "Manage service categories and subcategories for your packages.",
@@ -737,6 +742,49 @@ const en = {
     confirmDeleteSubcategory: "Delete?",
     active: "Active",
     archived: "Archived",
+  },
+
+  // ─── Onboarding (Business Profile Setup) ─────────────────
+  onboarding: {
+    title: "Set Up Your Business Profile",
+    subtitle:
+      "Tell us about your business so clients can find and contact you.",
+    businessNameLabel: "Business Name",
+    businessNamePlaceholder: "e.g. Studio Elegance Photography",
+    businessNameRequired: "Business name is required.",
+    taglineLabel: "Tagline (optional)",
+    taglinePlaceholder: "e.g. Capturing your precious moments",
+    emailLabel: "Business Email",
+    emailPlaceholder: "hello@yourbusiness.com",
+    phoneLabel: "Phone Number",
+    phonePlaceholder: "+62812...",
+    socialLinksLabel: "Social Media (optional)",
+    uploadLogo: "Upload business logo",
+    completeSetup: "Complete Setup",
+    saving: "Saving…",
+    saveError: "Failed to save profile. Please try again.",
+    canEditLater: "You can always edit this later in your profile settings.",
+  },
+
+  // ─── Push Notifications (Settings) ───────────────────────
+  pushNotifications: {
+    title: "Push Notifications",
+    subtitle: "Receive instant updates about bookings and payments.",
+    enable: "Enable Notifications",
+    disable: "Disable Notifications",
+    enabled: "Notifications enabled",
+    enabledDesc: "You will receive push notifications for important updates.",
+    disabled: "Notifications disabled",
+    disabledDesc: "Enable push notifications to stay updated.",
+    denied: "Notifications blocked",
+    deniedDesc:
+      "Please allow notifications in your browser settings to receive updates.",
+    notSupported: "Push notifications are not supported on this device.",
+  },
+
+  // ─── Google Calendar ─────────────────────────────────────
+  googleCalendar: {
+    addToCalendar: "Add to Google Calendar",
   },
 };
 

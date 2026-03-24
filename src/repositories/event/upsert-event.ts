@@ -5,12 +5,15 @@ import type {
 } from "@/lib/validations/event";
 
 /**
- * Create a new event for a vendor.
+ * Create a new event for a business profile.
  */
-export async function createEvent(vendorId: string, data: CreateEventInput) {
+export async function createEvent(
+  businessProfileId: string,
+  data: CreateEventInput,
+) {
   return prisma.event.create({
     data: {
-      vendorId,
+      businessProfileId,
       clientName: data.clientName,
       clientPhone: data.clientPhone,
       clientEmail: data.clientEmail ?? undefined,

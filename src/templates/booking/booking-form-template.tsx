@@ -468,6 +468,7 @@ function BookingPortal({
                 portalYourAddOns: b.portalYourAddOns,
                 portalNoAddOns: b.portalNoAddOns,
                 portalIncluded: b.portalIncluded,
+                addToCalendar: dict.googleCalendar.addToCalendar,
               }}
               addOnLabels={{ qty: b.qty, perUnit: b.perUnit }}
               formatDate={formatDate}

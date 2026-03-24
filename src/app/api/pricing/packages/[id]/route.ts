@@ -5,7 +5,7 @@ import {
   notFoundError,
   forbiddenError,
   internalError,
-  requireAuth,
+  requireBusinessProfile,
   validate,
 } from "@/lib/api";
 import {
@@ -24,8 +24,7 @@ function serializePackage(pkg: any) {
   return {
     ...pkg,
     price: String(pkg.price),
-    items: (pkg.items ?? []).map((item: any) => ({
-      // eslint-disable-line @typescript-eslint/no-explicit-any
+    items: (pkg.items ?? []).map((item: Record<string, unknown>) => ({
       ...item,
       price: String(item.price),
     })),
@@ -40,7 +39,7 @@ function serializePackage(pkg: any) {
  * Get a single package by ID.
  */
 export async function GET(_request: NextRequest, { params }: RouteParams) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
@@ -48,7 +47,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     const pkg = await findPackageById(id);
 
     if (!pkg) return notFoundError("Package not found.");
-    if (pkg.vendorId !== userId) return forbiddenError();
+    if (pkg.businessProfileId !== businessProfileId) return forbiddenError();
 
     return successResponse(serializePackage(pkg));
   } catch (err) {
@@ -62,7 +61,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
  * Update a package.
  */
 export async function PUT(request: NextRequest, { params }: RouteParams) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
@@ -70,7 +69,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const pkg = await findPackageById(id);
 
     if (!pkg) return notFoundError("Package not found.");
-    if (pkg.vendorId !== userId) return forbiddenError();
+    if (pkg.businessProfileId !== businessProfileId) return forbiddenError();
 
     const body = await request.json();
     const result = validate(updatePackageSchema, body);
@@ -90,7 +89,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
  * Delete a package.
  */
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
@@ -98,7 +97,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     const pkg = await findPackageById(id);
 
     if (!pkg) return notFoundError("Package not found.");
-    if (pkg.vendorId !== userId) return forbiddenError();
+    if (pkg.businessProfileId !== businessProfileId) return forbiddenError();
 
     await deletePackage(id);
     return successResponse({ deleted: true });

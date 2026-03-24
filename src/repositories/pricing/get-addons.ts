@@ -6,10 +6,10 @@ import type { PaginationInput } from "@/lib/validations/pricing";
  * Build the shared `where` clause for add-on queries.
  */
 function buildAddOnWhere(
-  vendorId: string,
+  businessProfileId: string,
   params?: Partial<PaginationInput>,
 ): Prisma.AddOnWhereInput {
-  const where: Prisma.AddOnWhereInput = { vendorId };
+  const where: Prisma.AddOnWhereInput = { businessProfileId };
 
   if (params?.search) {
     where.OR = [
@@ -30,10 +30,10 @@ function buildAddOnWhere(
  * Find add-ons with pagination and search.
  */
 export async function findAddOnsByVendor(
-  vendorId: string,
+  businessProfileId: string,
   params?: Partial<PaginationInput>,
 ) {
-  const where = buildAddOnWhere(vendorId, params);
+  const where = buildAddOnWhere(businessProfileId, params);
   const page = params?.page ?? 1;
   const limit = params?.limit ?? 50;
   const dir = params?.sortDir ?? "asc";
@@ -54,9 +54,9 @@ export async function findAddOnsByVendor(
 /**
  * Find only active add-ons belonging to a vendor.
  */
-export async function findActiveAddOnsByVendor(vendorId: string) {
+export async function findActiveAddOnsByVendor(businessProfileId: string) {
   return prisma.addOn.findMany({
-    where: { vendorId, isActive: true },
+    where: { businessProfileId, isActive: true },
     orderBy: { sortOrder: "asc" },
   });
 }

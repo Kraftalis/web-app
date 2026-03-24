@@ -6,7 +6,7 @@ import {
   notFoundError,
   forbiddenError,
   internalError,
-  requireAuth,
+  requireBusinessProfile,
   validate,
 } from "@/lib/api";
 import { z } from "zod";
@@ -33,14 +33,14 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
     const { id } = await params;
     const event = await findEventById(id);
     if (!event) return notFoundError("Event not found.");
-    if (event.vendorId !== userId) return forbiddenError();
+    if (event.businessProfileId !== businessProfileId) return forbiddenError();
 
     const payments = await findPaymentsByEvent(id);
 
@@ -73,14 +73,14 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
     const { id } = await params;
     const event = await findEventById(id);
     if (!event) return notFoundError("Event not found.");
-    if (event.vendorId !== userId) return forbiddenError();
+    if (event.businessProfileId !== businessProfileId) return forbiddenError();
 
     const body = await request.json();
     const result = validate(createPaymentSchema, body);

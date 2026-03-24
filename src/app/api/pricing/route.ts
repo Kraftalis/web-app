@@ -4,7 +4,7 @@ import {
   createdResponse,
   validationError,
   internalError,
-  requireAuth,
+  requireBusinessProfile,
   validate,
 } from "@/lib/api";
 import {
@@ -25,7 +25,7 @@ import {
  * Supports pagination & filtering via query params.
  */
 export async function GET(request: NextRequest) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
@@ -34,8 +34,8 @@ export async function GET(request: NextRequest) {
     const filters = parsed.success ? parsed.data : {};
 
     const [pkgResult, addonResult] = await Promise.all([
-      findPackagesByVendor(userId, filters),
-      findAddOnsByVendor(userId, filters),
+      findPackagesByVendor(businessProfileId, filters),
+      findAddOnsByVendor(businessProfileId, filters),
     ]);
 
     return successResponse(
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
  * Body must include { type: "package" | "addon", ...data }
  */
 export async function POST(request: NextRequest) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       if (result.error)
         return validationError("Validation failed.", result.error);
 
-      const pkg = await createPackage(userId, result.data);
+      const pkg = await createPackage(businessProfileId, result.data);
       return createdResponse(serializePackage(pkg));
     }
 
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
       if (result.error)
         return validationError("Validation failed.", result.error);
 
-      const addOn = await createAddOn(userId, result.data);
+      const addOn = await createAddOn(businessProfileId, result.data);
       return createdResponse(serializeAddOn(addOn));
     }
 
@@ -100,8 +100,7 @@ function serializePackage(pkg: any) {
   return {
     ...pkg,
     price: String(pkg.price),
-    items: (pkg.items ?? []).map((item: any) => ({
-      // eslint-disable-line @typescript-eslint/no-explicit-any
+    items: (pkg.items ?? []).map((item: Record<string, unknown>) => ({
       ...item,
       price: String(item.price),
     })),

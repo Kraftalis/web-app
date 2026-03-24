@@ -8,6 +8,7 @@ import {
 } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { createPayment, recalcPaymentStatus } from "@/repositories/event";
+import { sendPushToUser } from "@/lib/push";
 import { z } from "zod";
 
 interface RouteParams {
@@ -43,6 +44,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return notFoundError("No event found for this booking link.");
     }
 
+    // Fetch event to get vendor userId (via businessProfile) and client name for push notification
+    const event = await prisma.event.findUnique({
+      where: { id: link.eventId },
+      select: {
+        clientName: true,
+        businessProfile: { select: { userId: true } },
+      },
+    });
+
     // 2. Validate body
     const body = await request.json();
     const result = validate(paymentSchema, body);
@@ -64,6 +74,22 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // 4. Recalculate event payment status based on verified payments
     await recalcPaymentStatus(link.eventId);
+
+    // 5. Push notification to vendor
+    if (event?.businessProfile?.userId) {
+      const clientLabel = event.clientName ?? "A client";
+      const amountFormatted = new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0,
+      }).format(data.amount);
+
+      sendPushToUser(event.businessProfile.userId, {
+        title: "💰 Payment Received",
+        body: `${clientLabel} submitted a ${amountFormatted} payment.`,
+        url: `/event/${link.eventId}`,
+      }).catch(() => {});
+    }
 
     return successResponse({
       id: payment.id,

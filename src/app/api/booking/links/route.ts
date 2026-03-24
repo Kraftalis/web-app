@@ -4,7 +4,7 @@ import {
   createdResponse,
   validationError,
   internalError,
-  requireAuth,
+  requireBusinessProfile,
   validate,
 } from "@/lib/api";
 import {
@@ -18,11 +18,11 @@ import { createBookingLinkSchema } from "@/lib/validations/booking";
  * List all booking links for the authenticated vendor.
  */
 export async function GET() {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
-    const links = await findBookingLinksByVendor(userId);
+    const links = await findBookingLinksByVendor(businessProfileId);
 
     return successResponse(
       links.map((l) => ({
@@ -59,7 +59,7 @@ export async function GET() {
  * Create a new booking link with snapshot data.
  */
 export async function POST(request: NextRequest) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     if (result.error)
       return validationError("Validation failed.", result.error);
 
-    const link = await createBookingLink(userId, result.data);
+    const link = await createBookingLink(businessProfileId, result.data);
 
     return createdResponse({
       id: link.id,

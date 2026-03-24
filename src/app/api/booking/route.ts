@@ -10,6 +10,7 @@ import { bookingSubmitSchema } from "@/lib/validations/event";
 import { findBookingLinkByToken } from "@/repositories/event";
 import { createEvent } from "@/repositories/event";
 import { prisma } from "@/lib/prisma";
+import { sendPushToUser } from "@/lib/push";
 
 /**
  * POST /api/booking — handles public booking form submission.
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
       return validationError("This booking link has already been used.");
 
     // 2. Create event with snapshot data
-    const event = await createEvent(link.vendorId, {
+    const event = await createEvent(link.businessProfileId, {
       clientName: data.clientName,
       clientPhone: data.clientPhone,
       clientEmail: data.clientEmail,
@@ -70,6 +71,13 @@ export async function POST(request: NextRequest) {
       where: { id: event.id },
       data: { eventStatus: "WAITING_CONFIRMATION" },
     });
+
+    // 5. Push notification to vendor
+    sendPushToUser(link.businessProfile.userId, {
+      title: "📋 New Booking",
+      body: `${data.clientName} submitted a booking for ${data.eventType}.`,
+      url: `/event/${event.id}`,
+    }).catch(() => {});
 
     return successResponse({
       eventId: event.id,

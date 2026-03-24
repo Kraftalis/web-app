@@ -716,6 +716,11 @@ const id: Dictionary = {
   settings: {
     title: "Pengaturan",
     subtitle: "Kelola pengaturan aplikasi dan data master.",
+    tabBusinessProfile: "Profil Bisnis",
+    tabNotifications: "Notifikasi",
+    tabCategories: "Kategori Layanan",
+    profileUpdated: "Profil bisnis berhasil diperbarui!",
+    saveProfile: "Simpan Perubahan",
     categoriesTitle: "Kategori Layanan",
     categoriesSubtitle:
       "Kelola kategori dan subkategori layanan untuk paket Anda.",
@@ -739,6 +744,49 @@ const id: Dictionary = {
     confirmDeleteSubcategory: "Hapus?",
     active: "Aktif",
     archived: "Nonaktif",
+  },
+
+  // ─── Onboarding (Business Profile Setup) ─────────────────
+  onboarding: {
+    title: "Atur Profil Bisnis Anda",
+    subtitle:
+      "Beritahu kami tentang bisnis Anda agar klien dapat menemukan dan menghubungi Anda.",
+    businessNameLabel: "Nama Bisnis",
+    businessNamePlaceholder: "mis. Studio Elegance Photography",
+    businessNameRequired: "Nama bisnis wajib diisi.",
+    taglineLabel: "Tagline (opsional)",
+    taglinePlaceholder: "mis. Mengabadikan momen berharga Anda",
+    emailLabel: "Email Bisnis",
+    emailPlaceholder: "hello@bisnisanda.com",
+    phoneLabel: "Nomor Telepon",
+    phonePlaceholder: "+62812...",
+    socialLinksLabel: "Media Sosial (opsional)",
+    uploadLogo: "Unggah logo bisnis",
+    completeSetup: "Selesaikan Pengaturan",
+    saving: "Menyimpan…",
+    saveError: "Gagal menyimpan profil. Silakan coba lagi.",
+    canEditLater: "Anda selalu bisa mengubah ini nanti di pengaturan profil.",
+  },
+
+  // ─── Push Notifications (Settings) ───────────────────────
+  pushNotifications: {
+    title: "Notifikasi Push",
+    subtitle: "Terima pembaruan instan tentang booking dan pembayaran.",
+    enable: "Aktifkan Notifikasi",
+    disable: "Nonaktifkan Notifikasi",
+    enabled: "Notifikasi aktif",
+    enabledDesc: "Anda akan menerima notifikasi push untuk pembaruan penting.",
+    disabled: "Notifikasi nonaktif",
+    disabledDesc: "Aktifkan notifikasi push agar tetap mendapat informasi.",
+    denied: "Notifikasi diblokir",
+    deniedDesc:
+      "Silakan izinkan notifikasi di pengaturan browser Anda untuk menerima pembaruan.",
+    notSupported: "Notifikasi push tidak didukung di perangkat ini.",
+  },
+
+  // ─── Google Calendar ─────────────────────────────────────
+  googleCalendar: {
+    addToCalendar: "Tambah ke Google Calendar",
   },
 };
 

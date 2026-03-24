@@ -7,10 +7,13 @@ import type {
 /**
  * Create a new add-on for a vendor.
  */
-export async function createAddOn(vendorId: string, data: CreateAddOnInput) {
+export async function createAddOn(
+  businessProfileId: string,
+  data: CreateAddOnInput,
+) {
   return prisma.addOn.create({
     data: {
-      vendorId,
+      businessProfileId,
       name: data.name,
       description: data.description ?? undefined,
       price: data.price,

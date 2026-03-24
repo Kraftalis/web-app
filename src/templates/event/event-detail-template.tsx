@@ -10,8 +10,10 @@ import {
   IconEdit,
   IconLink,
   IconCopy,
+  IconGoogleCalendar,
 } from "@/components/icons";
 import { useDictionary } from "@/i18n";
+import { buildGoogleCalendarUrl } from "@/lib/google-calendar";
 // types imported from services when needed
 import { eventStatusVariant, paymentStatusVariant } from "./types";
 import {
@@ -317,6 +319,32 @@ export default function EventDetailTemplate({
                 </>
               )}
             </Button>
+          )}
+
+          {/* Google Calendar */}
+          {eventData.eventDate && (
+            <a
+              href={buildGoogleCalendarUrl({
+                title: `${eventData.eventType ?? "Event"} – ${eventData.clientName}`,
+                date: eventData.eventDate,
+                time: eventData.eventTime ?? null,
+                location: eventData.eventLocation ?? null,
+                description: (
+                  eventData.packageSnapshot as { name?: string } | null
+                )?.name
+                  ? `Package: ${(eventData.packageSnapshot as { name?: string }).name}`
+                  : undefined,
+              })}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button variant="outline" size="sm" type="button">
+                <IconGoogleCalendar size={14} />
+                <span className="hidden sm:inline">
+                  {dict.googleCalendar.addToCalendar}
+                </span>
+              </Button>
+            </a>
           )}
 
           {/* Edit toggle */}

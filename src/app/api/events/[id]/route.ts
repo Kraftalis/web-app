@@ -5,7 +5,7 @@ import {
   notFoundError,
   forbiddenError,
   internalError,
-  requireAuth,
+  requireBusinessProfile,
   validate,
 } from "@/lib/api";
 import { findEventById, updateEvent, deleteEvent } from "@/repositories/event";
@@ -20,7 +20,7 @@ interface RouteParams {
  * Get a single event with full details.
  */
 export async function GET(_request: NextRequest, { params }: RouteParams) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
@@ -28,7 +28,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     const event = await findEventById(id);
 
     if (!event) return notFoundError("Event not found.");
-    if (event.vendorId !== userId) return forbiddenError();
+    if (event.businessProfileId !== businessProfileId) return forbiddenError();
 
     return successResponse(serializeEventDetail(event));
   } catch (err) {
@@ -42,7 +42,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
  * Update an event.
  */
 export async function PUT(request: NextRequest, { params }: RouteParams) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
@@ -50,7 +50,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const event = await findEventById(id);
 
     if (!event) return notFoundError("Event not found.");
-    if (event.vendorId !== userId) return forbiddenError();
+    if (event.businessProfileId !== businessProfileId) return forbiddenError();
 
     const body = await request.json();
     const result = validate(updateEventSchema, body);
@@ -80,7 +80,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
  * Delete an event.
  */
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
@@ -88,7 +88,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     const event = await findEventById(id);
 
     if (!event) return notFoundError("Event not found.");
-    if (event.vendorId !== userId) return forbiddenError();
+    if (event.businessProfileId !== businessProfileId) return forbiddenError();
 
     await deleteEvent(id);
     return successResponse({ deleted: true });
@@ -104,7 +104,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
 function serializeEventDetail(event: any) {
   return {
     id: event.id,
-    vendorId: event.vendorId,
+    vendorId: event.businessProfileId,
     clientName: event.clientName,
     clientPhone: event.clientPhone,
     clientEmail: event.clientEmail,

@@ -6,3 +6,5 @@ export {
   verifyUserEmail,
   updateUserPassword,
 } from "./upsert-user";
+export { findBusinessProfile, upsertBusinessProfile } from "./business-profile";
+export type { SocialLinks } from "./business-profile";

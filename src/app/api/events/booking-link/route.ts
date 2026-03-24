@@ -3,7 +3,7 @@ import {
   successResponse,
   createdResponse,
   internalError,
-  requireAuth,
+  requireBusinessProfile,
 } from "@/lib/api";
 import {
   createBookingLink,
@@ -19,11 +19,11 @@ import {
  * Generate a new booking link for the authenticated vendor.
  */
 export async function POST() {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
-    const link = await createBookingLink(userId);
+    const link = await createBookingLink(businessProfileId);
     return createdResponse({
       token: link.token,
       expiresAt: link.expiresAt.toISOString(),
@@ -61,14 +61,18 @@ export async function GET(request: NextRequest) {
 
     // Fetch vendor's active packages & add-ons for the booking form
     const [packages, addOns] = await Promise.all([
-      findActivePackagesByVendor(link.vendorId),
-      findActiveAddOnsByVendor(link.vendorId),
+      findActivePackagesByVendor(link.businessProfileId),
+      findActiveAddOnsByVendor(link.businessProfileId),
     ]);
 
     return successResponse({
       token: link.token,
-      vendorId: link.vendorId,
-      vendor: link.vendor,
+      vendorId: link.businessProfileId,
+      vendor: {
+        id: link.businessProfile.id,
+        name: link.businessProfile.businessName,
+        image: link.businessProfile.logoUrl,
+      },
       eventId: link.eventId,
       expiresAt: link.expiresAt.toISOString(),
       packages: packages.map((p) => ({

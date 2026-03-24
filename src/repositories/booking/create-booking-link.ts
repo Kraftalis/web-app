@@ -10,7 +10,7 @@ import type {
  * If payment data is provided, auto-create an Event (BOOKED) + Payment record.
  */
 export async function createBookingLink(
-  vendorId: string,
+  businessProfileId: string,
   input: CreateBookingLinkInput,
 ) {
   const token = randomBytes(16).toString("hex");
@@ -33,7 +33,7 @@ export async function createBookingLink(
       // 1. Create the event with BOOKED status
       const event = await tx.event.create({
         data: {
-          vendorId,
+          businessProfileId,
           clientName: input.clientName ?? "—",
           clientPhone: input.clientPhone ?? "—",
           eventType: "Other",
@@ -74,7 +74,7 @@ export async function createBookingLink(
       // 3. Create the booking link, linked to the event
       const link = await tx.bookingLink.create({
         data: {
-          vendorId,
+          businessProfileId,
           token,
           expiresAt,
           eventId: event.id,
@@ -96,7 +96,7 @@ export async function createBookingLink(
   // No payment → simple booking link creation (original flow)
   return prisma.bookingLink.create({
     data: {
-      vendorId,
+      businessProfileId,
       token,
       expiresAt,
       clientName: input.clientName ?? undefined,
@@ -118,18 +118,27 @@ export async function findBookingLinkByToken(token: string) {
   return prisma.bookingLink.findUnique({
     where: { token },
     include: {
-      vendor: { select: { id: true, name: true, image: true } },
+      businessProfile: {
+        select: {
+          id: true,
+          userId: true,
+          businessName: true,
+          logoUrl: true,
+          email: true,
+          phoneNumber: true,
+        },
+      },
       event: { select: { id: true, eventStatus: true, paymentStatus: true } },
     },
   });
 }
 
 /**
- * Find all booking links for a vendor.
+ * Find all booking links for a business profile.
  */
-export async function findBookingLinksByVendor(vendorId: string) {
+export async function findBookingLinksByVendor(businessProfileId: string) {
   return prisma.bookingLink.findMany({
-    where: { vendorId },
+    where: { businessProfileId },
     orderBy: { createdAt: "desc" },
     include: {
       event: {
@@ -164,7 +173,7 @@ export async function findBookingLinkById(id: string) {
 export async function updateBookingLinkById(
   id: string,
   input: UpdateBookingLinkInput,
-  vendorId?: string,
+  businessProfileId?: string,
 ) {
   // Calculate total from new snapshots
   const pkgPrice =
@@ -185,14 +194,14 @@ export async function updateBookingLinkById(
   }
 
   // If vendor provides payment data → create event + payment in a transaction
-  if (input.payment && vendorId) {
+  if (input.payment && businessProfileId) {
     const total = totalAmount ?? 0;
 
     return prisma.$transaction(async (tx) => {
       // 1. Create the event
       const event = await tx.event.create({
         data: {
-          vendorId,
+          businessProfileId,
           clientName: input.clientName ?? "—",
           clientPhone: input.clientPhone ?? "—",
           eventType: "Other",

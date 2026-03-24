@@ -6,10 +6,10 @@ import type { PaginationInput } from "@/lib/validations/pricing";
  * Build the shared `where` clause for package queries.
  */
 function buildPackageWhere(
-  vendorId: string,
+  businessProfileId: string,
   params?: Partial<PaginationInput>,
 ): Prisma.PackageWhereInput {
-  const where: Prisma.PackageWhereInput = { vendorId };
+  const where: Prisma.PackageWhereInput = { businessProfileId };
 
   if (params?.search) {
     where.OR = [
@@ -65,10 +65,10 @@ function buildOrderBy(
  * Find packages with pagination, search, and filtering.
  */
 export async function findPackagesByVendor(
-  vendorId: string,
+  businessProfileId: string,
   params?: Partial<PaginationInput>,
 ) {
-  const where = buildPackageWhere(vendorId, params);
+  const where = buildPackageWhere(businessProfileId, params);
   const page = params?.page ?? 1;
   const limit = params?.limit ?? 10;
   const orderBy = buildOrderBy(params?.sortBy, params?.sortDir);
@@ -90,9 +90,9 @@ export async function findPackagesByVendor(
 /**
  * Find only active packages belonging to a vendor.
  */
-export async function findActivePackagesByVendor(vendorId: string) {
+export async function findActivePackagesByVendor(businessProfileId: string) {
   return prisma.package.findMany({
-    where: { vendorId, isActive: true },
+    where: { businessProfileId, isActive: true },
     orderBy: { sortOrder: "asc" },
     include: packageInclude,
   });

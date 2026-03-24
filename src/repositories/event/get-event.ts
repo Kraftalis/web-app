@@ -1,12 +1,12 @@
 import { prisma } from "@/lib/prisma";
 
 /**
- * Find all events belonging to a vendor (list view).
+ * Find all events belonging to a business profile (list view).
  * Includes the latest unverified client payment for quick-action.
  */
-export async function findEventsByVendor(vendorId: string) {
+export async function findEventsByVendor(businessProfileId: string) {
   return prisma.event.findMany({
-    where: { vendorId },
+    where: { businessProfileId },
     orderBy: { eventDate: "desc" },
     include: {
       bookingLink: { select: { token: true } },

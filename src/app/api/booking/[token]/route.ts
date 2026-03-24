@@ -74,11 +74,11 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     return successResponse({
       token: link.token,
       status,
-      vendorId: link.vendorId,
+      vendorId: link.businessProfileId,
       vendor: {
-        id: link.vendor.id,
-        name: link.vendor.name,
-        image: link.vendor.image,
+        id: link.businessProfile.id,
+        name: link.businessProfile.businessName,
+        image: link.businessProfile.logoUrl,
       },
       // Booking link data (pre-filled by vendor)
       clientName: link.clientName,

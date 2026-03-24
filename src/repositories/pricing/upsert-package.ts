@@ -15,12 +15,12 @@ const packageInclude = {
  * Variations (items) are created with their own price + description.
  */
 export async function createPackage(
-  vendorId: string,
+  businessProfileId: string,
   data: CreatePackageInput,
 ) {
   return prisma.package.create({
     data: {
-      vendorId,
+      businessProfileId,
       name: data.name,
       description: data.description ?? undefined,
       price: data.price ?? 0,

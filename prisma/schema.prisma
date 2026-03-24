@@ -53,10 +53,8 @@ model User {
   accounts     Account[]
   sessions     Session[]
   auditLogs    AuditLog[]
-  events       Event[]       @relation("vendorEvents")
-  bookingLinks BookingLink[] @relation("vendorBookingLinks")
-  packages     Package[]     @relation("vendorPackages")
-  addOns       AddOn[]       @relation("vendorAddOns")
+  businessProfile BusinessProfile?
+  pushSubscriptions PushSubscription[]
 
   @@index([email])
   @@index([status])
@@ -250,7 +248,7 @@ model Subcategory {
 /// - 1+ variations: client must pick a variation; each variation has its own price.
 model Package {
   id             String  @id @default(uuid()) @db.Uuid
-  vendorId       String  @map("vendor_id") @db.Uuid
+  businessProfileId String @map("business_profile_id") @db.Uuid
   categoryId     String? @map("category_id") @db.Uuid
   subcategoryId  String? @map("subcategory_id") @db.Uuid
   name           String  @db.VarChar(255) // e.g. "Paket Wisuda Photoshoot"
@@ -273,12 +271,12 @@ model Package {
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  vendor        User          @relation("vendorPackages", fields: [vendorId], references: [id], onDelete: Cascade)
+  businessProfile BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
   category      Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   subcategory   Subcategory?  @relation(fields: [subcategoryId], references: [id], onDelete: SetNull)
   items         PackageItem[]
 
-  @@index([vendorId])
+  @@index([businessProfileId])
   @@index([categoryId])
   @@index([subcategoryId])
   @@index([isActive])
@@ -316,7 +314,7 @@ model PackageItem {
 /// e.g. "Extra 1 jam @250rb", "Photo booth", "Dekorasi tambahan"
 model AddOn {
   id          String  @id @default(uuid()) @db.Uuid
-  vendorId    String  @map("vendor_id") @db.Uuid
+  businessProfileId String @map("business_profile_id") @db.Uuid
   name        String  @db.VarChar(255) // e.g. "Tambahan 1 jam"
   description String? @db.Text
   price       Decimal @db.Decimal(12, 2)
@@ -329,9 +327,9 @@ model AddOn {
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  vendor      User         @relation("vendorAddOns", fields: [vendorId], references: [id], onDelete: Cascade)
+  businessProfile BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
 
-  @@index([vendorId])
+  @@index([businessProfileId])
   @@index([isActive])
   @@map("add_ons")
 }
@@ -343,7 +341,7 @@ model AddOn {
 /// at "checkout" time so later changes to the master data don't affect this record.
 model Event {
   id            String        @id @default(uuid()) @db.Uuid
-  vendorId      String        @map("vendor_id") @db.Uuid
+  businessProfileId String    @map("business_profile_id") @db.Uuid
 
   // Client info
   clientName    String        @map("client_name") @db.VarChar(255)
@@ -378,11 +376,11 @@ model Event {
   updatedAt     DateTime      @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  vendor        User          @relation("vendorEvents", fields: [vendorId], references: [id], onDelete: Cascade)
+  businessProfile BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
   bookingLink   BookingLink?
   payments      Payment[]
 
-  @@index([vendorId])
+  @@index([businessProfileId])
   @@index([eventStatus])
   @@index([paymentStatus])
   @@index([eventDate])
@@ -397,7 +395,7 @@ model Event {
 /// Once event is created (client fills remaining fields), snapshot moves to Event.
 model BookingLink {
   id        String    @id @default(uuid()) @db.Uuid
-  vendorId  String    @map("vendor_id") @db.Uuid
+  businessProfileId String @map("business_profile_id") @db.Uuid
   token     String    @unique @db.VarChar(64)
   eventId   String?   @unique @map("event_id") @db.Uuid // 1:1 with event
 
@@ -420,11 +418,11 @@ model BookingLink {
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  vendor    User      @relation("vendorBookingLinks", fields: [vendorId], references: [id], onDelete: Cascade)
+  businessProfile BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
   event     Event?    @relation(fields: [eventId], references: [id], onDelete: SetNull)
 
   @@index([token])
-  @@index([vendorId])
+  @@index([businessProfileId])
   @@map("booking_links")
 }
 
@@ -454,4 +452,63 @@ model Payment {
   @@index([eventId])
   @@index([paidAt])
   @@map("payments")
+}
+
+// ─── Business Profile ───────────────────────────────────────────────────────
+
+/// Vendor business profile — the central business entity.
+/// Owns events, packages, add-ons, and booking links.
+/// One user has one business profile (for now).
+model BusinessProfile {
+  id          String  @id @default(uuid()) @db.Uuid
+  userId      String  @unique @map("user_id") @db.Uuid
+
+  // Branding
+  businessName String  @map("business_name") @db.VarChar(255)
+  tagline      String? @db.VarChar(500)
+  logoUrl      String? @map("logo_url") @db.Text
+
+  // Contact
+  email        String? @db.VarChar(320)
+  phoneNumber  String? @map("phone_number") @db.VarChar(50)
+
+  // Social media links — stored as JSON for flexibility
+  // { instagram?: string, tiktok?: string, facebook?: string, linkedin?: string, whatsapp?: string, ...}
+  socialLinks  Json?   @map("social_links") @db.JsonB
+
+  // Audit fields
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events       Event[]
+  bookingLinks BookingLink[]
+  packages     Package[]
+  addOns       AddOn[]
+
+  @@index([userId])
+  @@map("business_profiles")
+}
+
+// ─── Push Notification Subscriptions ────────────────────────────────────────
+
+/// Stores Web Push API subscriptions for each user device.
+/// A user can have multiple subscriptions (phone, desktop, etc.)
+model PushSubscription {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  endpoint  String   @unique @db.Text
+  p256dh    String   @db.Text  // Public key
+  auth      String   @db.Text  // Auth secret
+  userAgent String?  @map("user_agent") @db.Text
+
+  // Audit fields
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }

@@ -5,7 +5,7 @@ import {
   notFoundError,
   forbiddenError,
   internalError,
-  requireAuth,
+  requireBusinessProfile,
   validate,
 } from "@/lib/api";
 import {
@@ -24,7 +24,7 @@ interface RouteParams {
  * Get a single add-on by ID.
  */
 export async function GET(_request: NextRequest, { params }: RouteParams) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
@@ -32,7 +32,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     const addOn = await findAddOnById(id);
 
     if (!addOn) return notFoundError("Add-on not found.");
-    if (addOn.vendorId !== userId) return forbiddenError();
+    if (addOn.businessProfileId !== businessProfileId) return forbiddenError();
 
     return successResponse({
       ...addOn,
@@ -49,7 +49,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
  * Update an add-on.
  */
 export async function PUT(request: NextRequest, { params }: RouteParams) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
@@ -57,7 +57,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const addOn = await findAddOnById(id);
 
     if (!addOn) return notFoundError("Add-on not found.");
-    if (addOn.vendorId !== userId) return forbiddenError();
+    if (addOn.businessProfileId !== businessProfileId) return forbiddenError();
 
     const body = await request.json();
     const result = validate(updateAddOnSchema, body);
@@ -80,7 +80,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
  * Delete an add-on.
  */
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
@@ -88,7 +88,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     const addOn = await findAddOnById(id);
 
     if (!addOn) return notFoundError("Add-on not found.");
-    if (addOn.vendorId !== userId) return forbiddenError();
+    if (addOn.businessProfileId !== businessProfileId) return forbiddenError();
 
     await deleteAddOn(id);
     return successResponse({ deleted: true });

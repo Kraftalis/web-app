@@ -11,4 +11,4 @@ export {
   internalError,
 } from "./response";
 export { validate } from "./validate";
-export { requireAuth } from "./auth";
+export { requireAuth, requireBusinessProfile } from "./auth";

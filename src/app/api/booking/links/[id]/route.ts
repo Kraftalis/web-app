@@ -4,7 +4,7 @@ import {
   validationError,
   notFoundError,
   internalError,
-  requireAuth,
+  requireBusinessProfile,
   validate,
 } from "@/lib/api";
 import {
@@ -21,7 +21,7 @@ type RouteParams = { params: Promise<{ id: string }> };
  * Update a booking link (vendor side — only if no event yet).
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
@@ -30,7 +30,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // Find and verify ownership
     const link = await findBookingLinkById(id);
     if (!link) return notFoundError("Booking link not found.");
-    if (link.vendorId !== userId)
+    if (link.businessProfileId !== businessProfileId)
       return notFoundError("Booking link not found.");
     if (link.event)
       return validationError(
@@ -43,7 +43,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (result.error)
       return validationError("Validation failed.", result.error);
 
-    const updated = await updateBookingLinkById(id, result.data, userId);
+    const updated = await updateBookingLinkById(
+      id,
+      result.data,
+      businessProfileId,
+    );
 
     return successResponse({
       id: updated.id,
@@ -69,7 +73,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
  * Delete a booking link (vendor side — only if no event yet).
  */
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
@@ -77,7 +81,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
 
     const link = await findBookingLinkById(id);
     if (!link) return notFoundError("Booking link not found.");
-    if (link.vendorId !== userId)
+    if (link.businessProfileId !== businessProfileId)
       return notFoundError("Booking link not found.");
     if (link.event)
       return validationError(

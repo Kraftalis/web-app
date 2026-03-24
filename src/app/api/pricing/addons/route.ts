@@ -1,5 +1,9 @@
 import { NextRequest } from "next/server";
-import { successResponse, internalError, requireAuth } from "@/lib/api";
+import {
+  successResponse,
+  internalError,
+  requireBusinessProfile,
+} from "@/lib/api";
 import { findAddOnsByVendor } from "@/repositories/pricing";
 import { paginationSchema } from "@/lib/validations/pricing";
 
@@ -9,7 +13,7 @@ import { paginationSchema } from "@/lib/validations/pricing";
  * Supports pagination & search via query params.
  */
 export async function GET(request: NextRequest) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
@@ -17,7 +21,7 @@ export async function GET(request: NextRequest) {
     const parsed = paginationSchema.safeParse(params);
     const filters = parsed.success ? parsed.data : {};
 
-    const result = await findAddOnsByVendor(userId, filters);
+    const result = await findAddOnsByVendor(businessProfileId, filters);
 
     return successResponse(result.addOns.map(serializeAddOn), {
       page: result.page,

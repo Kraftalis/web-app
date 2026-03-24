@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
       {
         // Supabase Storage public files (vendor avatars, event images, receipts)
         protocol: "https",
-        hostname: "vrcedxsfglrrpxkawvsy.supabase.co",
+        hostname: "vrcedxsfglrrpxkawvsy.storage.supabase.co",
       },
     ],
   },

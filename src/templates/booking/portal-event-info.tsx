@@ -1,13 +1,15 @@
 "use client";
 
-import { Card, CardHeader, CardBody } from "@/components/ui";
+import { Card, CardHeader, CardBody, Button } from "@/components/ui";
 import {
   IconCalendar,
   IconClock,
   IconMapPin,
   IconCheck,
   IconEvent,
+  IconGoogleCalendar,
 } from "@/components/icons";
+import { buildGoogleCalendarUrl } from "@/lib/google-calendar";
 import type { PortalEvent } from "./types";
 import { formatCurrency } from "./types";
 
@@ -26,6 +28,7 @@ interface PortalEventInfoProps {
     portalYourAddOns: string;
     portalNoAddOns: string;
     portalIncluded: string;
+    addToCalendar: string;
   };
   addOnLabels: {
     qty: string;
@@ -79,6 +82,30 @@ export function PortalEventInfo({
                 value={event.eventLocation}
               />
             )}
+          </div>
+
+          {/* Google Calendar link */}
+          <div className="mt-4 border-t border-gray-100 pt-4">
+            <a
+              href={buildGoogleCalendarUrl({
+                title: event.eventType ?? "Event",
+                date: event.eventDate,
+                time: event.eventTime ?? null,
+                location: event.eventLocation ?? null,
+              })}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                type="button"
+              >
+                <IconGoogleCalendar size={14} />
+                {labels.addToCalendar}
+              </Button>
+            </a>
           </div>
         </CardBody>
       </Card>

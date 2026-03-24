@@ -5,6 +5,10 @@ import type { NextRequest } from "next/server";
  * Authentication middleware.
  * Checks for session token cookie to protect routes.
  * Lightweight — no database calls, no Node.js dependencies.
+ *
+ * Also enforces onboarding: if a logged-in user hasn't set up their
+ * business profile (indicated by the `bp` cookie), redirect them to
+ * /onboarding. The cookie is set by the business profile API on save.
  */
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -19,6 +23,7 @@ export function proxy(request: NextRequest) {
   const isOnSignUp = pathname.startsWith("/signup");
   const isOnVerifyEmail = pathname.startsWith("/verify-email");
   const isOnBooking = pathname.startsWith("/booking");
+  const isOnOnboarding = pathname.startsWith("/onboarding");
   const isPublicRoute =
     isOnLogin || isOnSignUp || isOnVerifyEmail || isOnBooking;
 
@@ -44,6 +49,19 @@ export function proxy(request: NextRequest) {
     const signUpUrl = new URL("/signup", request.url);
     signUpUrl.searchParams.set("callbackUrl", request.url);
     return NextResponse.redirect(signUpUrl);
+  }
+
+  // ─── Onboarding enforcement ────────────────────────────────────
+  // The "bp" (business profile) cookie is set when the profile is saved.
+  // If logged in but no bp cookie, and not already on /onboarding, redirect.
+  const hasBp = request.cookies.get("bp");
+  if (!hasBp && !isOnOnboarding) {
+    return NextResponse.redirect(new URL("/onboarding", request.url));
+  }
+
+  // If already on /onboarding but has bp cookie, send to home
+  if (hasBp && isOnOnboarding) {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return response;

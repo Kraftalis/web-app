@@ -4,7 +4,7 @@ import {
   createdResponse,
   validationError,
   internalError,
-  requireAuth,
+  requireBusinessProfile,
   validate,
 } from "@/lib/api";
 import { findEventsByVendor, createEvent } from "@/repositories/event";
@@ -12,14 +12,14 @@ import { createEventSchema } from "@/lib/validations/event";
 
 /**
  * GET /api/events
- * List all events for the authenticated vendor.
+ * List all events for the authenticated vendor's business profile.
  */
 export async function GET() {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
-    const events = await findEventsByVendor(userId);
+    const events = await findEventsByVendor(businessProfileId);
 
     // Extract package name from JSONB snapshot
     const extractPkgName = (snap: unknown): string | null => {
@@ -34,7 +34,7 @@ export async function GET() {
         const pendingPayment = e.payments?.[0] ?? null;
         return {
           id: e.id,
-          vendorId: e.vendorId,
+          businessProfileId: e.businessProfileId,
           clientName: e.clientName,
           clientPhone: e.clientPhone,
           clientEmail: e.clientEmail,
@@ -75,10 +75,10 @@ export async function GET() {
 
 /**
  * POST /api/events
- * Create a new event for the authenticated vendor.
+ * Create a new event for the authenticated vendor's business profile.
  */
 export async function POST(request: NextRequest) {
-  const { userId, error } = await requireAuth();
+  const { businessProfileId, error } = await requireBusinessProfile();
   if (error) return error;
 
   try {
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     if (result.error)
       return validationError("Validation failed.", result.error);
 
-    const event = await createEvent(userId, result.data);
+    const event = await createEvent(businessProfileId, result.data);
 
     return createdResponse({
       ...event,
