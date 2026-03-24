@@ -168,10 +168,7 @@ function EventCard({
                 <Badge variant={eventStatusVariant(event.eventStatus)} dot>
                   {eventStatusLabel[event.eventStatus] ?? event.eventStatus}
                 </Badge>
-                <Badge
-                  variant={paymentStatusVariant(event.paymentStatus)}
-                  dot
-                >
+                <Badge variant={paymentStatusVariant(event.paymentStatus)} dot>
                   {paymentStatusLabel[event.paymentStatus] ??
                     event.paymentStatus}
                 </Badge>
@@ -271,10 +268,7 @@ function EventCard({
                 variant="primary"
                 disabled={isVerifying}
                 onClick={() =>
-                  onQuickVerify?.(
-                    event.id,
-                    event.latestPendingPayment!.id,
-                  )
+                  onQuickVerify?.(event.id, event.latestPendingPayment!.id)
                 }
                 className="px-2.5! py-1! text-xs! rounded-md!"
               >

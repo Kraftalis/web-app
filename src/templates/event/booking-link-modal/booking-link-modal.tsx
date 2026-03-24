@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, type ReactNode } from "react";
 import { Modal } from "@/components/ui";
 import { BookingLinkForm } from "@/templates/event/booking-link-form";
 import type { BookingLinkItem } from "@/services/booking";
@@ -24,13 +25,22 @@ export default function BookingLinkModal({
     ? (labels.editTitle ?? "Edit Booking Link")
     : (labels.configTitle ?? "Create Booking Link");
 
+  const [footer, setFooter] = useState<ReactNode>(null);
+
   return (
-    <Modal open={open} onClose={onClose} title={title} className="max-w-2xl">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={title}
+      className="max-w-2xl"
+      footer={footer}
+    >
       <BookingLinkForm
         onClose={onClose}
         editingLink={editingLink ?? undefined}
         defaultEventDate={defaultEventDate}
         labels={labels}
+        renderFooter={setFooter}
       />
     </Modal>
   );

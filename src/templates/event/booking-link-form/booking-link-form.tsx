@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  type ReactNode,
+} from "react";
 import { Button } from "@/components/ui";
 import { useCreateBookingLink, useUpdateBookingLink } from "@/hooks/booking";
 import { usePricing, useAddOns } from "@/hooks";
@@ -92,6 +98,12 @@ interface Props {
   defaultEventDate?: string; // ISO date string e.g. "2026-03-25"
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   labels: Record<string, any>;
+  /**
+   * When provided the form won't render its own footer buttons.
+   * Instead it calls this with the footer ReactNode so the parent
+   * (e.g. a Modal) can place it in a sticky footer slot.
+   */
+  renderFooter?: (footer: ReactNode) => void;
 }
 
 // ─── Build initial state from an editing link ───────────────
@@ -186,6 +198,7 @@ export default function BookingLinkForm({
   editingLink,
   defaultEventDate,
   labels,
+  renderFooter,
 }: Props) {
   const isEditMode = !!editingLink;
 
@@ -386,6 +399,47 @@ export default function BookingLinkForm({
     setResult(null);
   };
 
+  // ─── Footer content (buttons + total) ───────────────────
+
+  const total = calculateTotal(pkgSnapshot, addOnsSnapshot);
+  const hasData =
+    state.clientName.trim() ||
+    state.eventDate ||
+    state.packageMode !== "none" ||
+    state.selectedAddOnIds.length > 0 ||
+    state.customAddOns.length > 0;
+
+  const isBusy =
+    isUploading ||
+    (isEditMode ? updateMutation.isPending : createMutation.isPending);
+
+  const footerContent = result ? null : (
+    <>
+      {total > 0 && (
+        <span className="mr-auto text-sm font-semibold text-gray-700">
+          Total: Rp {total.toLocaleString("id-ID")}
+        </span>
+      )}
+      {onClose && (
+        <Button variant="outline" onClick={onClose}>
+          {labels.cancel ?? "Cancel"}
+        </Button>
+      )}
+      <Button onClick={handleSubmit} isLoading={isBusy} disabled={!hasData}>
+        {isUploading
+          ? (labels.uploading ?? "Uploading…")
+          : isEditMode
+            ? (labels.updateLink ?? "Update Booking Link")
+            : (labels.generateButton ?? "Generate Link")}
+      </Button>
+    </>
+  );
+
+  // Notify parent of footer content so it can be placed in Modal footer slot
+  useEffect(() => {
+    renderFooter?.(footerContent);
+  });
+
   // ─── Result view ────────────────────────────────────────
 
   if (result) {
@@ -401,14 +455,6 @@ export default function BookingLinkForm({
   }
 
   // ─── Form view ──────────────────────────────────────────
-
-  const total = calculateTotal(pkgSnapshot, addOnsSnapshot);
-  const hasData =
-    state.clientName.trim() ||
-    state.eventDate ||
-    state.packageMode !== "none" ||
-    state.selectedAddOnIds.length > 0 ||
-    state.customAddOns.length > 0;
 
   return (
     <div className="space-y-6">
@@ -491,35 +537,12 @@ export default function BookingLinkForm({
         labels={labels}
       />
 
-      {/* Actions */}
-      <div className="flex items-center justify-between pt-2">
-        {onClose && (
-          <Button variant="ghost" onClick={onClose}>
-            {labels.cancel ?? "Cancel"}
-          </Button>
-        )}
-        <div className="ml-auto flex items-center gap-3">
-          {total > 0 && (
-            <span className="text-sm font-medium text-gray-500">
-              Total: Rp {total.toLocaleString("id-ID")}
-            </span>
-          )}
-          <Button
-            onClick={handleSubmit}
-            isLoading={
-              isUploading ||
-              (isEditMode ? updateMutation.isPending : createMutation.isPending)
-            }
-            disabled={!hasData}
-          >
-            {isUploading
-              ? (labels.uploading ?? "Uploading…")
-              : isEditMode
-                ? (labels.updateLink ?? "Update Booking Link")
-                : (labels.generateLink ?? "Generate Booking Link")}
-          </Button>
+      {/* Inline footer — only when no external footer slot */}
+      {!renderFooter && (
+        <div className="flex items-center justify-end gap-3 pt-2">
+          {footerContent}
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -47,7 +47,7 @@ export default function Modal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto px-4 py-8 sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto px-4 pb-20 pt-8 sm:items-center sm:pb-8">
       {/* Backdrop */}
       <div
         ref={overlayRef}

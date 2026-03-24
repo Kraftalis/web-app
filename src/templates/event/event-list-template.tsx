@@ -4,7 +4,6 @@ import { useState } from "react";
 import { AppLayout } from "@/components/layout";
 import { Button, Input, Select } from "@/components/ui";
 import {
-  IconPlus,
   IconLink,
   IconSearch,
   IconList,
@@ -21,7 +20,7 @@ import { EventStats } from "./event-stats";
 import { EventTable } from "./event-table";
 import { KanbanBoard } from "./kanban-board";
 import { EventListSkeleton } from "./event-list-skeleton";
-import { CreateEventModal, BookingLinkModal } from "./event-modals";
+import { BookingLinkModal } from "./event-modals";
 import { ActiveOfferingsSection } from "./active-offerings-section";
 
 export type { EventItem };
@@ -49,7 +48,6 @@ export default function EventListTemplate({ user }: EventListTemplateProps) {
   const [statusFilter, setStatusFilter] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("");
 
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [editingLink, setEditingLink] = useState<BookingLinkItem | null>(null);
 
@@ -88,15 +86,6 @@ export default function EventListTemplate({ user }: EventListTemplateProps) {
       day: "numeric",
     });
 
-  const eventTypes = [
-    { value: "Wedding", label: dict.booking.typeWedding },
-    { value: "Engagement", label: dict.booking.typeEngagement },
-    { value: "Birthday", label: dict.booking.typeBirthday },
-    { value: "Graduation", label: dict.booking.typeGraduation },
-    { value: "Corporate", label: dict.booking.typeCorporate },
-    { value: "Other", label: dict.booking.typeOther },
-  ];
-
   return (
     <AppLayout user={user} title={dict.nav.event}>
       {/* Page Header */}
@@ -108,17 +97,9 @@ export default function EventListTemplate({ user }: EventListTemplateProps) {
           <p className="mt-1 text-sm text-gray-500">{dict.event.subtitle}</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="md"
-            onClick={() => setShowLinkModal(true)}
-          >
+          <Button size="md" onClick={() => setShowLinkModal(true)}>
             <IconLink size={16} />
             {dict.event.generateLink}
-          </Button>
-          <Button size="md" onClick={() => setShowCreateModal(true)}>
-            <IconPlus size={16} />
-            {dict.event.createEvent}
           </Button>
         </div>
       </div>
@@ -266,20 +247,6 @@ export default function EventListTemplate({ user }: EventListTemplateProps) {
       )}
 
       {/* Modals */}
-      <CreateEventModal
-        open={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSubmit={() => {
-          setShowCreateModal(false);
-          refetch();
-        }}
-        isCreating={false}
-        createError={null}
-        eventTypes={eventTypes}
-        labels={dict.createEventModal}
-        cancelLabel={dict.common.cancel}
-      />
-
       <BookingLinkModal
         open={showLinkModal}
         onClose={() => {
