@@ -296,7 +296,7 @@ export default function HomeTemplate({ user }: HomeTemplateProps) {
               {dict.dashboard.eventPipeline}
             </h2>
             <Link
-              href="/vendor/event"
+              href="/event"
               className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
             >
               {dict.dashboard.viewAll}
@@ -458,7 +458,7 @@ export default function HomeTemplate({ user }: HomeTemplateProps) {
                 {dict.dashboard.upcomingEvents}
               </h2>
               <Link
-                href="/vendor/schedule"
+                href="/schedule"
                 className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
               >
                 {dict.dashboard.viewAll}

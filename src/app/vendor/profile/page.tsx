@@ -7,13 +7,13 @@ export default async function ProfilePage() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    redirect("/vendor/login");
+    redirect("/login");
   }
 
   const user = await findUserById(session.user.id);
 
   if (!user) {
-    redirect("/vendor/login");
+    redirect("/login");
   }
 
   return (

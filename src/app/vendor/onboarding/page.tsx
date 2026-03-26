@@ -8,7 +8,7 @@ export default async function OnboardingPage() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    redirect("/vendor/login");
+    redirect("/login");
   }
 
   // If profile is already set up, set the bp cookie and redirect to home
@@ -21,7 +21,7 @@ export default async function OnboardingPage() {
       maxAge: 60 * 60 * 24 * 365,
       sameSite: "lax",
     });
-    redirect("/vendor");
+    redirect("/");
   }
 
   return <OnboardingTemplate />;

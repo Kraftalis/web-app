@@ -1,5 +1,15 @@
 import Link from "next/link";
 
+/**
+ * URLs for the vendor subdomain.
+ * In production: https://vendor.kraftalis.com
+ * In local dev:  set NEXT_PUBLIC_VENDOR_URL in .env.local (e.g. http://localhost:3000)
+ *               or it falls back to /vendor/* so relative links still work.
+ */
+const VENDOR_URL = process.env.NEXT_PUBLIC_VENDOR_URL ?? "";
+
+const vendorHref = (path: string) => `${VENDOR_URL}${path}`;
+
 const features = [
   {
     icon: (
@@ -139,13 +149,13 @@ export default function LandingTemplate() {
           </Link>
           <div className="flex items-center gap-3">
             <Link
-              href="/vendor/login"
+              href={vendorHref("/login")}
               className="rounded-lg px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
             >
               Sign In
             </Link>
             <Link
-              href="/vendor/signup"
+              href={vendorHref("/signup")}
               className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
             >
               Get Started — Free
@@ -178,7 +188,7 @@ export default function LandingTemplate() {
           </p>
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
-              href="/vendor/signup"
+              href={vendorHref("/signup")}
               className="inline-flex items-center rounded-xl bg-blue-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-600/30"
             >
               Start for Free
@@ -197,7 +207,7 @@ export default function LandingTemplate() {
               </svg>
             </Link>
             <Link
-              href="/vendor/login"
+              href={vendorHref("/login")}
               className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-8 py-3.5 text-sm font-semibold text-slate-700 transition-all hover:border-slate-400 hover:bg-slate-50"
             >
               Sign In
@@ -252,7 +262,7 @@ export default function LandingTemplate() {
           </p>
           <div className="mt-10">
             <Link
-              href="/vendor/signup"
+              href={vendorHref("/signup")}
               className="inline-flex items-center rounded-xl bg-blue-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-600/30"
             >
               Get Started — It&apos;s Free

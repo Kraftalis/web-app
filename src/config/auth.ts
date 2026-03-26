@@ -25,8 +25,14 @@ export const authConfig: NextAuthConfig = {
         "/vendor/verify-email",
       );
       const isOnBooking = nextUrl.pathname.startsWith("/client/booking");
+      const isVendorRoot = nextUrl.pathname === "/vendor";
       const isPublicRoute =
-        isLanding || isOnLogin || isOnSignUp || isOnVerifyEmail || isOnBooking;
+        isLanding ||
+        isOnLogin ||
+        isOnSignUp ||
+        isOnVerifyEmail ||
+        isOnBooking ||
+        isVendorRoot;
 
       if (isOnLogin) {
         if (isLoggedIn) return Response.redirect(new URL("/vendor", nextUrl));

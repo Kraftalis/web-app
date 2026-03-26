@@ -6,7 +6,7 @@ export default async function VendorDashboardPage() {
   const session = await auth();
 
   if (!session?.user) {
-    redirect("/vendor/login");
+    redirect("/login");
   }
 
   return (

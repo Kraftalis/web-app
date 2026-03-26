@@ -25,28 +25,28 @@ interface NavItem {
 }
 
 const navigation: NavItem[] = [
-  { labelKey: "home", href: "/vendor", icon: IconHome, groupKey: "main" },
+  { labelKey: "home", href: "/", icon: IconHome, groupKey: "main" },
   {
     labelKey: "schedule",
-    href: "/vendor/schedule",
+    href: "/schedule",
     icon: IconCalendar,
     groupKey: "main",
   },
   {
     labelKey: "event",
-    href: "/vendor/event",
+    href: "/event",
     icon: IconEvent,
     groupKey: "main",
   },
   {
     labelKey: "pricingPackage",
-    href: "/vendor/finance",
+    href: "/finance",
     icon: IconWallet,
     groupKey: "main",
   },
   {
     labelKey: "settings",
-    href: "/vendor/settings",
+    href: "/settings",
     icon: IconSettings,
     groupKey: "other",
   },
@@ -83,7 +83,7 @@ export default function Sidebar() {
         {/* Brand */}
         <div className="flex h-16 items-center justify-between border-b border-slate-100 px-4">
           {!collapsed && (
-            <Link href="/vendor" className="flex items-center gap-2.5">
+            <Link href="/" className="flex items-center gap-2.5">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
                 <span className="text-sm font-bold text-white">K</span>
               </div>
@@ -93,7 +93,7 @@ export default function Sidebar() {
             </Link>
           )}
           {collapsed && (
-            <Link href="/vendor" className="mx-auto flex items-center">
+            <Link href="/" className="mx-auto flex items-center">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
                 <span className="text-sm font-bold text-white">K</span>
               </div>
@@ -126,8 +126,8 @@ export default function Sidebar() {
               <ul className="space-y-1">
                 {items.map((item) => {
                   const isActive =
-                    item.href === "/vendor"
-                      ? pathname === "/vendor"
+                    item.href === "/"
+                      ? pathname === "/"
                       : pathname.startsWith(item.href);
                   const label = dict.nav[item.labelKey];
                   return (
