@@ -3,7 +3,7 @@
 import { createContext, useContext, type ReactNode } from "react";
 import type { Dictionary } from "./dictionaries/en";
 import type { Locale } from "./config";
-import en from "./dictionaries/en";
+import id from "./dictionaries/id";
 
 /**
  * Context holding the current dictionary + locale.
@@ -14,8 +14,8 @@ interface I18nContextValue {
 }
 
 const I18nContext = createContext<I18nContextValue>({
-  dict: en,
-  locale: "en",
+  dict: id,
+  locale: "id",
 });
 
 /**

@@ -27,9 +27,9 @@ const features = [
         />
       </svg>
     ),
-    title: "Event Management",
+    title: "Manajemen Acara",
     description:
-      "Create, organize, and track all your events in one place. Manage event statuses, payments, and timelines effortlessly.",
+      "Buat, kelola, dan pantau semua acara Anda dalam satu tempat. Atur status acara, pembayaran, dan jadwal dengan mudah.",
   },
   {
     icon: (
@@ -47,9 +47,9 @@ const features = [
         />
       </svg>
     ),
-    title: "Booking Links",
+    title: "Link Booking",
     description:
-      "Generate shareable booking links for your clients. Let them pick dates, packages, and add-ons — all self-service.",
+      "Buat link booking yang bisa dibagikan ke klien. Biarkan mereka memilih tanggal, paket, dan tambahan — semuanya secara mandiri.",
   },
   {
     icon: (
@@ -67,9 +67,9 @@ const features = [
         />
       </svg>
     ),
-    title: "Pricing & Packages",
+    title: "Harga & Paket",
     description:
-      "Set up flexible pricing packages with variations, add-ons, and inclusions. Your clients see transparent pricing upfront.",
+      "Atur paket harga fleksibel dengan variasi, tambahan, dan inklusi. Klien Anda melihat harga yang transparan sejak awal.",
   },
   {
     icon: (
@@ -87,9 +87,9 @@ const features = [
         />
       </svg>
     ),
-    title: "Schedule & Calendar",
+    title: "Jadwal & Kalender",
     description:
-      "View your upcoming events on a calendar. Never miss a booking with a clear visual overview of your schedule.",
+      "Lihat acara mendatang di kalender. Jangan sampai terlewat satu booking pun dengan tampilan jadwal yang jelas.",
   },
   {
     icon: (
@@ -107,9 +107,9 @@ const features = [
         />
       </svg>
     ),
-    title: "Finance & Bookkeeping",
+    title: "Keuangan & Pembukuan",
     description:
-      "Track payments, manage invoices, and monitor revenue. Get a clear picture of your business finances at a glance.",
+      "Pantau pembayaran, kelola invoice, dan monitor pendapatan. Dapatkan gambaran jelas keuangan bisnis Anda dalam sekejap.",
   },
   {
     icon: (
@@ -129,7 +129,7 @@ const features = [
     ),
     title: "Mobile-First PWA",
     description:
-      "Install Kraftalis on your phone like a native app. Manage your business on the go with full offline-ready support.",
+      "Instal Kraftalis di ponsel Anda seperti aplikasi native. Kelola bisnis Anda kapan saja dengan dukungan offline penuh.",
   },
 ];
 
@@ -152,13 +152,13 @@ export default function LandingTemplate() {
               href={vendorHref("/login")}
               className="rounded-lg px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
             >
-              Sign In
+              Masuk
             </Link>
             <Link
               href={vendorHref("/signup")}
               className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
             >
-              Get Started — Free
+              Mulai Gratis
             </Link>
           </div>
         </div>
@@ -174,24 +174,24 @@ export default function LandingTemplate() {
 
         <div className="mx-auto max-w-4xl px-4 py-24 text-center sm:px-6 sm:py-32">
           <div className="mb-6 inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-4 py-1.5 text-xs font-medium text-blue-700">
-            ✨ Free during early access
+            ✨ Gratis selama akses awal
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
-            Manage your events,
+            Kelola acara Anda,
             <br />
-            <span className="text-blue-600">grow your business.</span>
+            <span className="text-blue-600">kembangkan bisnis Anda.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-600">
-            Kraftalis is the all-in-one platform for event vendors. Create
-            booking links, manage packages, track payments, and keep your
-            schedule organized — all in one place.
+            Kraftalis adalah platform all-in-one untuk vendor acara. Buat link
+            booking, kelola paket, pantau pembayaran, dan atur jadwal — semua
+            dalam satu tempat.
           </p>
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
               href={vendorHref("/signup")}
               className="inline-flex items-center rounded-xl bg-blue-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-600/30"
             >
-              Start for Free
+              Mulai Gratis
               <svg
                 className="ml-2 h-4 w-4"
                 fill="none"
@@ -210,7 +210,7 @@ export default function LandingTemplate() {
               href={vendorHref("/login")}
               className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-8 py-3.5 text-sm font-semibold text-slate-700 transition-all hover:border-slate-400 hover:bg-slate-50"
             >
-              Sign In
+              Masuk
             </Link>
           </div>
         </div>
@@ -221,11 +221,11 @@ export default function LandingTemplate() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mb-16 text-center">
             <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-              Everything you need to run your event business
+              Semua yang Anda butuhkan untuk menjalankan bisnis acara
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-base text-slate-600">
-              From initial inquiry to final payment, Kraftalis handles it all so
-              you can focus on delivering amazing experiences.
+              Dari pertanyaan awal hingga pembayaran akhir, Kraftalis menangani
+              semuanya agar Anda bisa fokus memberikan pengalaman terbaik.
             </p>
           </div>
 
@@ -254,18 +254,18 @@ export default function LandingTemplate() {
       <section className="py-20 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
           <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            Ready to streamline your event business?
+            Siap menyederhanakan bisnis acara Anda?
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-base text-slate-600">
-            Join Kraftalis today — completely free during our early access
-            period. No credit card required.
+            Bergabunglah dengan Kraftalis hari ini — sepenuhnya gratis selama
+            masa akses awal. Tidak perlu kartu kredit.
           </p>
           <div className="mt-10">
             <Link
               href={vendorHref("/signup")}
               className="inline-flex items-center rounded-xl bg-blue-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-600/30"
             >
-              Get Started — It&apos;s Free
+              Mulai Sekarang — Gratis
               <svg
                 className="ml-2 h-4 w-4"
                 fill="none"
@@ -297,7 +297,7 @@ export default function LandingTemplate() {
               </span>
             </div>
             <p className="text-xs text-slate-500">
-              &copy; {new Date().getFullYear()} Kraftalis. All rights reserved.
+              &copy; {new Date().getFullYear()} Kraftalis. Hak cipta dilindungi.
             </p>
           </div>
         </div>
