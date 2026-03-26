@@ -6,14 +6,13 @@ cmds = ["npm ci"]
 
 [phases.build]
 cmds = [
+  "yarn install",
   "npx prisma generate",
-  "npm run build",
-  "cp -r public .next/standalone/public",
-  "cp -r .next/static .next/standalone/.next/static"
+  "yarn build"
 ]
 
 [start]
-cmd = "npm run start"
+cmd = "yarn start"
 
 [variables]
 NODE_ENV = "production"
