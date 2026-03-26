@@ -1,15 +1,11 @@
 [phases.setup]
-nixPkgs = ["nodejs_20"]
+nixPkgs = ["nodejs_24"]
 
 [phases.install]
-cmds = ["npm ci"]
+cmds = ["yarn install", "npx prisma generate"]
 
 [phases.build]
-cmds = [
-  "yarn install",
-  "npx prisma generate",
-  "yarn build"
-]
+cmds = ["yarn build"]
 
 [start]
 cmd = "yarn start"
