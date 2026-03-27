@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { Modal, Button, Input, Select } from "@/components/ui";
 import AddOnSelector from "./AddOnSelector";
-import type { BookingLinkConfig } from "../types";
-import type { VendorPackage, VendorAddOn } from "@/templates/booking/types";
+import type { BookingLinkConfig, VendorPackage, VendorAddOn } from "../types";
 
 interface CustomVariation {
   label: string;

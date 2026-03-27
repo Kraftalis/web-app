@@ -16,6 +16,33 @@ export interface BookingLinkConfig {
   }[];
 }
 
+// ─── Vendor package / add-on (for booking link form) ────────
+
+export interface VendorPackageVariation {
+  id: string;
+  label: string;
+  description: string | null;
+  price: string;
+}
+
+export interface VendorPackage {
+  id: string;
+  name: string;
+  description: string | null;
+  price: string; // base / fallback price
+  currency: string;
+  inclusions: string[];
+  items: VendorPackageVariation[]; // price variations (empty = flat price)
+}
+
+export interface VendorAddOn {
+  id: string;
+  name: string;
+  description: string | null;
+  price: string;
+  currency: string;
+}
+
 import type { BadgeVariant } from "@/components/ui";
 
 // ─── Event Item (list view) ─────────────────────────────────

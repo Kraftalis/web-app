@@ -2,7 +2,7 @@
 
 import { Input } from "@/components/ui";
 import { IconPlus, IconTrash } from "@/components/icons";
-import type { VendorAddOn } from "@/templates/booking/types";
+import type { VendorAddOn } from "../types";
 
 interface CustomAddOn {
   name: string;
