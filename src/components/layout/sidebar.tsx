@@ -10,6 +10,7 @@ import {
   IconSettings,
   IconChevronLeft,
   IconChevronRight,
+  KraftalisLogo,
 } from "@/components/icons";
 import { useSidebarStore } from "@/stores/sidebar-store";
 import { useDictionary } from "@/i18n";
@@ -84,9 +85,7 @@ export default function Sidebar() {
         <div className="flex h-16 items-center justify-between border-b border-slate-100 px-4">
           {!collapsed && (
             <Link href="/" className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-                <span className="text-sm font-bold text-white">K</span>
-              </div>
+              <KraftalisLogo size={32} />
               <span className="text-base font-bold tracking-tight text-slate-900">
                 Kraftalis
               </span>
@@ -94,9 +93,7 @@ export default function Sidebar() {
           )}
           {collapsed && (
             <Link href="/" className="mx-auto flex items-center">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-                <span className="text-sm font-bold text-white">K</span>
-              </div>
+              <KraftalisLogo size={32} />
             </Link>
           )}
           <button

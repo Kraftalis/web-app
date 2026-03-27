@@ -1,1 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><rect width="512" height="512" fill="#000"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#fff" font-size="128" font-family="Arial">K</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a73e8"/>
+      <stop offset="100%" stop-color="#1557b0"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" ry="112" fill="url(#bg)"/>
+  <path d="M160 112 L160 400" stroke="#fff" stroke-width="48" stroke-linecap="round" fill="none"/>
+  <path d="M160 268 L300 132" stroke="#fff" stroke-width="48" stroke-linecap="round" fill="none"/>
+  <path d="M160 268 L310 400" stroke="#fff" stroke-width="48" stroke-linecap="round" fill="none"/>
+  <polygon points="340,80 358,108 340,136 322,108" fill="#FBBC04" opacity="0.95"/>
+  <polygon points="340,62 350,80 340,98 330,80" fill="#fff" opacity="0.7"/>
+</svg>

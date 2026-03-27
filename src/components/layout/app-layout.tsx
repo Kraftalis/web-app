@@ -10,6 +10,7 @@ import {
   IconPricing,
   IconSettings,
   IconPlus,
+  KraftalisLogo,
 } from "@/components/icons";
 import {
   NotificationDropdown,
@@ -77,9 +78,7 @@ export default function AppLayout({ children, user }: AppLayoutProps) {
           <div className="flex items-center gap-8">
             {/* Brand */}
             <Link href="/" className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent">
-                <span className="text-sm font-bold text-white">K</span>
-              </div>
+              <KraftalisLogo size={32} />
               <span className="hidden text-lg font-semibold text-foreground sm:block">
                 Kraftalis
               </span>

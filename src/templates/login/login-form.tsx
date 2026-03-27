@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { loginWithCredentials, loginWithGoogle } from "./actions";
 import { useDictionary } from "@/i18n";
+import { KraftalisLogo } from "@/components/icons";
 
 export default function LoginForm() {
   const [state, formAction, isPending] = useActionState(
@@ -16,7 +17,8 @@ export default function LoginForm() {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-md">
         {/* Logo / Brand */}
-        <div className="mb-8 text-center">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <KraftalisLogo size={56} className="mb-3" />
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">
             {dict.common.appName}
           </h1>

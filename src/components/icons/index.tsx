@@ -506,3 +506,55 @@ export function IconMinus({ size, ...props }: IconProps) {
     </svg>
   );
 }
+
+/** Kraftalis brand logo — K letterform with catalyst spark */
+export function KraftalisLogo({ size = 32, ...props }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 512 512"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <defs>
+        <linearGradient id="kraftalis-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#1a73e8" />
+          <stop offset="100%" stopColor="#1557b0" />
+        </linearGradient>
+      </defs>
+      <rect
+        width="512"
+        height="512"
+        rx="112"
+        ry="112"
+        fill="url(#kraftalis-bg)"
+      />
+      <path
+        d="M160 112L160 400"
+        stroke="#fff"
+        strokeWidth="48"
+        strokeLinecap="round"
+      />
+      <path
+        d="M160 268L300 132"
+        stroke="#fff"
+        strokeWidth="48"
+        strokeLinecap="round"
+      />
+      <path
+        d="M160 268L310 400"
+        stroke="#fff"
+        strokeWidth="48"
+        strokeLinecap="round"
+      />
+      <polygon
+        points="340,80 358,108 340,136 322,108"
+        fill="#FBBC04"
+        opacity="0.95"
+      />
+      <polygon points="340,62 350,80 340,98 330,80" fill="#fff" opacity="0.7" />
+    </svg>
+  );
+}
