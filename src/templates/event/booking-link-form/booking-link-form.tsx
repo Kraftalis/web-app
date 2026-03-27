@@ -1,21 +1,19 @@
 "use client";
 
-import { useState, useMemo, useEffect, type ReactNode } from "react";
+import {
+  useState,
+  useMemo,
+  useEffect,
+  useRef,
+  useCallback,
+  type ReactNode,
+} from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Select } from "@/components/ui";
 import { useCreateBookingLink, useUpdateBookingLink } from "@/hooks/booking";
 import { usePricing, useAddOns, useEventCategories } from "@/hooks";
-import type {
-  Package as PkgType,
-  AddOn as AddOnType,
-} from "@/services/pricing";
-import type {
-  BookingLinkItem,
-  PackageSnapshot,
-  AddOnSnapshot,
-} from "@/services/booking";
-
+import type { BookingLinkItem } from "@/services/booking";
 import ClientEventFields from "./client-event-fields";
 import PackageSelector from "./package-selector";
 import AddOnSelector from "./addon-selector";
@@ -25,141 +23,16 @@ import BookingLinkResult from "./booking-link-result";
 import {
   bookingLinkSchema,
   type BookingLinkFormValues,
-  type CustomAddOnDraft,
-  type SourcePackage,
-  type SourceAddOn,
   buildPackageSnapshot,
   buildAddOnsSnapshot,
   calculateTotal,
 } from "./types";
-
-// ─── Helpers ────────────────────────────────────────────────
-
-const DEFAULT_VALUES: BookingLinkFormValues = {
-  clientName: "",
-  clientPhone: "",
-  eventCategoryId: "",
-  eventDate: "",
-  eventTime: "",
-  eventLocation: "",
-  packageMode: "existing",
-  selectedPkgId: "",
-  selectedVariationId: "",
-  customPkgName: "",
-  customPkgPrice: "",
-  customPkgInclusions: "",
-  selectedAddOnIds: [],
-  customAddOns: [],
-  paymentType: "",
-  paymentAmount: "",
-  paymentReceipt: null,
-  paymentNote: "",
-};
-
-function mapPackages(raw: PkgType[]): SourcePackage[] {
-  return raw
-    .filter((p) => p.isActive)
-    .map((p) => ({
-      id: p.id,
-      name: p.name,
-      description: p.description,
-      price: p.price,
-      currency: p.currency,
-      inclusions: p.inclusions,
-      eventCategoryId: p.eventCategory?.id ?? null,
-      items: p.items.map((v) => ({
-        id: v.id,
-        label: v.label,
-        description: v.description,
-        price: v.price,
-        inclusions: v.inclusions ?? [],
-      })),
-    }));
-}
-
-function mapAddOns(raw: AddOnType[]): SourceAddOn[] {
-  return raw
-    .filter((a) => a.isActive)
-    .map((a) => ({
-      id: a.id,
-      name: a.name,
-      description: a.description,
-      price: a.price,
-      currency: a.currency,
-    }));
-}
-
-function buildEditValues(
-  link: BookingLinkItem,
-  packages: SourcePackage[],
-  addOns: SourceAddOn[],
-): BookingLinkFormValues {
-  const pkg = link.packageSnapshot as PackageSnapshot | null;
-  const linkAddOns = (link.addOnsSnapshot ?? []) as AddOnSnapshot[];
-
-  let packageMode: BookingLinkFormValues["packageMode"] = "existing";
-  let selectedPkgId = "";
-  let selectedVariationId = "";
-  let customPkgName = "";
-  let customPkgPrice = "";
-  let customPkgInclusions = "";
-
-  if (pkg) {
-    if (pkg.isCustom) {
-      packageMode = "custom";
-      customPkgName = pkg.name;
-      customPkgPrice = String(pkg.price);
-      customPkgInclusions = (pkg.inclusions ?? []).join("\n");
-    } else {
-      const match = packages.find((p) => p.name === pkg.name);
-      if (match) {
-        selectedPkgId = match.id;
-        if (pkg.variationLabel) {
-          const varMatch = match.items.find(
-            (v) => v.label === pkg.variationLabel,
-          );
-          if (varMatch) selectedVariationId = varMatch.id;
-        }
-      } else {
-        packageMode = "custom";
-        customPkgName = pkg.name;
-        customPkgPrice = String(pkg.price);
-        customPkgInclusions = (pkg.inclusions ?? []).join("\n");
-      }
-    }
-  }
-
-  const selectedAddOnIds: string[] = [];
-  const customAddOnDrafts: CustomAddOnDraft[] = [];
-
-  for (const la of linkAddOns) {
-    if (la.isCustom) {
-      customAddOnDrafts.push({ name: la.name, price: String(la.price) });
-    } else {
-      const match = addOns.find((a) => a.name === la.name);
-      if (match) selectedAddOnIds.push(match.id);
-      else customAddOnDrafts.push({ name: la.name, price: String(la.price) });
-    }
-  }
-
-  return {
-    ...DEFAULT_VALUES,
-    clientName: link.clientName ?? "",
-    clientPhone: link.clientPhone ?? "",
-    eventCategoryId: link.eventCategoryId ?? "",
-    eventDate: link.eventDate ?? "",
-    eventTime: link.eventTime ?? "",
-    eventLocation: link.eventLocation ?? "",
-    packageMode,
-    selectedPkgId,
-    selectedVariationId,
-    customPkgName,
-    customPkgPrice,
-    customPkgInclusions,
-    selectedAddOnIds,
-    customAddOns: customAddOnDrafts,
-  };
-}
+import {
+  DEFAULT_VALUES,
+  mapPackages,
+  mapAddOns,
+  buildEditValues,
+} from "./utils";
 
 // ─── Props ──────────────────────────────────────────────────
 
@@ -187,24 +60,33 @@ export default function BookingLinkForm({
   const { data: addOnsData } = useAddOns();
   const { data: eventCategoriesData } = useEventCategories();
 
-  const packages = useMemo(
-    () => mapPackages(pricingData?.data.packages ?? []),
-    [pricingData],
-  );
-  const addOns = useMemo(() => mapAddOns(addOnsData?.data ?? []), [addOnsData]);
-  const eventCategories = useMemo(
-    () => (eventCategoriesData ?? []).filter((c) => c.isActive),
-    [eventCategoriesData],
-  );
+  const rawPackages = pricingData?.data?.packages;
+  const rawAddOns = addOnsData?.data;
+
+  const packages = useMemo(() => {
+    if (!rawPackages) return [];
+    return mapPackages(rawPackages);
+  }, [rawPackages]);
+
+  const addOns = useMemo(() => {
+    if (!rawAddOns) return [];
+    return mapAddOns(rawAddOns);
+  }, [rawAddOns]);
+
+  const eventCategories = useMemo(() => {
+    if (!eventCategoriesData) return [];
+    return eventCategoriesData.filter((c) => c.isActive);
+  }, [eventCategoriesData]);
 
   // Build default values once master data is loaded for edit mode
   const initialValues = useMemo(() => {
     if (editingLink && packages.length + addOns.length > 0) {
       return buildEditValues(editingLink, packages, addOns);
     }
-    return defaultEventDate
-      ? { ...DEFAULT_VALUES, eventDate: defaultEventDate }
-      : DEFAULT_VALUES;
+    if (defaultEventDate) {
+      return { ...DEFAULT_VALUES, eventDate: defaultEventDate };
+    }
+    return DEFAULT_VALUES;
   }, [editingLink, defaultEventDate, packages, addOns]);
 
   const { control, handleSubmit, reset, setValue, getValues } =
@@ -213,22 +95,35 @@ export default function BookingLinkForm({
       defaultValues: initialValues,
     });
 
-  // Re-sync form when edit mode data resolves
-  const [initialized, setInitialized] = useState(!isEditMode);
+  // Re-sync form only when initialValues identity changes (edit mode data loads)
+  const prevInitialRef = useRef(initialValues);
   useEffect(() => {
-    if (!initialized && editingLink && packages.length + addOns.length > 0) {
-      reset(buildEditValues(editingLink, packages, addOns));
-      setInitialized(true);
+    if (prevInitialRef.current !== initialValues) {
+      prevInitialRef.current = initialValues;
+      reset(initialValues);
     }
-  }, [initialized, editingLink, packages, addOns, reset]);
+  }, [initialValues, reset]);
 
   const watched = useWatch({ control });
 
+  // Extract only the primitive values we need from watched to avoid
+  // re-creating derived values on every render (useWatch returns new obj each time)
+  const watchedEventCategoryId = watched.eventCategoryId ?? "";
+  const watchedSelectedPkgId = watched.selectedPkgId ?? "";
+  const watchedSelectedVariationId = watched.selectedVariationId ?? "";
+  const watchedPackageMode = watched.packageMode ?? "existing";
+  const watchedCustomPkgName = watched.customPkgName ?? "";
+  const watchedCustomPkgPrice = watched.customPkgPrice ?? "";
+  const watchedCustomPkgInclusions = watched.customPkgInclusions ?? "";
+  const watchedSelectedAddOnIds = watched.selectedAddOnIds;
+  const watchedCustomAddOns = watched.customAddOns;
+  const watchedClientName = watched.clientName ?? "";
+  const watchedEventDate = watched.eventDate ?? "";
+
   const filteredPackages = useMemo(() => {
-    const catId = watched.eventCategoryId;
-    if (!catId) return packages;
-    return packages.filter((p) => p.eventCategoryId === catId);
-  }, [packages, watched.eventCategoryId]);
+    if (!watchedEventCategoryId) return packages;
+    return packages.filter((p) => p.eventCategoryId === watchedEventCategoryId);
+  }, [packages, watchedEventCategoryId]);
 
   const createMutation = useCreateBookingLink();
   const updateMutation = useUpdateBookingLink();
@@ -239,33 +134,61 @@ export default function BookingLinkForm({
     totalAmount: string | null;
   } | null>(null);
 
-  // ─── Live snapshots ─────────────────────────────────────
+  // ─── Live snapshots (use extracted primitives) ──────────
 
   const pkgSnapshot = useMemo(
-    () => buildPackageSnapshot(watched as BookingLinkFormValues, packages),
-    [watched, packages],
+    () =>
+      buildPackageSnapshot(
+        {
+          packageMode: watchedPackageMode,
+          selectedPkgId: watchedSelectedPkgId,
+          selectedVariationId: watchedSelectedVariationId,
+          customPkgName: watchedCustomPkgName,
+          customPkgPrice: watchedCustomPkgPrice,
+          customPkgInclusions: watchedCustomPkgInclusions,
+        } as BookingLinkFormValues,
+        packages,
+      ),
+    [
+      watchedPackageMode,
+      watchedSelectedPkgId,
+      watchedSelectedVariationId,
+      watchedCustomPkgName,
+      watchedCustomPkgPrice,
+      watchedCustomPkgInclusions,
+      packages,
+    ],
   );
+
   const addOnsSnapshot = useMemo(
-    () => buildAddOnsSnapshot(watched as BookingLinkFormValues, addOns),
-    [watched, addOns],
+    () =>
+      buildAddOnsSnapshot(
+        {
+          selectedAddOnIds: watchedSelectedAddOnIds,
+          customAddOns: watchedCustomAddOns,
+        } as BookingLinkFormValues,
+        addOns,
+      ),
+    [watchedSelectedAddOnIds, watchedCustomAddOns, addOns],
   );
 
   // ─── Upload helper ───────────────────────────────────────
 
-  const uploadReceipt = async (
-    file: File,
-  ): Promise<{ url: string; name: string }> => {
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("folder", "receipts");
-    const res = await fetch("/api/upload", { method: "POST", body: fd });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error?.message ?? "Failed to upload receipt.");
-    }
-    const { publicUrl, fileName } = (await res.json()).data;
-    return { url: publicUrl, name: fileName };
-  };
+  const uploadReceipt = useCallback(
+    async (file: File): Promise<{ url: string; name: string }> => {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("folder", "receipts");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error?.message ?? "Failed to upload receipt.");
+      }
+      const { publicUrl, fileName } = (await res.json()).data;
+      return { url: publicUrl, name: fileName };
+    },
+    [],
+  );
 
   // ─── Submit ─────────────────────────────────────────────
 
@@ -338,46 +261,60 @@ export default function BookingLinkForm({
   };
 
   // ─── Footer ─────────────────────────────────────────────
+  // Use a primitive "key" to detect changes and only push to parent when
+  // something actually changed. This avoids the infinite loop caused by
+  // renderFooter (setState) → parent re-render → child re-render → useEffect fires again.
 
   const total = calculateTotal(pkgSnapshot, addOnsSnapshot);
-  const v = watched;
   const hasData = Boolean(
-    v.clientName?.trim() ||
-    v.eventDate ||
-    v.selectedPkgId ||
-    v.customPkgName?.trim() ||
-    (v.selectedAddOnIds?.length ?? 0) > 0 ||
-    (v.customAddOns?.length ?? 0) > 0,
+    watchedClientName.trim() ||
+    watchedEventDate ||
+    watchedSelectedPkgId ||
+    watchedCustomPkgName.trim() ||
+    (watchedSelectedAddOnIds?.length ?? 0) > 0 ||
+    (watchedCustomAddOns?.length ?? 0) > 0,
   );
   const isBusy =
     isUploading ||
     (isEditMode ? updateMutation.isPending : createMutation.isPending);
 
-  const footerContent = result ? null : (
-    <>
-      {total > 0 && (
-        <span className="mr-auto text-sm font-semibold text-gray-700">
-          Total: Rp {total.toLocaleString("id-ID")}
-        </span>
-      )}
-      {onClose && (
-        <Button variant="outline" onClick={onClose}>
-          {labels.cancel ?? "Cancel"}
-        </Button>
-      )}
-      <Button onClick={onSubmit} isLoading={isBusy} disabled={!hasData}>
-        {isUploading
-          ? (labels.uploading ?? "Uploading…")
-          : isEditMode
-            ? (labels.updateLink ?? "Update Booking Link")
-            : (labels.generateButton ?? "Generate Link")}
-      </Button>
-    </>
-  );
+  // Build a primitive string key from all footer-relevant values
+  const footerKey = `${!!result}|${total}|${isUploading}|${isEditMode}|${isBusy}|${hasData}`;
+  const prevFooterKeyRef = useRef("");
 
   useEffect(() => {
-    renderFooter?.(footerContent);
-  });
+    if (!renderFooter) return;
+    if (prevFooterKeyRef.current === footerKey) return;
+    prevFooterKeyRef.current = footerKey;
+
+    if (result) {
+      renderFooter(null);
+      return;
+    }
+
+    renderFooter(
+      <>
+        {total > 0 && (
+          <span className="mr-auto text-sm font-semibold text-gray-700">
+            Total: Rp {total.toLocaleString("id-ID")}
+          </span>
+        )}
+        {onClose && (
+          <Button variant="outline" onClick={onClose}>
+            {labels.cancel ?? "Cancel"}
+          </Button>
+        )}
+        <Button onClick={onSubmit} isLoading={isBusy} disabled={!hasData}>
+          {isUploading
+            ? (labels.uploading ?? "Uploading…")
+            : isEditMode
+              ? (labels.updateLink ?? "Update Booking Link")
+              : (labels.generateButton ?? "Generate Link")}
+        </Button>
+      </>,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [footerKey]);
 
   // ─── Result view ────────────────────────────────────────
 
@@ -406,7 +343,7 @@ export default function BookingLinkForm({
       {eventCategories.length > 0 && (
         <Select
           label={labels.eventCategory ?? "Event Category"}
-          value={watched.eventCategoryId ?? ""}
+          value={watchedEventCategoryId}
           onChange={(e) => {
             setValue("eventCategoryId", e.target.value);
             setValue("selectedPkgId", "");
@@ -455,7 +392,23 @@ export default function BookingLinkForm({
       {/* Inline footer — only when no external footer slot */}
       {!renderFooter && (
         <div className="flex items-center justify-end gap-3 pt-2">
-          {footerContent}
+          {total > 0 && (
+            <span className="mr-auto text-sm font-semibold text-gray-700">
+              Total: Rp {total.toLocaleString("id-ID")}
+            </span>
+          )}
+          {onClose && (
+            <Button variant="outline" onClick={onClose}>
+              {labels.cancel ?? "Cancel"}
+            </Button>
+          )}
+          <Button onClick={onSubmit} isLoading={isBusy} disabled={!hasData}>
+            {isUploading
+              ? (labels.uploading ?? "Uploading…")
+              : isEditMode
+                ? (labels.updateLink ?? "Update Booking Link")
+                : (labels.generateButton ?? "Generate Link")}
+          </Button>
         </div>
       )}
     </form>

@@ -35,6 +35,7 @@ function buildPackageWhere(
 const packageInclude = {
   items: { orderBy: { sortOrder: "asc" as const } },
   category: { select: { id: true, name: true } },
+  eventCategory: { select: { id: true, name: true } },
 };
 
 /**
