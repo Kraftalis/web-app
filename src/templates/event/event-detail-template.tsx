@@ -355,7 +355,11 @@ export default function EventDetailTemplate({
   }
 
   return (
-    <AppLayout user={user} title={dict.nav.event}>
+    <AppLayout
+      user={user}
+      title={dict.nav.event}
+      contentContainerClassName="max-w-6xl pb-20"
+    >
       {/* Top message toast */}
       {message && (
         <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">

@@ -105,7 +105,11 @@ export default function ProfileTemplate({ user }: ProfileTemplateProps) {
   };
 
   return (
-    <AppLayout user={topbarUser} title={dict.profile.title}>
+    <AppLayout
+      user={topbarUser}
+      title={dict.profile.title}
+      contentContainerClassName="max-w-6xl pb-20"
+    >
       {/* Page Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">

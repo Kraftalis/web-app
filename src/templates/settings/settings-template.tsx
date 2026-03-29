@@ -72,7 +72,7 @@ export default function SettingsTemplate({ user }: SettingsTemplateProps) {
   // ─── Render ───────────────────────────────────────────────
 
   return (
-    <AppLayout user={user}>
+    <AppLayout user={user} contentContainerClassName="max-w-6xl pb-20">
       <div className="space-y-6">
         {/* Page Header */}
         <div>
@@ -83,7 +83,7 @@ export default function SettingsTemplate({ user }: SettingsTemplateProps) {
         </div>
 
         {/* Tab Navigation */}
-        <div className="-mb-px flex gap-1 overflow-x-auto border-b border-(--border)">
+        <div className="-mb-px mb-6 flex gap-1 overflow-x-auto border-b border-(--border)">
           {tabs.map((tab) => (
             <button
               key={tab.key}

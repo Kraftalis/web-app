@@ -88,7 +88,11 @@ export default function EventListTemplate({ user }: EventListTemplateProps) {
     });
 
   return (
-    <AppLayout user={user} title={dict.nav.event}>
+    <AppLayout
+      user={user}
+      title={dict.nav.event}
+      contentContainerClassName="max-w-6xl pb-20"
+    >
       {/* Page Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

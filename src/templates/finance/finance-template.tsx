@@ -47,7 +47,7 @@ export default function FinanceTemplate({ user }: FinanceTemplateProps) {
   ];
 
   return (
-    <AppLayout user={user}>
+    <AppLayout user={user} contentContainerClassName="max-w-6xl pb-20">
       <div className="space-y-6">
         {/* Header */}
         <div>

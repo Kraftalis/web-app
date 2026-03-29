@@ -11,12 +11,7 @@ import {
   Badge,
   Textarea,
 } from "@/components/ui";
-import {
-  IconPlus,
-  IconArrowDownLeft,
-  IconArrowUpRight,
-  IconFilter,
-} from "@/components/icons";
+import { IconPlus, IconFilter, IconEdit, IconTrash } from "@/components/icons";
 import { useDictionary } from "@/i18n";
 import {
   useAccounts,
@@ -334,84 +329,93 @@ export default function TransactionsTab() {
       )}
 
       {transactions.length > 0 && (
-        <div className="space-y-2">
-          {transactions.map((tx) => {
-            const isIncome = tx.type === "INCOME";
-            return (
-              <Card key={tx.id}>
-                <CardBody>
-                  <div className="flex items-center gap-3">
-                    {/* Icon */}
-                    <div
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                        isIncome
-                          ? "bg-emerald-100 text-emerald-600"
-                          : "bg-red-100 text-red-600"
-                      }`}
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-gray-100 bg-gray-50/50 text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                <tr>
+                  <th className="px-4 py-3">{f.transactionDate}</th>
+                  <th className="px-4 py-3">{f.category}</th>
+                  <th className="px-4 py-3">{f.account}</th>
+                  <th className="px-4 py-3 text-right">{f.amount}</th>
+                  <th className="px-4 py-3 text-right">
+                    {dict.event.colActions || "Aksi"}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {transactions.map((tx) => {
+                  const isIncome = tx.type === "INCOME";
+                  return (
+                    <tr
+                      key={tx.id}
+                      className="hover:bg-gray-50/50 transition-colors"
                     >
-                      {isIncome ? (
-                        <IconArrowDownLeft size={16} />
-                      ) : (
-                        <IconArrowUpRight size={16} />
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate text-sm font-medium text-gray-900">
-                          {tx.category}
-                        </span>
-                        <Badge variant={isIncome ? "success" : "danger"}>
-                          {isIncome ? f.income : f.expense}
-                        </Badge>
-                      </div>
-                      {tx.description && (
-                        <p className="truncate text-xs text-gray-500">
-                          {tx.description}
-                        </p>
-                      )}
-                      <p className="mt-0.5 text-xs text-gray-400">
+                      <td className="whitespace-nowrap px-4 py-3 text-gray-600">
                         {fmtDate(tx.transactionDate)}
-                        {tx.account && ` · ${tx.account.name}`}
-                        {tx.event && ` · ${tx.event.clientName}`}
-                      </p>
-                    </div>
-
-                    {/* Amount */}
-                    <div className="text-right">
-                      <span
-                        className={`text-sm font-semibold ${
-                          isIncome ? "text-emerald-600" : "text-red-600"
-                        }`}
-                      >
-                        {isIncome ? "+" : "−"}
-                        {fmtCurrency(tx.amount, tx.currency)}
-                      </span>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex shrink-0 gap-1">
-                      <button
-                        onClick={() => openEditTx(tx)}
-                        className="rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-100"
-                      >
-                        {dict.common.edit}
-                      </button>
-                      <button
-                        onClick={() => txDelete.handleDelete(tx.id)}
-                        className="rounded px-2 py-1 text-xs text-red-500 hover:bg-red-50"
-                      >
-                        {txDelete.pendingId === tx.id
-                          ? f.confirmDeleteTransaction
-                          : dict.common.delete}
-                      </button>
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-            );
-          })}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-gray-900">
+                            {tx.category}
+                          </span>
+                          {tx.description && (
+                            <span className="text-[11px] text-gray-400 line-clamp-1">
+                              {tx.description}
+                            </span>
+                          )}
+                          {tx.event && (
+                            <span className="text-[10px] text-blue-500 font-medium">
+                              #{tx.event.clientName}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
+                          {tx.account?.name}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right">
+                        <span
+                          className={`font-bold ${
+                            isIncome ? "text-emerald-600" : "text-red-600"
+                          }`}
+                        >
+                          {isIncome ? "+" : "−"}
+                          {fmtCurrency(tx.amount, tx.currency)}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right">
+                        {!tx.eventId ? (
+                          <div className="flex justify-end gap-1.5 px-2">
+                            <button
+                              onClick={() => openEditTx(tx)}
+                              className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-blue-600 transition-colors"
+                              title={dict.common.edit}
+                            >
+                              <IconEdit size={14} />
+                            </button>
+                            <button
+                              onClick={() => txDelete.handleDelete(tx.id)}
+                              className="rounded-md p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                              title={dict.common.delete}
+                            >
+                              <IconTrash size={14} />
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] font-bold text-gray-300 uppercase tracking-tighter pr-4">
+                            System
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
 
           {/* Pagination */}
           {totalPages > 1 && (

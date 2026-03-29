@@ -25,6 +25,7 @@ import { type ReactNode } from "react";
 
 interface AppLayoutProps {
   children: ReactNode;
+  contentContainerClassName?: string;
   user: {
     name: string | null;
     email: string | null;
@@ -54,6 +55,7 @@ export default function AppLayout({
   children,
   user,
   fullWidth = false,
+  contentContainerClassName,
 }: AppLayoutProps) {
   const pathname = usePathname();
   const { dict } = useDictionary();
@@ -135,7 +137,11 @@ export default function AppLayout({
         {fullWidth ? (
           children
         ) : (
-          <div className="mx-auto px-4 py-6 sm:px-6">{children}</div>
+          <div
+            className={`mx-auto px-4 py-6 sm:px-6 ${contentContainerClassName}`}
+          >
+            {children}
+          </div>
         )}
       </main>
 
