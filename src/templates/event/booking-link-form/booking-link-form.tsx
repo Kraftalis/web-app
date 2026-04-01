@@ -211,14 +211,19 @@ export default function BookingLinkForm({
         }
       | undefined;
 
-    const paymentAmt = parseFloat(values.paymentAmount);
+    const rawPaymentAmt = values.paymentAmount;
+    const paymentAmt =
+      typeof rawPaymentAmt === "number"
+        ? rawPaymentAmt
+        : parseFloat(rawPaymentAmt);
+
     if (values.paymentType && paymentAmt > 0) {
       payment = {
         paymentType: values.paymentType as "DOWN_PAYMENT" | "FULL_PAYMENT",
         amount: paymentAmt,
         note: values.paymentNote || undefined,
       };
-      if (values.paymentReceipt) {
+      if (values.paymentReceipt instanceof File) {
         setIsUploading(true);
         try {
           const uploaded = await uploadReceipt(values.paymentReceipt);

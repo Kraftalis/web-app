@@ -25,8 +25,8 @@ export const bookingLinkSchema = z.object({
   selectedAddOnIds: z.array(z.string()),
   customAddOns: z.array(z.object({ name: z.string(), price: z.string() })),
   paymentType: z.enum(["DOWN_PAYMENT", "FULL_PAYMENT", ""]),
-  paymentAmount: z.string(),
-  paymentReceipt: z.instanceof(File).nullable(),
+  paymentAmount: z.string().or(z.number()),
+  paymentReceipt: z.any().nullable(),
   paymentNote: z.string(),
 });
 
