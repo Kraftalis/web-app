@@ -393,6 +393,7 @@ const en = {
     tabGeneralInfo: "General Information",
     tabPackagePayments: "Package & Payments",
     tabBrief: "Brief",
+    tabCost: "Costs",
 
     // Brief
     noBriefs: "No briefs yet.",
@@ -415,6 +416,17 @@ const en = {
 
     // Link map
     eventLocationUrl: "Map Link",
+
+    // Cost tracking
+    addCost: "Add Cost",
+    costRecords: "Event Costs",
+    noCostsYet: "No costs recorded yet.",
+    noCostsDesc: "Track your expenses for this event.",
+    costAdded: "Cost recorded successfully!",
+    costCategory: "Category",
+    costDescription: "Description",
+    costAmount: "Amount",
+    costDate: "Date",
 
     // Schedule section
     scheduleTitle: "Schedule",

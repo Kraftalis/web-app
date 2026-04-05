@@ -43,7 +43,7 @@ export const createEventSchema = z.object({
 
 export const updateEventSchema = createEventSchema.partial().extend({
   eventStatus: z
-    .enum(["INQUIRY", "WAITING_CONFIRMATION", "BOOKED", "ONGOING", "COMPLETED"])
+    .enum(["INQUIRY", "WAITING_CONFIRMATION", "BOOKED", "ONGOING", "COMPLETED", "CANCELED"])
     .optional(),
   paymentStatus: z.enum(["UNPAID", "DP_PAID", "PAID"]).optional(),
 });

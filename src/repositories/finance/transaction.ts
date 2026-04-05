@@ -297,17 +297,22 @@ export async function createIncomeFromPayment(opts: {
   receiptUrl?: string | null;
   receiptName?: string | null;
 }) {
-  const description = opts.clientName
-    ? `Payment from ${opts.clientName}`
-    : "Event payment";
+  const isRefund = opts.paymentType === "REFUND";
+  const desc = opts.clientName
+    ? isRefund
+      ? `Refund to ${opts.clientName}`
+      : `Payment from ${opts.clientName}`
+    : isRefund
+      ? "Event refund"
+      : "Event payment";
 
   return prisma.financeTransaction.create({
     data: {
       businessProfileId: opts.businessProfileId,
       accountId: opts.primaryAccountId,
-      type: "INCOME",
-      category: "Event Payment",
-      description,
+      type: isRefund ? "EXPENSE" : "INCOME",
+      category: isRefund ? "Refund" : "Event Payment",
+      description: desc,
       amount: opts.amount,
       currency: opts.currency ?? "IDR",
       transactionDate: new Date(),

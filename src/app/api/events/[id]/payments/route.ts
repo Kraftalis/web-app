@@ -23,7 +23,12 @@ import {
 
 const createPaymentSchema = z.object({
   amount: z.number().positive("Amount must be positive."),
-  paymentType: z.enum(["DOWN_PAYMENT", "INSTALLMENT", "FULL_PAYMENT"]),
+  paymentType: z.enum([
+    "DOWN_PAYMENT",
+    "INSTALLMENT",
+    "FULL_PAYMENT",
+    "REFUND",
+  ]),
   note: z.string().max(2000).optional().nullable(),
   receiptUrl: z.string().url().optional().nullable(),
   receiptName: z.string().max(255).optional().nullable(),

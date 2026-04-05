@@ -100,7 +100,7 @@ export interface UpdateAccountPayload {
 }
 
 export interface CreateTransactionPayload {
-  accountId: string;
+  accountId?: string;
   type: TransactionType;
   category: string;
   description?: string | null;

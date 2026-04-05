@@ -21,6 +21,7 @@ import {
   IconInfo,
   IconPackage,
   IconDocument,
+  IconX,
 } from "@/components/icons";
 import { useDictionary } from "@/i18n";
 import { buildGoogleCalendarUrl } from "@/lib/google-calendar";
@@ -95,6 +96,7 @@ export default function EventDetailTemplate({
 
   // Payment modal
   const [showAddPayment, setShowAddPayment] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
 
   // Package & Add-ons edit modals
@@ -141,6 +143,7 @@ export default function EventDetailTemplate({
     BOOKED: dict.event.statusBooked,
     ONGOING: dict.event.statusOngoing,
     COMPLETED: dict.event.statusCompleted,
+    CANCELED: "Canceled",
   };
 
   const paymentStatusLabel: Record<string, string> = {
@@ -164,6 +167,7 @@ export default function EventDetailTemplate({
     { value: "BOOKED", label: dict.event.statusBooked },
     { value: "ONGOING", label: dict.event.statusOngoing },
     { value: "COMPLETED", label: dict.event.statusCompleted },
+    { value: "CANCELED", label: "Canceled" },
   ];
 
   const paymentStatusOptions = [
@@ -311,7 +315,8 @@ export default function EventDetailTemplate({
         paymentType: data.paymentType as
           | "DOWN_PAYMENT"
           | "INSTALLMENT"
-          | "FULL_PAYMENT",
+          | "FULL_PAYMENT"
+          | "REFUND",
         note: data.note || null,
         receiptUrl,
         receiptName,
@@ -379,6 +384,17 @@ export default function EventDetailTemplate({
           </Link>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          {eventData.eventStatus !== "CANCELED" && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
+              onClick={() => setShowCancelModal(true)}
+            >
+              <IconX size={14} />
+              Cancel Event
+            </Button>
+          )}
           {/* Status badges */}
           <Badge variant={eventStatusVariant(eventData.eventStatus)} dot>
             {eventStatusLabel[eventData.eventStatus] ?? eventData.eventStatus}
@@ -1043,6 +1059,45 @@ export default function EventDetailTemplate({
           formatCurrencyFn={formatCurrency}
           currency={eventData.currency}
         />
+      </Modal>
+
+      {/* Cancel Event Modal */}
+      <Modal
+        open={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        title="Cancel Event"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-slate-600">
+            Are you sure you want to cancel this event? If you need to issue a
+            refund, please add it from the payment tab.
+          </p>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setShowCancelModal(false)}>
+              Back
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                startSaveTransition(() => {
+                  updateEvent.mutate(
+                    { id: eventData.id, payload: { eventStatus: "CANCELED" } },
+                    {
+                      onSuccess: () => {
+                        setShowCancelModal(false);
+                        setMessage("Event canceled.");
+                        router.refresh();
+                      },
+                    },
+                  );
+                });
+              }}
+              disabled={isSaving}
+            >
+              Confirm Cancel
+            </Button>
+          </div>
+        </div>
       </Modal>
     </AppLayout>
   );

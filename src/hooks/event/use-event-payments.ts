@@ -9,7 +9,7 @@ import { eventKeys } from "./keys";
 
 interface AddPaymentPayload {
   amount: number;
-  paymentType: "DOWN_PAYMENT" | "INSTALLMENT" | "FULL_PAYMENT";
+  paymentType: "DOWN_PAYMENT" | "INSTALLMENT" | "FULL_PAYMENT" | "REFUND";
   note?: string | null;
   receiptUrl?: string | null;
   receiptName?: string | null;

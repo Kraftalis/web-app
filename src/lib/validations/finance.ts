@@ -19,7 +19,7 @@ export type UpdateFinanceAccountInput = z.infer<
 // ─── Finance Transaction ────────────────────────────────────
 
 export const createTransactionSchema = z.object({
-  accountId: z.string().uuid("Invalid account."),
+  accountId: z.string().uuid("Invalid account.").optional(),
   type: z.enum(["INCOME", "EXPENSE"]),
   category: z.string().min(1, "Category is required.").max(100),
   description: z.string().max(2000).optional().nullable(),

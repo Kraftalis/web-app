@@ -398,6 +398,7 @@ const id: Dictionary = {
     tabGeneralInfo: "Informasi Umum",
     tabPackagePayments: "Paket & Pembayaran",
     tabBrief: "Brief",
+    tabCost: "Pengeluaran",
 
     // Brief
     noBriefs: "Belum ada brief.",
@@ -420,6 +421,17 @@ const id: Dictionary = {
 
     // Link map
     eventLocationUrl: "Link Peta",
+
+    // Cost tracking
+    addCost: "Tambah Pengeluaran",
+    costRecords: "Pengeluaran Acara",
+    noCostsYet: "Belum ada pengeluaran tercatat.",
+    noCostsDesc: "Lacak biaya pengeluaran Anda untuk acara ini.",
+    costAdded: "Cost recorded successfully!",
+    costCategory: "Kategori",
+    costDescription: "Deskripsi",
+    costAmount: "Jumlah",
+    costDate: "Tanggal",
 
     // Schedule section
     scheduleTitle: "Jadwal",

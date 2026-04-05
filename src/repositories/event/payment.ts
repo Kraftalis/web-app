@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { findPrimaryAccount, createIncomeFromPayment } from "@/repositories/finance";
+import {
+  findPrimaryAccount,
+  createIncomeFromPayment,
+} from "@/repositories/finance";
 
 /**
  * Create a payment record for an event.
@@ -7,7 +10,7 @@ import { findPrimaryAccount, createIncomeFromPayment } from "@/repositories/fina
  */
 export async function createPayment(data: {
   eventId: string;
-  paymentType: "DOWN_PAYMENT" | "FULL_PAYMENT" | "INSTALLMENT";
+  paymentType: "DOWN_PAYMENT" | "FULL_PAYMENT" | "INSTALLMENT" | "REFUND";
   amount: number;
   currency?: string;
   note?: string | null;
@@ -125,7 +128,10 @@ export async function verifyPayment(id: string) {
         }
       }
     } catch (err) {
-      console.error("[payments] auto-create finance transaction on verify failed:", err);
+      console.error(
+        "[payments] auto-create finance transaction on verify failed:",
+        err,
+      );
     }
   }
 
@@ -173,7 +179,12 @@ export async function recalcPaymentStatus(eventId: string) {
 
   const totalPaid = allPayments
     .filter((p) => p.isVerified)
-    .reduce((sum, p) => sum + Number(p.amount), 0);
+    .reduce((sum, p) => {
+      if (p.paymentType === "REFUND") {
+        return sum - Number(p.amount);
+      }
+      return sum + Number(p.amount);
+    }, 0);
   const totalAmount = Number(event?.amount ?? 0);
 
   let newStatus: "UNPAID" | "DP_PAID" | "PAID" = "UNPAID";

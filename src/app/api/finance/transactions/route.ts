@@ -10,6 +10,7 @@ import {
 import {
   findTransactionsByBusiness,
   createTransaction,
+  findPrimaryAccount,
 } from "@/repositories/finance";
 import {
   createTransactionSchema,
@@ -59,6 +60,13 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
+
+    // If accountId is empty, try to resolve it to the primary account
+    if (!body.accountId) {
+      const primary = await findPrimaryAccount(businessProfileId);
+      if (primary) body.accountId = primary.id;
+    }
+
     const result = validate(createTransactionSchema, body);
     if (result.error)
       return validationError("Validation failed.", result.error);

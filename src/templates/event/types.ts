@@ -128,6 +128,22 @@ export interface PaymentSerialized {
   createdAt: string;
 }
 
+export interface FinanceTransactionSerialized {
+  id: string;
+  accountId: string;
+  type: string; // "INCOME" | "EXPENSE"
+  category: string;
+  description: string | null;
+  amount: string;
+  currency: string;
+  transactionDate: string;
+  receiptUrl: string | null;
+  receiptName: string | null;
+  tags: string[];
+  notes: string | null;
+  createdAt: string;
+}
+
 export interface EventDetail {
   id: string;
   vendorId: string;
@@ -153,6 +169,7 @@ export interface EventDetail {
   bookingToken: string | null;
   schedules: EventScheduleItem[];
   payments: PaymentSerialized[];
+  financeTransactions?: FinanceTransactionSerialized[];
 }
 
 // ─── Status helpers ─────────────────────────────────────────
@@ -164,6 +181,7 @@ export function eventStatusVariant(status: string): BadgeVariant {
     BOOKED: "success",
     ONGOING: "primary",
     COMPLETED: "default",
+    CANCELED: "danger",
   };
   return map[status] ?? "default";
 }
@@ -193,6 +211,7 @@ export const EVENT_STATUSES = [
   "BOOKED",
   "ONGOING",
   "COMPLETED",
+  "CANCELED",
 ] as const;
 
 export type EventStatus = (typeof EVENT_STATUSES)[number];
@@ -203,4 +222,5 @@ export const EVENT_STATUS_COLORS: Record<string, string> = {
   BOOKED: "bg-green-500",
   ONGOING: "bg-blue-500",
   COMPLETED: "bg-slate-400",
+  CANCELED: "bg-red-500",
 };

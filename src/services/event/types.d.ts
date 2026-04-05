@@ -58,6 +58,22 @@ export interface EventDetailPayment {
   createdAt: string;
 }
 
+export interface EventDetailFinanceTransaction {
+  id: string;
+  accountId: string;
+  type: string;
+  category: string;
+  description: string | null;
+  amount: string;
+  currency: string;
+  transactionDate: string;
+  receiptUrl: string | null;
+  receiptName: string | null;
+  tags: string[];
+  notes: string | null;
+  createdAt: string;
+}
+
 export interface EventDetail {
   id: string;
   vendorId: string;
@@ -83,6 +99,7 @@ export interface EventDetail {
   bookingToken: string | null;
   schedules: EventScheduleItem[];
   payments: EventDetailPayment[];
+  financeTransactions?: EventDetailFinanceTransaction[];
 }
 
 // ─── Payloads ───────────────────────────────────────────────

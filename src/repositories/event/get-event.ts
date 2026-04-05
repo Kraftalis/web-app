@@ -32,6 +32,7 @@ export async function findEventById(id: string) {
       bookingLink: { select: { token: true } },
       schedules: { orderBy: { sortOrder: "asc" } },
       payments: { orderBy: { paidAt: "desc" } },
+      financeTransactions: { orderBy: { transactionDate: "desc" } },
     },
   });
 }

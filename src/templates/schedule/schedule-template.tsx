@@ -43,19 +43,21 @@ export default function ScheduleTemplate({ user }: ScheduleTemplateProps) {
   const { data: rawEvents = [] } = useEvents();
   const events: ScheduleEvent[] = useMemo(
     () =>
-      rawEvents.map((e) => ({
-        id: e.id,
-        clientName: e.clientName,
-        eventType: e.eventType,
-        eventCategoryId: e.eventCategoryId ?? null,
-        eventCategoryName: e.eventCategoryName ?? null,
-        eventCategoryColor: e.eventCategoryColor ?? null,
-        eventLocation: e.eventLocation,
-        packageName: e.packageName,
-        eventStatus: e.eventStatus,
-        paymentStatus: e.paymentStatus,
-        schedules: e.schedules ?? [],
-      })),
+      rawEvents
+        .filter((e) => e.eventStatus !== "CANCELED")
+        .map((e) => ({
+          id: e.id,
+          clientName: e.clientName,
+          eventType: e.eventType,
+          eventCategoryId: e.eventCategoryId ?? null,
+          eventCategoryName: e.eventCategoryName ?? null,
+          eventCategoryColor: e.eventCategoryColor ?? null,
+          eventLocation: e.eventLocation,
+          packageName: e.packageName,
+          eventStatus: e.eventStatus,
+          paymentStatus: e.paymentStatus,
+          schedules: e.schedules ?? [],
+        })),
     [rawEvents],
   );
 

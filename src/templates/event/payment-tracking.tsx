@@ -376,7 +376,6 @@ export function AddPaymentForm({
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
         required
-        placeholder="0"
       />
 
       <Select
@@ -387,14 +386,15 @@ export function AddPaymentForm({
           { value: "DOWN_PAYMENT", label: bookingLabels.dpPayment },
           { value: "INSTALLMENT", label: bookingLabels.installment },
           { value: "FULL_PAYMENT", label: bookingLabels.fullPayment },
+          { value: "REFUND", label: "Refund" },
         ]}
       />
 
       <Input
         label={bookingLabels.paymentNote}
+        placeholder={bookingLabels.paymentNotePlaceholder}
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        placeholder={bookingLabels.paymentNotePlaceholder}
       />
 
       {/* File upload */}

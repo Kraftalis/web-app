@@ -167,5 +167,36 @@ function serializeEventDetail(event: any) {
         createdAt: p.createdAt.toISOString(),
       }),
     ),
+    financeTransactions: (event.financeTransactions ?? []).map(
+      (t: {
+        id: string;
+        accountId: string;
+        type: string;
+        category: string;
+        description: string | null;
+        amount: unknown;
+        currency: string;
+        transactionDate: Date;
+        receiptUrl: string | null;
+        receiptName: string | null;
+        tags: string[];
+        notes: string | null;
+        createdAt: Date;
+      }) => ({
+        id: t.id,
+        accountId: t.accountId,
+        type: t.type,
+        category: t.category,
+        description: t.description,
+        amount: String(t.amount),
+        currency: t.currency,
+        transactionDate: t.transactionDate.toISOString(),
+        receiptUrl: t.receiptUrl,
+        receiptName: t.receiptName,
+        tags: t.tags,
+        notes: t.notes,
+        createdAt: t.createdAt.toISOString(),
+      }),
+    ),
   };
 }
