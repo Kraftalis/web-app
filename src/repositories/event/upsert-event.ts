@@ -47,7 +47,7 @@ export async function createEvent(
           endTime: s.endTime ?? null,
           label: s.label ?? null,
           sortOrder: idx,
-          updated_at: new Date(),
+          updatedAt: new Date(),
         })),
       });
 
@@ -128,7 +128,7 @@ export async function updateEvent(id: string, data: UpdateEventInput) {
               endTime: s.endTime ?? null,
               label: s.label ?? null,
               sortOrder: idx,
-              updated_at: new Date(),
+              updatedAt: new Date(),
             },
           });
         } else {
@@ -141,7 +141,7 @@ export async function updateEvent(id: string, data: UpdateEventInput) {
               endTime: s.endTime ?? null,
               label: s.label ?? null,
               sortOrder: idx,
-              updated_at: new Date(),
+              updatedAt: new Date(),
             },
           });
         }
